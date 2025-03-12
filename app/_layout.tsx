@@ -1,3 +1,4 @@
+import GoogleFitComponent from "@/components/Googlefit";
 import HomeScreen from "@/components/screens/HomeScreen";
 import LeaderboardScreen from "@/components/screens/LeaderboardScreen";
 import ProfileScreen from "@/components/screens/ProfileScreen";
@@ -28,6 +29,7 @@ export default function Layout() {
       />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Google" component={GoogleFitComponent}></Tab.Screen>
     </Tab.Navigator>
   );
 }
