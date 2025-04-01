@@ -1,34 +1,39 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
-  SafeAreaView,
-  StatusBar,
   ActivityIndicator,
   ScrollView,
   Dimensions,
-} from 'react-native';
-import {
+  FlatList,
+} from "react-native";
+import BottomSheet, {
+  BottomSheetFlatList,
   BottomSheetModal,
   BottomSheetModalProvider,
-  BottomSheetBackdrop,
   BottomSheetView,
-} from '@gorhom/bottom-sheet';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
+} from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-// Get screen dimensions
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Types
 type Player = {
   id: string;
   username: string;
   score: number;
   avatar?: string;
+  dailySteps: number[];
 };
 
 type GameData = {
@@ -42,7 +47,7 @@ type GameData = {
     registered: number;
     free: number;
   };
-  days: number; // Number of days in the competition
+  days: number;
 };
 
 const GameLeaderboard = () => {
@@ -52,84 +57,71 @@ const GameLeaderboard = () => {
   const [activeDay, setActiveDay] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const dayTabsScrollViewRef = useRef<ScrollView>(null);
-  
-  const snapPoints = useMemo(() => ['50%', '70%'], []);
 
-  // Handle presenting the bottom sheet
+  const snapPoints = useMemo(() => ["25%", "60%", "85%"], []);
+
   const handlePresentBottomSheet = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
 
-  // Scroll to active day tab
   const scrollToActiveDay = useCallback((day: number) => {
     if (dayTabsScrollViewRef.current) {
-      // Calculate the position to scroll to
-      const tabWidth = 80; // Approximate width of each tab
+      const tabWidth = 80;
       const scrollPosition = (day - 1) * tabWidth;
-      
-      // Scroll to the position with animation
       dayTabsScrollViewRef.current.scrollTo({
-        x: scrollPosition - SCREEN_WIDTH / 4, // Center the tab
+        x: scrollPosition - SCREEN_WIDTH / 4,
         animated: true,
       });
     }
   }, []);
 
-  // Fetch game data and players
+  const generateRandomSteps = () => {
+    return Array.from(
+      { length: 30 },
+      () => Math.floor(Math.random() * 10000) + 1000
+    );
+  };
+
   useEffect(() => {
     const fetchGameData = async () => {
       try {
-        // In a real app, replace with your actual API endpoint
-        // const response = await fetch('https://api.example.com/game/bonk-april');
-        // const data = await response.json();
-        
-        // Mock data based on the screenshot with 18 days
         setGameData({
-          id: '1',
-          title: 'BONK April Maintenance',
-          entry: '1M',
-          duration: '30 Days',
-          dateRange: '01/04 - 30/04',
-          steps: '4k',
+          id: "1",
+          title: "BONK April Maintenance",
+          entry: "1M",
+          duration: "30 Days",
+          dateRange: "01/04 - 30/04",
+          steps: "4k",
           players: {
             registered: 221,
             free: 303,
           },
-          days: 18, // Using 18 days as requested
+          days: 30,
         });
-        
-        // Simulate API response delay
+
         setTimeout(() => {
           setLoading(false);
-          // Auto-present the bottom sheet after data is loaded
           handlePresentBottomSheet();
         }, 1000);
       } catch (error) {
-        console.error('Error fetching game data:', error);
+        console.error("Error fetching game data:", error);
         setLoading(false);
       }
     };
 
     const fetchPlayers = async () => {
       try {
-        // In a real app, replace with your actual API endpoint
-        // const response = await fetch(`https://api.example.com/game/bonk-april/leaderboard?day=${activeDay}`);
-        // const data = await response.json();
-        
-        // Mock data based on the screenshot
-        const mockPlayers: Player[] = [
-          { id: '1', username: 'opebear', score: 30000, avatar: 'https://via.placeholder.com/40' },
-          { id: '2', username: 'mydoan', score: 29498, avatar: 'https://via.placeholder.com/40' },
-          { id: '3', username: 'a5868519', score: 27053, avatar: 'https://via.placeholder.com/40' },
-          { id: '4', username: 'KoreaUniv', score: 26364, avatar: 'https://via.placeholder.com/40' },
-          { id: '5', username: 'haydoidayctm', score: 21423, avatar: 'https://via.placeholder.com/40' },
-          { id: '6', username: 'masato', score: 20655, avatar: 'https://via.placeholder.com/40' },
-          { id: '7', username: 'longximing', score: 20095, avatar: 'https://via.placeholder.com/40' },
-        ];
-        
+        const mockPlayers: Player[] = Array.from({ length: 20 }, (_, i) => ({
+          id: `${i + 1}`,
+          username: `user${i + 1}`,
+          score: 30000 - i * 500,
+          avatar: "https://via.placeholder.com/40",
+          dailySteps: generateRandomSteps(),
+        }));
+
         setPlayers(mockPlayers);
       } catch (error) {
-        console.error('Error fetching players:', error);
+        console.error("Error fetching players:", error);
       }
     };
 
@@ -137,69 +129,76 @@ const GameLeaderboard = () => {
     fetchPlayers();
   }, [handlePresentBottomSheet]);
 
-  // Update players when active day changes
-  useEffect(() => {
-    const fetchPlayersForDay = async () => {
-      try {
-        // In a real app, replace with your actual API endpoint
-        // const response = await fetch(`https://api.example.com/game/bonk-april/leaderboard?day=${activeDay}`);
-        // const data = await response.json();
-        
-        // For demo purposes, we'll just update the scores slightly based on the day
-        const mockPlayers: Player[] = [
-          { id: '1', username: 'opebear', score: 30000 + (activeDay * 100), avatar: 'https://via.placeholder.com/40' },
-          { id: '2', username: 'mydoan', score: 29498 + (activeDay * 50), avatar: 'https://via.placeholder.com/40' },
-          { id: '3', username: 'a5868519', score: 27053 + (activeDay * 75), avatar: 'https://via.placeholder.com/40' },
-          { id: '4', username: 'KoreaUniv', score: 26364 + (activeDay * 60), avatar: 'https://via.placeholder.com/40' },
-          { id: '5', username: 'haydoidayctm', score: 21423 + (activeDay * 90), avatar: 'https://via.placeholder.com/40' },
-          { id: '6', username: 'masato', score: 20655 + (activeDay * 40), avatar: 'https://via.placeholder.com/40' },
-          { id: '7', username: 'longximing', score: 20095 + (activeDay * 30), avatar: 'https://via.placeholder.com/40' },
-        ];
-        
-        setPlayers(mockPlayers);
-        
-        // Scroll to the active day tab
-        scrollToActiveDay(activeDay);
-      } catch (error) {
-        console.error('Error fetching players for day:', error);
-      }
-    };
+  const renderPlayerRow = ({ item }: { item: Player }) => (
+    <View style={styles.playerRow}>
+      <View style={styles.playerInfo}>
+        <Image source={{ uri: item.avatar }} style={styles.playerAvatar} />
+        <Text style={styles.playerUsername} numberOfLines={1}>
+          {item.username}
+        </Text>
+      </View>
 
-    if (!loading && gameData) {
-      fetchPlayersForDay();
-    }
-  }, [activeDay, loading, gameData, scrollToActiveDay]);
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.daysScrollContainer}
+      >
+        {item.dailySteps.map((steps, dayIndex) => (
+          <View
+            key={`day-${dayIndex}`}
+            style={[
+              styles.dayCell,
+              activeDay === dayIndex + 1 && styles.activeDayCell,
+            ]}
+          >
+            <Text style={styles.dayCellText}>{steps}</Text>
+            <Text style={styles.dayLabel}>Day {dayIndex + 1}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
 
-  const formatScore = (score: number): string => {
-    return score >= 30000 ? '30k+' : score.toString();
-  };
-
-  // Generate day tabs dynamically based on the competition duration
   const renderDayTabs = () => {
     if (!gameData) return null;
-    
-    const tabs = [];
-    for (let i = 1; i <= gameData.days; i++) {
-      tabs.push(
-        <TouchableOpacity
-          key={`day-${i}`}
-          style={[styles.dayTab, activeDay === i && styles.activeDayTab]}
-          onPress={() => setActiveDay(i)}
-        >
-          <Text style={[styles.dayTabText, activeDay === i && styles.activeDayTabText]}>
-            Day{i}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
-    return tabs;
+
+    return (
+      <ScrollView
+        ref={dayTabsScrollViewRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.dayTabsScrollContent}
+      >
+        {Array.from({ length: gameData.days }).map((_, index) => (
+          <TouchableOpacity
+            key={`day-tab-${index + 1}`}
+            style={[
+              styles.dayTab,
+              activeDay === index + 1 && styles.activeDayTab,
+            ]}
+            onPress={() => setActiveDay(index + 1)}
+          >
+            <Text
+              style={[
+                styles.dayTabText,
+                activeDay === index + 1 && styles.activeDayTabText,
+              ]}
+            >
+              Day {index + 1}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
   };
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
-        <StatusBar barStyle="light-content" />
-        <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={["#1a0033", "#4b0082", "#290d44"]}
+          style={{ flex: 1 }}
+        >
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton}>
               <Ionicons name="chevron-back" size={24} color="white" />
@@ -211,13 +210,17 @@ const GameLeaderboard = () => {
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#7FD4F5" style={styles.loader} />
+            <ActivityIndicator
+              size="large"
+              color="#7FD4F5"
+              style={styles.loader}
+            />
           ) : (
             <View style={styles.gameCard}>
               <View style={styles.gameHeader}>
                 <View style={styles.gameTitleContainer}>
                   <Image
-                    source={{ uri: 'https://via.placeholder.com/50' }}
+                    source={{ uri: "https://via.placeholder.com/50" }}
                     style={styles.gameIcon}
                   />
                   <Text style={styles.gameTitle}>{gameData?.title}</Text>
@@ -226,36 +229,38 @@ const GameLeaderboard = () => {
                   <Text style={styles.joinButtonText}>Join</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <View style={styles.divider} />
-              
+
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Entry</Text>
                   <View style={styles.statValueContainer}>
                     <Image
-                      source={{ uri: 'https://via.placeholder.com/20' }}
+                      source={{ uri: "https://via.placeholder.com/20" }}
                       style={styles.statIcon}
                     />
                     <Text style={styles.statValue}>{gameData?.entry}</Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>{gameData?.duration}</Text>
                   <Text style={styles.statValue}>{gameData?.dateRange}</Text>
                 </View>
-                
+
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Steps</Text>
                   <Text style={styles.statValue}>{gameData?.steps}</Text>
                 </View>
-                
+
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Players</Text>
                   <Text style={styles.statValue}>
-                    {gameData?.players.registered}{' '}
-                    <Text style={styles.freeText}>+ {gameData?.players.free} free</Text>
+                    {gameData?.players.registered}{" "}
+                    <Text style={styles.freeText}>
+                      + {gameData?.players.free} free
+                    </Text>
                   </Text>
                 </View>
               </View>
@@ -264,82 +269,49 @@ const GameLeaderboard = () => {
 
           <View style={styles.silhouetteContainer}>
             <Image
-              source={{ uri: 'https://via.placeholder.com/150' }}
+              source={{ uri: "https://via.placeholder.com/150" }}
               style={styles.silhouette}
             />
           </View>
 
-          {/* Bottom Sheet Modal */}
           <BottomSheetModal
             ref={bottomSheetModalRef}
-            index={0}
+            index={1}
+            enablePanDownToClose={false}
             snapPoints={snapPoints}
-            handleIndicatorStyle={styles.bottomSheetIndicator}
+            handleIndicatorStyle={{ backgroundColor: "white", width: 40 }}
             backgroundStyle={styles.bottomSheetBackground}
-            backdropComponent={(props) => (
-              <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.7}
-              />
-            )}
           >
-            <BottomSheetView style={styles.bottomSheetContent}>
+            <BottomSheetView style={[styles.bottomSheetContent, { flex: 1 }]}>
               <View style={styles.leaderboardHeader}>
-                <View style={styles.userSortContainer}>
-                  <Text style={styles.userLabel}>User</Text>
-                  <Ionicons name="swap-vertical" size={18} color="#7FD4F5" />
-                </View>
-                
-                {/* Horizontally scrollable day tabs */}
-                <ScrollView
-                  ref={dayTabsScrollViewRef}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.dayTabsScrollContent}
-                  style={styles.dayTabsScroll}
-                >
-                  {renderDayTabs()}
-                </ScrollView>
+                <Text style={styles.leaderboardTitle}>Leaderboard</Text>
+                {renderDayTabs()}
               </View>
-              
-              <ScrollView style={styles.playersList}>
-                {players.map((player) => (
-                  <View key={player.id} style={styles.playerRow}>
-                    <View style={styles.playerInfo}>
-                      <Image
-                        source={{ uri: player.avatar }}
-                        style={styles.playerAvatar}
-                      />
-                      <Text style={styles.playerUsername}>{player.username}</Text>
-                    </View>
-                    <Text style={styles.playerScore}>
-                      {formatScore(player.score)}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
+
+              <BottomSheetFlatList
+                data={players}
+                renderItem={renderPlayerRow}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.playersListContent}
+                style={styles.playersList}
+              />
             </BottomSheetView>
           </BottomSheetModal>
-        </SafeAreaView>
+        </LinearGradient>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
-  // Main container
   container: {
     flex: 1,
-    backgroundColor: '#1A2330',
+    backgroundColor: "#1A2330",
   },
-  
-  // Header styles
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -348,40 +320,36 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   menuButton: {
     padding: 8,
   },
-  
-  // Loading indicator
   loader: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  
-  // Game card styles
   gameCard: {
     margin: 16,
-    backgroundColor: '#1E2734',
+    backgroundColor: "#1E2734",
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   gameHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   gameTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   gameIcon: {
     width: 50,
@@ -391,42 +359,40 @@ const styles = StyleSheet.create({
   gameTitle: {
     marginLeft: 12,
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#7FD4F5',
+    fontWeight: "bold",
+    color: "#7FD4F5",
   },
   joinButton: {
-    backgroundColor: '#7FD4F5',
+    backgroundColor: "#7FD4F5",
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
   },
   joinButtonText: {
-    color: '#1A2330',
-    fontWeight: 'bold',
+    color: "#1A2330",
+    fontWeight: "bold",
     fontSize: 16,
   },
   divider: {
     height: 1,
-    backgroundColor: '#2A3A4A',
+    backgroundColor: "#2A3A4A",
     marginVertical: 16,
   },
-  
-  // Stats container styles
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statLabel: {
-    color: '#8A9AAB',
+    color: "#8A9AAB",
     marginBottom: 4,
     fontSize: 14,
   },
   statValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statIcon: {
     width: 20,
@@ -435,63 +401,41 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   statValue: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 15,
   },
   freeText: {
-    color: '#8A9AAB',
-    fontWeight: 'normal',
+    color: "#8A9AAB",
+    fontWeight: "normal",
   },
-  
-  // Silhouette styles
   silhouetteContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   silhouette: {
     width: 150,
     height: 150,
-    tintColor: '#7FD4F5',
+    tintColor: "#7FD4F5",
   },
-  
-  // Bottom sheet styles
   bottomSheetBackground: {
-    backgroundColor: '#7FD4F5',
-  },
-  bottomSheetIndicator: {
-    backgroundColor: '#555',
-    width: 40,
+    backgroundColor: "#7E3887",
   },
   bottomSheetContent: {
     flex: 1,
-    backgroundColor: '#1E2734',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 16,
+    backgroundColor: "#1a0033",
   },
-  
-  // Leaderboard header styles
   leaderboardHeader: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  userSortContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  leaderboardTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
     marginBottom: 12,
-  },
-  userLabel: {
-    color: 'white',
-    marginRight: 8,
-    fontSize: 16,
-  },
-  
-  // Day tabs styles
-  dayTabsScroll: {
-    flexGrow: 0,
-    marginTop: 8,
   },
   dayTabsScrollContent: {
     paddingRight: 16,
@@ -502,37 +446,39 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 8,
     minWidth: 70,
-    alignItems: 'center',
+    alignItems: "center",
+    backgroundColor: "#2A3A4A",
   },
   activeDayTab: {
-    backgroundColor: '#2A3A4A',
+    backgroundColor: "#7FD4F5",
   },
   dayTabText: {
-    color: '#8A9AAB',
+    color: "#8A9AAB",
     fontSize: 14,
   },
   activeDayTabText: {
-    color: 'white',
-    fontWeight: '500',
+    color: "#1A2330",
+    fontWeight: "500",
   },
-  
-  // Players list styles
   playersList: {
     flex: 1,
   },
-  playerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
+  playersListContent: {
     paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  playerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#2A3A4A',
+    borderBottomColor: "#2A3A4A",
+    minHeight: 60,
   },
   playerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    width: 120,
+    flexDirection: "row",
+    alignItems: "center",
   },
   playerAvatar: {
     width: 40,
@@ -541,15 +487,34 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   playerUsername: {
-    color: '#7FD4F5',
-    fontSize: 16,
+    color: "#7FD4F5",
+    fontSize: 14,
+    flexShrink: 1,
   },
-  playerScore: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    minWidth: 60,
-    textAlign: 'right',
+  daysScrollContainer: {
+    flexGrow: 1,
+    paddingLeft: 8,
+  },
+  dayCell: {
+    width: 80,
+    padding: 6,
+    marginRight: 8,
+    borderRadius: 8,
+    backgroundColor: "#2A3A4A",
+    alignItems: "center",
+  },
+  activeDayCell: {
+    backgroundColor: "#7FD4F5",
+  },
+  dayCellText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  dayLabel: {
+    color: "#8A9AAB",
+    fontSize: 10,
+    marginTop: 2,
   },
 });
 
