@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  "https://decentrailzed-ttrack-3yr8.vercel.app/api/v1";
+  "https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1";

@@ -644,7 +644,6 @@ const SendModal = () => {
       if (!publickey) {
         throw new Error("No public key found");
       }
-
       const connection = new Connection("https://api.devnet.solana.com");
       const getBalance = await connection.getBalance(new PublicKey(publickey));
 
@@ -674,7 +673,7 @@ const SendModal = () => {
       ToastAndroid.show("Transaction Sent Successfully!", ToastAndroid.SHORT);
     } catch (e: any) {
       console.log(e);
-      // setresponse(false);
+      setresponse(false);
       seterror(e);
       ToastAndroid.show(e.message || "Transaction Failed!", ToastAndroid.SHORT);
     } finally {

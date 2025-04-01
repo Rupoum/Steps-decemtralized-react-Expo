@@ -21,7 +21,7 @@ const HistoryGamesScreen = () => {
   const [selectedGame, setSelectedGame] = useState(null);
 
   const snapPoints = useMemo(() => ["50%", "60%"], []);
-  const handleJoinClick = useCallback((game) => {
+  const handleJoinClick = useCallback((game:any) => {
     console.log("Joining game", game.title);
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();

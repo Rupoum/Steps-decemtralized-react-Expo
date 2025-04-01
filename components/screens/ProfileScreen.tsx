@@ -81,6 +81,7 @@ const ProfileScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Friend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(false);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [friends, setfriends] = useState([]);
   let Fetchfriend: any = null;
@@ -103,7 +104,7 @@ const ProfileScreen = () => {
       }
     };
     Fetchfriend();
-  }, []);
+  }, [refreshTrigger]);
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
@@ -133,7 +134,7 @@ const ProfileScreen = () => {
         userid: userid,
       });
       ToastAndroid.show("Friend request send ", ToastAndroid.LONG);
-
+      setRefreshTrigger(prev => !prev); 
       console.log(response.data);
       await axios.post(`${BACKEND_URL}/add/friend`, {
         username: username,
