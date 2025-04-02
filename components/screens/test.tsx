@@ -18,7 +18,6 @@ const requestPermissions = async () => {
     ];
 
     if (Platform.OS === "android") {
-      // Manually add Health Connect background permission as a string
       permissionsToRequest.push(
         "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" as never
       );

@@ -17,6 +17,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   Animated,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,7 +31,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { initialize, readRecords } from "react-native-health-connect";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -493,6 +494,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
   return (
     <BottomSheetModalProvider>
       <View style={styles.gamesContainer}>
+        
         <View
           style={{
             flexDirection: "row",
@@ -539,7 +541,17 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           ]}
         >
           {form.map((game) => (
+            <View>
+           {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
+  
             <View key={game.id} style={styles.gameCard}>
+            <Pressable 
+      onPress={() => router.push(`/status/${game.id}`)}
+      style={({ pressed }) => [
+        { opacity: pressed ? 0.8 : 1 },
+        { flex: 1 } // Makes it fill the parent
+      ]}
+    >
               <View
                 style={{
                   alignItems: "center",
@@ -562,7 +574,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                 {joined.some((join) => join.id == game.id) || game.memberqty == game.members.length ? (
   <View>
     <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-      {game.memberqty == game.members.length ? "MEMBER FULL" : "ALREADY JOINED"}
+      {game.memberqty == game.members.length ? "Full" : " Joined"}
     </Text>
     <Text style={{
       color: "white",
@@ -670,6 +682,10 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                   </View>
                 </View>
               </View>
+              </Pressable>
+            </View>
+            {/* </Link> */}
+            {/* </Pressable> */}
             </View>
           ))}
         </ScrollView>

@@ -1,50 +1,61 @@
-# Welcome to your Expo app 👋
+# 🏆 StepBet - Decentralized Fitness Betting App (Solana) 🏃‍♂️💨
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![Solana](https://img.shields.io/badge/Solana-3E4A8D?style=for-the-badge&logo=solana&logoColor=white)
+![Health Connect](https://img.shields.io/badge/Health_Connect-4285F4?style=for-the-badge&logo=google-fit&logoColor=white)
+![Web3](https://img.shields.io/badge/Web3-F16822?style=for-the-badge&logo=web3.js&logoColor=white)
 
-## Get started
+## 🌟 Introduction
+StepBet revolutionizes fitness motivation by combining blockchain technology with health tracking. Users bet on their daily step counts, compete with friends, and earn crypto rewards for meeting targets - all while improving their health!
+![StepBet Splash Screen](assets/images/splash-screen.png)
+## 🔍 Core Features
 
-1. Install dependencies
+### 1. Competition Creation
+- Set entry fees, duration, and step targets
+- Define maximum participants
+- Choose competition type (Solo/Duels/Tournaments)
 
-   ```bash
-   npm install
-   ```
+### 2. Participant Flow
+1. Connect Google Fit/Health Connect
+2. Pay entry fee via Solana wallet
+3. Track daily progress
+4. Meet targets to avoid strikes
+5. Win proportional rewards
 
-2. Start the app
+### 3. Technical Integration
+- Automated step tracking every 15 minutes
+- Blockchain-based reward distribution
+- Secure health data verification
+- Smart contract enforcement
 
-   ```bash
-    npx expo start
-   ```
+## 🛠️ Architecture
 
-In the output, you'll find options to open the app in a
+### Blockchain Components
+- StepBet.sol: Main contract
+- TokenVault.sol: Prize management
+- Verification.sol: Data validation
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Safety Features
+- Money-back guarantee
+- Anti-spoofing measures
+- Multi-step verification
+- Automatic refund system
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🚀 Getting Started
 
-## Get a fresh project
+### Prerequisites
+- Node.js 18+
+- Solana CLI
+- PostgreSQL
+- Google Fit API credentials
 
-When you're ready, run:
-
+### Installation
 ```bash
-npm run reset-project
+git clone https://github.com/your-repo/stepbet-backend.git
+cd stepbet-backend
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📜 License
+MIT Licensed - See LICENSE for details.

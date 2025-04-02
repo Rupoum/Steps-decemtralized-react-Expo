@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react"
 import { View,StyleSheet, TextInput, Button, Alert} from "react-native"
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BACKEND_URL } from "@/Backendurl";
 enum currn{
     sol,
     usdc
@@ -15,7 +16,7 @@ const Competion=()=>{
         const get=async()=>{
             const userid=await AsyncStorage.getItem("userid");
             try{
-             const response=await axios.get(`http://10.5.121.76:3000/get/friends/${userid}`);
+             const response=await axios.get(`${BACKEND_URL}/get/friends/${userid}`);
              setfriend(response.data.user);
             }catch(e:any){
                Alert.alert(e);
@@ -30,7 +31,7 @@ const Competion=()=>{
         try {
             const userid=await AsyncStorage.getItem("userid")
             console.log(userid);
-             const response=await axios.post("http://10.5.121.76:3000/api/v1/create/challenge",{
+             const response=await axios.post(`${BACKEND_URL}/create/challenge`,{
                 name:form.name,
                 memberqty:form.memberqty,
                 Dailystep:form.Dailystep,

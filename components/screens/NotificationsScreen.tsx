@@ -76,11 +76,12 @@ const NotificationsScreen = () => {
   const handleDecline = async (notificationId: string) => {
     try {
       const userid=await AsyncStorage.getItem("userid");
-      await axios.post(`${BACKEND_URL}/accept/friend`, {
+      const response=await axios.post(`${BACKEND_URL}/accept/friend`, {
         userid:userid,
         username:username,
         bool:false
       });
+      // if(res)
       router.push("/(nonav)/notification")  
       setNotifications((prev) =>
         prev.filter((notification) => notification.id !== notificationId)

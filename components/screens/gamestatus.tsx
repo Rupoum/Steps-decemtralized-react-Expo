@@ -14,13 +14,14 @@ import {
   ActivityIndicator,
   ScrollView,
   Dimensions,
-  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import BottomSheet, {
   BottomSheetFlatList,
   BottomSheetModal,
   BottomSheetModalProvider,
-  BottomSheetView,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -57,9 +58,31 @@ const GameLeaderboard = () => {
   const [activeDay, setActiveDay] = useState(1);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const dayTabsScrollViewRef = useRef<ScrollView>(null);
+  const mainScrollViewRef = useRef<ScrollView>(null);
+  const horizontalScrollRef = useRef<ScrollView>(null);
+  const verticalScrollRef = useRef<ScrollView>(null);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
 
   const snapPoints = useMemo(() => ["25%", "60%", "85%"], []);
 
+  const handleVerticalScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Sync horizontal scroll with vertical scroll
+    if (horizontalScrollRef.current) {
+      horizontalScrollRef.current.scrollTo({
+        x: event.nativeEvent.contentOffset.x,
+        animated: false,
+      });
+    }
+  } 
+  const handleHorizontalScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Sync vertical scroll with horizontal scroll
+    if (verticalScrollRef.current) {
+      verticalScrollRef.current.scrollTo({
+        y: event.nativeEvent.contentOffset.y,
+        animated: false,
+      });
+    }
+  };
   const handlePresentBottomSheet = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -74,6 +97,11 @@ const GameLeaderboard = () => {
       });
     }
   }, []);
+
+  const handleDayPress = useCallback((day: number) => {
+    setActiveDay(day);
+    scrollToActiveDay(day);
+  }, [scrollToActiveDay]);
 
   const generateRandomSteps = () => {
     return Array.from(
@@ -96,7 +124,7 @@ const GameLeaderboard = () => {
             registered: 221,
             free: 303,
           },
-          days: 30,
+          days: 12,
         });
 
         setTimeout(() => {
@@ -111,7 +139,8 @@ const GameLeaderboard = () => {
 
     const fetchPlayers = async () => {
       try {
-        const mockPlayers: Player[] = Array.from({ length: 20 }, (_, i) => ({
+        // Generate more players for better scrolling demonstration
+        const mockPlayers: Player[] = Array.from({ length: 50 }, (_, i) => ({
           id: `${i + 1}`,
           username: `user${i + 1}`,
           score: 30000 - i * 500,
@@ -129,6 +158,57 @@ const GameLeaderboard = () => {
     fetchPlayers();
   }, [handlePresentBottomSheet]);
 
+  useEffect(() => {
+    // Scroll to active day when it changes
+    scrollToActiveDay(activeDay);
+  }, [activeDay, scrollToActiveDay]);
+
+  // const renderPlayerRow = ({ item }: { item: Player }) => (
+  //   <View style={styles.playerRow}>
+  //     <View style={styles.playerInfo}>
+  //       <Image source={{ uri: item.avatar }} style={styles.playerAvatar} />
+  //       <Text style={styles.playerUsername} numberOfLines={1}>
+  //         {item.username}
+  //       </Text>
+  //     </View>
+
+  //     <ScrollView
+  //       horizontal
+  //       showsHorizontalScrollIndicator={false}
+  //       contentContainerStyle={styles.daysScrollContainer}
+  //       snapToInterval={80} // Snap to each day cell
+  //       decelerationRate="fast"
+  //     >
+  //       {item.dailySteps.map((steps, dayIndex) => (
+  //         <TouchableOpacity
+  //           key={`day-${dayIndex}`}
+  //           style={[
+  //             styles.dayCell,
+  //             activeDay === dayIndex + 1 && styles.activeDayCell,
+  //           ]}
+  //           onPress={() => handleDayPress(dayIndex + 1)}
+  //         >
+  //           <Text 
+  //             style={[
+  //               styles.dayCellText,
+  //               activeDay === dayIndex + 1 && styles.activeDayCellText
+  //             ]}
+  //           >
+  //             {steps}
+  //           </Text>
+  //           <Text 
+  //             style={[
+  //               styles.dayLabel,
+  //               activeDay === dayIndex + 1 && styles.activeDayLabel
+  //             ]}
+  //           >
+  //             Day {dayIndex + 1}
+  //           </Text>
+  //         </TouchableOpacity>
+  //       ))}
+  //     </ScrollView>
+  //   </View>
+  // );
   const renderPlayerRow = ({ item }: { item: Player }) => (
     <View style={styles.playerRow}>
       <View style={styles.playerInfo}>
@@ -137,25 +217,36 @@ const GameLeaderboard = () => {
           {item.username}
         </Text>
       </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.daysScrollContainer}
-      >
+      
+      <View style={styles.daysRow}>
         {item.dailySteps.map((steps, dayIndex) => (
-          <View
+          <TouchableOpacity
             key={`day-${dayIndex}`}
             style={[
               styles.dayCell,
               activeDay === dayIndex + 1 && styles.activeDayCell,
             ]}
+            onPress={() => handleDayPress(dayIndex + 1)}
           >
-            <Text style={styles.dayCellText}>{steps}</Text>
-            <Text style={styles.dayLabel}>Day {dayIndex + 1}</Text>
-          </View>
+            <Text 
+              style={[
+                styles.dayCellText,
+                activeDay === dayIndex + 1 && styles.activeDayCellText
+              ]}
+            >
+              {steps}
+            </Text>
+            <Text 
+              style={[
+                styles.dayLabel,
+                activeDay === dayIndex + 1 && styles.activeDayLabel
+              ]}
+            >
+              Day {dayIndex + 1}
+            </Text>
+          </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -168,6 +259,8 @@ const GameLeaderboard = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.dayTabsScrollContent}
+        snapToInterval={78} // Width of tab + margin
+        decelerationRate="fast"
       >
         {Array.from({ length: gameData.days }).map((_, index) => (
           <TouchableOpacity
@@ -176,7 +269,7 @@ const GameLeaderboard = () => {
               styles.dayTab,
               activeDay === index + 1 && styles.activeDayTab,
             ]}
-            onPress={() => setActiveDay(index + 1)}
+            onPress={() => handleDayPress(index + 1)}
           >
             <Text
               style={[
@@ -192,6 +285,13 @@ const GameLeaderboard = () => {
     );
   };
 
+  const renderLeaderboardHeader = () => (
+    <View style={styles.leaderboardHeader}>
+      <Text style={styles.leaderboardTitle}>Leaderboard</Text>
+      {renderDayTabs()}
+    </View>
+  );
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
@@ -199,103 +299,130 @@ const GameLeaderboard = () => {
           colors={["#1a0033", "#4b0082", "#290d44"]}
           style={{ flex: 1 }}
         >
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Game</Text>
-            <TouchableOpacity style={styles.menuButton}>
-              <Ionicons name="ellipsis-vertical" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
+          <ScrollView
+            ref={mainScrollViewRef}
+            contentContainerStyle={styles.mainScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.backButton}>
+                <Ionicons name="chevron-back" size={24} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Game</Text>
+              <TouchableOpacity style={styles.menuButton}>
+                <Ionicons name="ellipsis-vertical" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
 
-          {loading ? (
-            <ActivityIndicator
-              size="large"
-              color="#7FD4F5"
-              style={styles.loader}
-            />
-          ) : (
-            <View style={styles.gameCard}>
-              <View style={styles.gameHeader}>
-                <View style={styles.gameTitleContainer}>
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/50" }}
-                    style={styles.gameIcon}
-                  />
-                  <Text style={styles.gameTitle}>{gameData?.title}</Text>
-                </View>
-                <TouchableOpacity style={styles.joinButton}>
-                  <Text style={styles.joinButtonText}>Join</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Entry</Text>
-                  <View style={styles.statValueContainer}>
+            {loading ? (
+              <ActivityIndicator
+                size="large"
+                color="#7FD4F5"
+                style={styles.loader}
+              />
+            ) : (
+              <View style={styles.gameCard}>
+                <View style={styles.gameHeader}>
+                  <View style={styles.gameTitleContainer}>
                     <Image
-                      source={{ uri: "https://via.placeholder.com/20" }}
-                      style={styles.statIcon}
+                      source={{ uri: "https://via.placeholder.com/50" }}
+                      style={styles.gameIcon}
                     />
-                    <Text style={styles.statValue}>{gameData?.entry}</Text>
+                    <Text style={styles.gameTitle}>{gameData?.title}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.joinButton}>
+                    <Text style={styles.joinButtonText}>Join</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Entry</Text>
+                    <View style={styles.statValueContainer}>
+                      <Image
+                        source={{ uri: "https://via.placeholder.com/20" }}
+                        style={styles.statIcon}
+                      />
+                      <Text style={styles.statValue}>{gameData?.entry}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>{gameData?.duration}</Text>
+                    <Text style={styles.statValue}>{gameData?.dateRange}</Text>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Steps</Text>
+                    <Text style={styles.statValue}>{gameData?.steps}</Text>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Players</Text>
+                    <Text style={styles.statValue}>
+                      {gameData?.players.registered}{" "}
+                      <Text style={styles.freeText}>
+                        + {gameData?.players.free} free
+                      </Text>
+                    </Text>
                   </View>
                 </View>
-
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>{gameData?.duration}</Text>
-                  <Text style={styles.statValue}>{gameData?.dateRange}</Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Steps</Text>
-                  <Text style={styles.statValue}>{gameData?.steps}</Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Players</Text>
-                  <Text style={styles.statValue}>
-                    {gameData?.players.registered}{" "}
-                    <Text style={styles.freeText}>
-                      + {gameData?.players.free} free
-                    </Text>
-                  </Text>
-                </View>
               </View>
+            )}
+
+            <View style={styles.silhouetteContainer}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/150" }}
+                style={styles.silhouette}
+              />
             </View>
-          )}
-
-          <View style={styles.silhouetteContainer}>
-            <Image
-              source={{ uri: "https://via.placeholder.com/150" }}
-              style={styles.silhouette}
-            />
-          </View>
-
+          </ScrollView>
           <BottomSheetModal
             ref={bottomSheetModalRef}
             index={1}
-            enablePanDownToClose={false}
             snapPoints={snapPoints}
+            enablePanDownToClose={false}
             handleIndicatorStyle={{ backgroundColor: "white", width: 40 }}
             backgroundStyle={styles.bottomSheetBackground}
           >
-            <BottomSheetView style={[styles.bottomSheetContent, { flex: 1 }]}>
-              <View style={styles.leaderboardHeader}>
-                <Text style={styles.leaderboardTitle}>Leaderboard</Text>
-                {renderDayTabs()}
-              </View>
-
-              <BottomSheetFlatList
-                data={players}
-                renderItem={renderPlayerRow}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.playersListContent}
-                style={styles.playersList}
-              />
-            </BottomSheetView>
+            <View style={styles.bottomSheetContainer}>
+              {renderLeaderboardHeader()}
+              
+              {/* Horizontal Scroll for Days */}
+              <ScrollView
+                ref={horizontalScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.daysHeaderScroll}
+                scrollEventThrottle={16}
+                onScroll={handleHorizontalScroll}
+              >
+                <View style={{ width: 120 }} /> {/* Spacer for player info column */}
+                {Array.from({ length: gameData?.days || 0 }).map((_, index) => (
+                  <View key={`day-header-${index}`} style={styles.dayHeader}>
+                    <Text style={styles.dayHeaderText}>Day {index + 1}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+              
+              {/* Vertical Scroll for Players */}
+              <ScrollView
+                ref={verticalScrollRef}
+                scrollEventThrottle={16}
+                onScroll={handleVerticalScroll}
+                showsVerticalScrollIndicator={false}
+              >
+                <BottomSheetFlatList
+                  data={players}
+                  renderItem={renderPlayerRow}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.bottomSheetContent}
+                  scrollEnabled={false} // We handle scrolling with the parent ScrollView
+                />
+              </ScrollView>
+            </View>
           </BottomSheetModal>
         </LinearGradient>
       </BottomSheetModalProvider>
@@ -307,6 +434,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1A2330",
+  },
+  mainScrollContent: {
+    flexGrow: 1,
+  },
+  daysHeaderScroll: {
+    paddingLeft: 16,
+    backgroundColor: '#1a0033',
+  },
+  dayHeader: {
+    width: 80,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3A4A',
+  },
+  dayHeaderText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  daysRow: {
+    flexDirection: 'row',
+    paddingLeft: 8,
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#1a0033',
   },
   header: {
     flexDirection: "row",
@@ -330,6 +485,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    minHeight: 200,
   },
   gameCard: {
     margin: 16,
@@ -350,6 +506,8 @@ const styles = StyleSheet.create({
   gameTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    marginRight: 8,
   },
   gameIcon: {
     width: 50,
@@ -361,6 +519,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#7FD4F5",
+    flexShrink: 1,
   },
   joinButton: {
     backgroundColor: "#7FD4F5",
@@ -405,14 +564,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 15,
   },
+  // bottomSheetContainer: {
+  //   flex: 1,
+  //   backgroundColor: '#1a0033',
+  // },
+  // bottomSheetContent: {
+  //   paddingHorizontal: 16,
+  // },
   freeText: {
     color: "#8A9AAB",
     fontWeight: "normal",
   },
   silhouetteContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    minHeight: 200,
+    marginVertical: 20,
   },
   silhouette: {
     width: 150,
@@ -430,6 +597,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    backgroundColor: "#1a0033",
+    zIndex: 1,
   },
   leaderboardTitle: {
     color: "white",
@@ -460,13 +629,6 @@ const styles = StyleSheet.create({
     color: "#1A2330",
     fontWeight: "500",
   },
-  playersList: {
-    flex: 1,
-  },
-  playersListContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
   playerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -474,6 +636,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#2A3A4A",
     minHeight: 60,
+    paddingHorizontal: 16,
   },
   playerInfo: {
     width: 120,
@@ -511,10 +674,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
   },
+  activeDayCellText: {
+    color: "#1A2330",
+  },
   dayLabel: {
     color: "#8A9AAB",
     fontSize: 10,
     marginTop: 2,
+  },
+  activeDayLabel: {
+    color: "#1A2330",
+  },
+  bottomPadding: {
+    height: 40,
   },
 });
 
