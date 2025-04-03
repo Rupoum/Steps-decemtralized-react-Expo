@@ -7,14 +7,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const Stats = () => {
   return (
-    // <GestureHandlerRootView style={{ flex: 1 }}>
-    //   <ActivityTracker />
-    // </GestureHandlerRootView>
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <SafeAreaProvider>
-      <GameLeaderboard />
-    </SafeAreaProvider>
-  </GestureHandlerRootView>
+      <ActivityTracker />
+    </GestureHandlerRootView>
+    
   
   );
 };

@@ -794,6 +794,13 @@ const CommunityGames = ({ handleJoinClick }: any) => {
 
               
           <View key={game.name} style={styles.gameCard}>
+          <Pressable 
+      onPress={() => router.push(`/status/${game.id}`)}
+      style={({ pressed }) => [
+        { opacity: pressed ? 0.8 : 1 },
+        { flex: 1 } // Makes it fill the parent
+      ]}
+    >
             <View
               style={{
                 alignItems: "center",
@@ -923,6 +930,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
                 </View>
               </View>
             </View>
+            </Pressable>
           </View>
           </View> 
         ))}
