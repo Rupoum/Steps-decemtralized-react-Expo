@@ -1,12 +1,12 @@
-# 🏆 StepBet - Decentralized Fitness Betting App (Solana) 🏃‍♂️💨
+# 🏆 SolWalk - Decentralized Fitness Betting App (Solana) 🏃‍♂️💨
 
 ![Solana](https://img.shields.io/badge/Solana-3E4A8D?style=for-the-badge&logo=solana&logoColor=white)
 ![Health Connect](https://img.shields.io/badge/Health_Connect-4285F4?style=for-the-badge&logo=google-fit&logoColor=white)
 ![Web3](https://img.shields.io/badge/Web3-F16822?style=for-the-badge&logo=web3.js&logoColor=white)
 
 ## 🌟 Introduction
-StepBet revolutionizes fitness motivation by combining blockchain technology with health tracking. Users bet on their daily step counts, compete with friends, and earn crypto rewards for meeting targets - all while improving their health!
-![StepBet Splash Screen](assets/images/splash-screen.png)
+SolWalk revolutionizes fitness motivation by combining blockchain technology with health tracking. Users bet on their daily step counts, compete with friends, and earn crypto rewards for meeting targets - all while improving their health!
+![SolWalk Splash Screen](assets/images/splash-screen.png)
 ## 🔍 Core Features
 
 ### 1. Competition Creation
