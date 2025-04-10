@@ -132,6 +132,7 @@ const CreateGameScreen = () => {
     setLoading(true);
     seterror(null);
     try {
+      console.log("chek1");
       const response = await axios.post(`${BACKEND_URL}/create/challenge`, {
         name: form.name,
         memberqty: form.memberqty,
@@ -144,24 +145,25 @@ const CreateGameScreen = () => {
         userid: await AsyncStorage.getItem("userid"),
         // request: form.request,
       });
+      
       Alert.alert("Success", "Game Created Successfully");
       router.push("/(tabs)");
       console.log("Signup response:", response.data);
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
-        // console.log(err);
-        const axiosError = err as { response: { data: { message: string } } };
-        // @ts-ignore
-        console.log(axiosError.response.data.error[0].message);
-        ToastAndroid.show(
-          axiosError.response.data.error[0].message,
-          ToastAndroid.LONG
-        );
-        // @ts-ignore
-        seterror(
-          axiosError.response.data.error[0].message ||
-            "An error occurred. Please try again."
-        );
+        // console.log(err.r);
+          
+        console.log("heee");
+        try {
+          const axiosError = err as { response: { data: { error: { message: string } } } };
+            console.log(axiosError);
+          // @ts-ignore
+          ToastAndroid.show(err.response.data.error[0].message,ToastAndroid.LONG)
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+          ToastAndroid.show("An unexpected error occurred.", ToastAndroid.LONG);
+        }
+        
       } else {
         console.log(err);
         seterror("An unexpected error occurred. Please try again.");
@@ -195,11 +197,8 @@ const CreateGameScreen = () => {
         const axiosError = err as { response: { data: { message: string } } };
         // @ts-ignore
         console.log(axiosError.response.data.error[0].message);
-        ToastAndroid.show(
-          // @ts-ignore
-          axiosError.response.data.error[0].message,
-          ToastAndroid.LONG
-        );
+        // @ts-ignore
+        ToastAndroid.show(err.response.data.error[0].message,ToastAndroid.LONG)
         // @ts-ignore
         seterror(
           // @ts-ignore
@@ -219,6 +218,7 @@ const CreateGameScreen = () => {
   }, []);
 
   const handleTabPress = (tab: "public" | "community") => {
+ 
     setSelectedTab(tab);
     Animated.timing(animatedValue, {
       toValue: tab === "public" ? 0 : 1,
@@ -451,7 +451,7 @@ const GameForm = ({
           placeholder="Amount"
           placeholderTextColor="#999"
           onChangeText={(e) => {
-            setform({ ...form, Amount: parseInt(e) });
+            setform({ ...form, Amount: parseFloat(e) });
           }}
           keyboardType="number-pad"
           autoCapitalize="none"

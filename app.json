@@ -5,7 +5,7 @@
     "platforms": ["android", "ios", "web"],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash-screen.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -20,7 +20,8 @@
       "permissions": [
         "android.permission.health.READ_STEPS",
         "android.permission.health.WRITE_STEPS",
-        "android.permission.health.READ_DISTANCE"
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_SLEEP"
       ],
       "package": "com.youval21.stepsdecentralized"
     },
@@ -37,10 +38,10 @@
         {
           "image": "./assets/images/splash-screen.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],[
+      ],
+      [
       "expo-build-properties",
       {
         "android": {

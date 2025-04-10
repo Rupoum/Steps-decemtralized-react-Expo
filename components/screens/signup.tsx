@@ -61,7 +61,7 @@ const Signup = () => {
         console.log(err);
         const axiosError = err as { response: { data: { message: string } } };
         // @ts-ignore
-        ToastAndroid.show(axiosError.response.data.error[0].message,ToastAndroid.LONG)
+        ToastAndroid.show(err.response.data.message[0].message,ToastAndroid.LONG)
         console.log(axiosError.response.data);
         seterror(
           // @ts-ignore

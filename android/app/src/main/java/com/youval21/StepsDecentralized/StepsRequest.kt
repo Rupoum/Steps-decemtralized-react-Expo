@@ -9,6 +9,8 @@ interface BackendApiService {
    suspend fun  getstep(): Getresponse
    @POST("update")
    suspend  fun sendSteps(@Body request: StepsRequest): StepsResponse
+   @POST("update/sleep")
+   suspend fun sendSleep(@Body request:SleepRequest):SleepRequest
 }
 data class StepsResponse(
     val success: Boolean,
@@ -20,4 +22,11 @@ data class StepsRequest(
 )
 data class Getresponse(
     val message: String?
+)
+data class SleepRequest(
+    val hours:String,
+     val userid:String
+)
+data class SleepResponse(
+    val message:String
 )

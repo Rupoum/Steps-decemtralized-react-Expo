@@ -136,22 +136,7 @@ export default function LeaderboardScreen() {
                   marginBottom: 10,
                 }}
               >
-                <Switch
-                  trackColor={{ false: "#767577", true: "#81b0ff" }}
-                  thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={toggleSwitch}
-                  value={isEnabled}
-                  style={{ marginLeft: 20 }}
-                />
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 10,
-                  }}
-                >
-                  Friends Only
-                </Text>
+                
               </View>
             </View>
           </View>

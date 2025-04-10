@@ -384,13 +384,13 @@ const Wallet = () => {
               </TouchableOpacity> */}
             </View>
             <View style={styles.balanceContainer}>
-              {loading ? (
-                <ActivityIndicator size="large" color="#00ff00" />
-              ) : (
+              
+                {/* <ActivityIndicator size="large" color="#00ff00" /> */}
+               
                 <Text style={styles.balanceText}>
                   ${(balance / LAMPORTS_PER_SOL).toFixed(2)}
                 </Text>
-              )}
+            
             </View>
             <View
               style={{

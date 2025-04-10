@@ -5,6 +5,7 @@ import React from "react"
 import { Alert, Button,View } from "react-native"
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { BACKEND_URL } from "@/Backendurl"
 
 interface Challenge{
 name:string,
@@ -21,7 +22,7 @@ id:string
   const [challenge,setchallenge]=useState<Challenge[]>([{name:"",memberqty:0,Dailystep:0,Amount:0,Digital_Currency:"",days:0,id:""}])
   useEffect(()=>{
     const challenge=async()=>{
-      const response=await axios.get("http://10.5.121.76:3000/api/v1/challenge");
+      const response=await axios.get(`${BACKEND_URL}/challenge`);
       setchallenge(response.data.allchalange);
       console.log(response.data.allchalange);
     }
@@ -57,7 +58,7 @@ id:string
         verifySignatures:false,
       })
       console.log(challengeid);
-      const response=await axios.post(`http://10.5.121.76:3000/api/v1/challenge/join/${challengeid}`,{tx:serilze});
+      const response=await axios.post(`${BACKEND_URL}/challenge/join/${challengeid}`,{tx:serilze});
      if(response.status==200){
         Alert.alert("txn successfull you are added to the competion");
      }}

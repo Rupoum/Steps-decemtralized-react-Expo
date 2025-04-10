@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/Backendurl';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { 
@@ -41,7 +42,7 @@ const StepTable = ({ challengeId }:any) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://10.5.121.76:3000/api/v1/challenge/info/${challengeId}`);
+        const response = await axios.get(`${BACKEND_URL}/challenge/info/${challengeId}`);
         const { startdate, enddate, result } = response.data;
         const datesInRange = getDatesBetween(new Date(startdate), new Date(enddate));
         setDays(datesInRange);

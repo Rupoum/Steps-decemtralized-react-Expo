@@ -4,6 +4,7 @@ import { View,StyleSheet, TextInput, Button, Alert} from "react-native"
 import {Picker} from '@react-native-picker/picker';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BACKEND_URL } from "@/Backendurl";
 enum currn{
     sol,
     usdc
@@ -17,7 +18,7 @@ const Competion=()=>{
         try {
             const userid=await AsyncStorage.getItem("userid")
             console.log(userid);
-             const response=await axios.post("http://10.5.121.76:3000/api/v1/create/challenge",{
+             const response=await axios.post(`${BACKEND_URL}/create/challenge`,{
                 name:form.name,
                 memberqty:form.memberqty,
                 Dailystep:form.Dailystep,

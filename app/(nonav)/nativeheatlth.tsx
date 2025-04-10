@@ -51,6 +51,7 @@ const InitializeHealthConnect = () => {
      
       const permisdsions = await requestPermission([
         { accessType: "read", recordType: "Steps" },
+        {accessType:"read",recordType:"SleepSession"}
       ]);
         console.log(permisdsions)
       const permissions = await getGrantedPermissions();

@@ -6,6 +6,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BACKEND_URL } from "@/Backendurl";
 
 const Friend = () => {
   const [username, setUsername] = useState("");
@@ -13,7 +14,7 @@ const Friend = () => {
     try {
       const userid = await AsyncStorage.getItem("userid");
       const response = await axios.post(
-        "http://10.5.121.76:3000/api/v1/add/friend",
+          `${BACKEND_URL}/add/friend`,
         { username: username, userid: userid }
       );
       console.log(response.data);

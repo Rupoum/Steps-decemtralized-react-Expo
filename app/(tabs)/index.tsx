@@ -47,6 +47,9 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
+import Entypo from '@expo/vector-icons/Entypo';
+import * as SplashScreen from 'expo-splash-screen';
+import * as Font from 'expo-font';
 interface GAme{
 Amount:number,
 id:string,
@@ -55,6 +58,11 @@ name:string,
 }
 
 const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
+// SplashScreen.preventAutoHideAsync();
+// SplashScreen.setOptions({
+//   duration: 1000,
+//   fade: true,
+// });
 
 const TransactionLoader = ({
   loading,
@@ -102,12 +110,7 @@ const TransactionLoader = ({
             {error.message || "An error occurred"}
           </Text>
           <View style={styles.buttonContainer}>
-            <Text onPress={onRetry} style={styles.retryButton}>
-              Retry
-            </Text>
-            <Text onPress={onClose} style={styles.closeButton}>
-              Close
-            </Text>
+            
           </View>
         </View>
       )}
@@ -115,9 +118,9 @@ const TransactionLoader = ({
         <View style={styles.successContainer}>
           <Text style={styles.successText}>Transaction Successful!</Text>
           <Text style={styles.successMessage}>Amount: {amount} SOL</Text>
-          <Text onPress={onClose} style={styles.closeButton}>
+          {/* <Text onPress={onClose} style={styles.closeButton}>
             Close
-          </Text>
+          </Text> */}
         </View>
       )}
     </View>
@@ -127,7 +130,7 @@ const TransactionLoader = ({
 const App = () => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [selectedGame, setSelectedGame] = useState<GAme>();
-
+  // const [appIsReady, setAppIsReady] = useState(false);
   const connection = new Connection("https://api.devnet.solana.com");
   const snapPoints = useMemo(() => ["50%", "75%"], []);
 
@@ -136,6 +139,38 @@ const App = () => {
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
+  
+  // useEffect(() => {
+  //   async function prepare() {
+  //     try {
+  //       // Pre-load fonts, make any API calls you need to do here
+  //       await Font.loadAsync(Entypo.font);
+  //       // Artificially delay for two seconds to simulate a slow loading
+  //       // experience. Remove this if you copy and paste the code!
+  //       await new Promise(resolve => setTimeout(resolve, 2000));
+  //     } catch (e) {
+  //       console.warn(e);
+  //     } finally {
+  //       // Tell the application to render
+  //       setAppIsReady(true);
+  //     }
+  //   }
+  //   prepare();
+  // }, []);
+  // const onLayoutRootView = useCallback(() => {
+  //   if (appIsReady) {
+  //     // This tells the splash screen to hide immediately! If we call this after
+  //     // `setAppIsReady`, then we may see a blank screen while the app is
+  //     // loading its initial state and rendering its first pixels. So instead,
+  //     // we hide the splash screen once we know the root view has already
+  //     // performed layout.
+  //     SplashScreen.hide();
+  //   }
+  // }, [appIsReady]);
+
+  // if (!appIsReady) {
+  //   return null;
+  // }
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -345,7 +380,7 @@ const StepsCount = () => {
         midnightToday.setHours(0, 0, 0, 0);
         const startTime = midnightToday.toISOString();
         const endTime = now.toISOString();
-        const isInitialized = await initialize();
+         await initialize();
         const { records } = await readRecords("Steps", {
           timeRangeFilter: {
             operator: "between",
@@ -353,6 +388,29 @@ const StepsCount = () => {
             endTime: endTime,
           },
         });
+        
+          const [sleepData]=await Promise.all([ readRecords("SleepSession",{
+            timeRangeFilter:{
+              operator:"between",
+              startTime:new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+              endTime:now.toISOString()
+            }
+          })])
+           console.log("sleeee",sleepData.records.map((stage)=>stage.stages));
+          let  totalSleepTime=0;
+        sleepData.records.map((cle)=>cle.stages?.map((entry)=>
+          {
+            const startTime = new Date(entry.startTime).getTime();
+            const endTime = new Date(entry.endTime).getTime();
+            totalSleepTime += endTime - startTime;
+          }
+          ))
+          console.log("totalsleep",totalSleepTime);
+          const totalSeconds = Math.floor(totalSleepTime / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          console.log(hours);
+          console.log(minutes);
         let count = 0;
         records.forEach((record) => {
           if (
@@ -463,7 +521,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
          const userid=await AsyncStorage.getItem("userid");
          console.log("userdid");
          const response =await axios.get(`${BACKEND_URL}/history/prev/${userid}`)
-         console.log(response.data);
+        //  console.log(response.data);
          setjoined(response.data.Tournament)    
       } catch (error) {
            console.log(error);
@@ -472,9 +530,9 @@ const OfficialGames = ({ handleJoinClick }: any) => {
     const fetchdata = async () => {
       try {
         const response = await axios.get(`${BACKEND_URL}/challenge/public`);
-        console.log(response.data);
+        // console.log(response.data);
         setform(response.data.allchalange);
-        console.log("response", response.data.allchalange);
+        // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
       }
@@ -687,7 +745,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             {/* </Link> */}
             {/* </Pressable> */}
             </View>
-          ))}
+          ))} 
         </ScrollView>
       </View>
     </BottomSheetModalProvider>
@@ -716,9 +774,9 @@ const CommunityGames = ({ handleJoinClick }: any) => {
     const fetchuserdata=async()=>{
       try {
          const userid=await AsyncStorage.getItem("userid");
-         console.log("userdid");
+        //  console.log("userdid");
          const response =await axios.get(`${BACKEND_URL}/history/prev/${userid}`)
-         console.log(response.data);
+        //  console.log(response.data);
          setjoined(response.data.Tournament)    
       } catch (error) {
            console.log(error);
@@ -732,9 +790,9 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         const response = await axios.get(
           `${BACKEND_URL}/challenge/private/${userid}`
         );
-        console.log(response.data);
+        // console.log(response.data);
         setform(response.data.allchalange);
-        console.log("response", response.data.allchalange);
+        // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
       }
@@ -790,15 +848,13 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         ]}
       >
         {form.map((game) => (
-           <View>
-
-              
+           <View>   
           <View key={game.name} style={styles.gameCard}>
           <Pressable 
       onPress={() => router.push(`/status/${game.id}`)}
       style={({ pressed }) => [
         { opacity: pressed ? 0.8 : 1 },
-        { flex: 1 } // Makes it fill the parent
+        { flex: 1 } 
       ]}
     >
             <View
