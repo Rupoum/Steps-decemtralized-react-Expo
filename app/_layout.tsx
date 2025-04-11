@@ -25,12 +25,20 @@ export default function RootLayout() {
       />
       <Stack.Screen name="(nonav)/newGame" options={{ title: "Create Game" }} />
       <Stack.Screen
+        name="(nonav)/newSleepGame.tsx"
+        options={{ title: "Create Game" }}
+      />
+      <Stack.Screen
         name="(nonav)/historyGames"
         options={{ title: "History" }}
       />
       <Stack.Screen
         name="(nonav)/notification"
         options={{ title: "Notification" }}
+      />
+      <Stack.Screen
+        name="(nonav)/selectGameType.tsx"
+        options={{ title: "Game Type" }}
       />
     </Stack>
   );
