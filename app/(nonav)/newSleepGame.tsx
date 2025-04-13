@@ -1,4 +1,4 @@
-import CreateSleepSccreen from "@/components/screens/CreateSleepSccreen";
+import CreateSleepSccreen from "@/components/screens/Createsleep";
 
 import React from "react";
 

@@ -32,7 +32,7 @@ const CreateSleepSccreen = () => {
   const [form, setform] = useState({
     name: "",
     memberqty: 0,
-    Dailystep: 0,
+    Hours:"",
     Amount: 0,
     Digital_Currency: "sol",
     days: 0,
@@ -42,7 +42,7 @@ const CreateSleepSccreen = () => {
   const [privateform, setprivateform] = useState({
     name: "",
     memberqty: 0,
-    Dailystep: 0,
+    Hours:"",
     Amount: 0,
     Digital_Currency: "sol",
     days: 0,
@@ -53,9 +53,10 @@ const CreateSleepSccreen = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
-  const [date, setDate] = useState(new Date(1598051730000));
-  const [mode, setMode] = useState("date");
-  const [show, setShow] = useState(false);
+  const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
+  const [endDateMode, setEndDateMode] = useState<"date" | "time">("date");
+  const [showStartDate, setShowStartDate] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState<"public" | "community">(
@@ -100,45 +101,54 @@ const CreateSleepSccreen = () => {
       }
     });
   };
-
+  
   useEffect(() => {
     setform((prev) => ({ ...prev, request: selectedFriends }));
   }, [selectedFriends]);
 
-  const showMode = (currentMode: any) => {
-    setShow(true);
-    setMode(currentMode);
-  };
-
-  const showDatepicker = () => {
-    showMode("date");
-  };
-
   const handleStartDateChange = (event: any, selectedDate: any) => {
-    const currentDate = selectedDate || startDate;
-    setShow(false);
-    setStartDate(currentDate);
-    setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
+    if (selectedDate) {
+      const currentDate = selectedDate;
+      setShowStartDate(false);
+      setStartDate(currentDate);
+      setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
+    } else {
+      setShowStartDate(false);
+    }
   };
 
   const handleEndDateChange = (event: any, selectedDate: any) => {
-    const currentDate = selectedDate || endDate;
-    setShow(false);
-    setEndDate(currentDate);
-    setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
+    if (selectedDate) {
+      const currentDate = selectedDate;
+      setShowEndDate(false);
+      setEndDate(currentDate);
+      setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
+    } else {
+      setShowEndDate(false);
+    }
   };
-
+  const showStartDatePicker = () => {
+    setStartDateMode("date");
+    setShowStartDate(true);
+  };
+  
+  const showEndDatePicker = () => {
+    setEndDateMode("date");
+    setShowEndDate(true);
+  };
   const handleCreategame = async () => {
     setLoading(true);
     seterror(null);
     try {
       console.log("chek1");
+      console.log("forma",form);
       const response = await axios.post(`${BACKEND_URL}/create/challenge`, {
         name: form.name,
         memberqty: form.memberqty,
-        Dailystep: form.Dailystep,
+        types:"Sleep",  
         Amount: form.Amount,
         Digital_Currency: "sol",
+        Hours:"",
         days: form.days,
         startdate: form.startdate,
         enddate: form.enddate,
@@ -152,7 +162,6 @@ const CreateSleepSccreen = () => {
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err.r);
-
         console.log("heee");
         try {
           const axiosError = err as {
@@ -183,10 +192,11 @@ const CreateSleepSccreen = () => {
       const response = await axios.post(`${BACKEND_URL}/challenge/private`, {
         name: privateform.name,
         memberqty: privateform.memberqty,
-        Dailystep: privateform.Dailystep,
+        Hours: privateform.Hours,
         Amount: privateform.Amount,
         Digital_Currency: "sol",
         days: privateform.days,
+         types:"Sleep",
         startdate: privateform.startdate,
         enddate: privateform.enddate,
         userid: await AsyncStorage.getItem("userid"),
@@ -272,11 +282,9 @@ const CreateSleepSccreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-
             <View style={styles.tabIndicatorContainer}>
               <Animated.View style={[styles.tabIndicator, animatedBarStyle]} />
             </View>
-
             <ScrollView contentContainerStyle={styles.scrollContainer}>
               <View style={styles.contentContainer}>
                 {selectedTab === "public" ? (
@@ -288,18 +296,21 @@ const CreateSleepSccreen = () => {
                     </View>
 
                     <GameForm
-                      form={form}
-                      setform={setform}
-                      loading={loading}
-                      error={error}
-                      startDate={startDate}
-                      endDate={endDate}
-                      show={show}
-                      mode={mode}
-                      showMode={showMode}
-                      handleStartDateChange={handleStartDateChange}
-                      handleEndDateChange={handleEndDateChange}
-                      handleCreategame={handleCreategame}
+                       form={form}
+                       setform={setform}
+                       loading={loading}
+                       error={error}
+                       startDate={startDate}
+                       endDate={endDate}
+                       showStartDate={showStartDate}
+                       showEndDate={showEndDate}
+                       startDateMode={startDateMode}
+                       endDateMode={endDateMode}
+                       showStartDatePicker={showStartDatePicker}
+                       showEndDatePicker={showEndDatePicker}
+                       handleStartDateChange={handleStartDateChange}
+                       handleEndDateChange={handleEndDateChange}
+                       handleCreategame={handleCreategame}
                     />
                   </View>
                 ) : (
@@ -310,18 +321,21 @@ const CreateSleepSccreen = () => {
                       </Text>
                     </View>
                     <GameForm
-                      form={privateform}
-                      setform={setprivateform}
-                      loading={loading}
-                      error={error}
-                      startDate={startDate}
-                      endDate={endDate}
-                      show={show}
-                      mode={mode}
-                      showMode={showMode}
-                      handleStartDateChange={handleStartDateChange}
-                      handleEndDateChange={handleEndDateChange}
-                      handleCreategame={handlePrivateCreategame}
+                     form={form}
+                     setform={setform}
+                     loading={loading}
+                     error={error}
+                     startDate={startDate}
+                     endDate={endDate}
+                     showStartDate={showStartDate}
+                     showEndDate={showEndDate}
+                     startDateMode={startDateMode}
+                     endDateMode={endDateMode}
+                     showStartDatePicker={showStartDatePicker}
+                     showEndDatePicker={showEndDatePicker}
+                     handleStartDateChange={handleStartDateChange}
+                     handleEndDateChange={handleEndDateChange}
+                     handleCreategame={handleCreategame}
                     />
                     <TouchableOpacity
                       onPress={handlePresentModalPress}
@@ -400,16 +414,19 @@ const CreateSleepSccreen = () => {
     </KeyboardAvoidingView>
   );
 };
-const GameForm = ({
+const GameForm= ({
   form,
   setform,
   loading,
   error,
   startDate,
   endDate,
-  show,
-  mode,
-  showMode,
+  showStartDate,
+  showEndDate,
+  startDateMode,
+  endDateMode,
+  showStartDatePicker,
+  showEndDatePicker,
   handleStartDateChange,
   handleEndDateChange,
   handleCreategame,
@@ -443,14 +460,13 @@ const GameForm = ({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="DailySteps"
+          placeholder="Hours"
           placeholderTextColor="#999"
-          onChangeText={(e) => setform({ ...form, Dailystep: parseInt(e) })}
-          keyboardType="number-pad"
+          onChangeText={(e) => setform({ ...form, Hours: parseInt(e) })}
+          keyboardType="name-phone-pad"
           autoCapitalize="none"
         />
       </View>
-
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -476,16 +492,16 @@ const GameForm = ({
         />
       </View>
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={() => showMode("date")}>
+        <TouchableOpacity onPress={showStartDatePicker}>
           <Text style={styles.dateButtonText}>
             Start Date: {format(startDate, "yyyy-MM-dd")}
           </Text>
         </TouchableOpacity>
-        {show && (
+        {showStartDate && (
           <DateTimePicker
             testID="dateTimePicker"
             value={startDate}
-            mode={mode}
+            mode={startDateMode}
             is24Hour={true}
             display="default"
             onChange={handleStartDateChange}
@@ -493,16 +509,16 @@ const GameForm = ({
         )}
       </View>
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={() => showMode("date")}>
+        <TouchableOpacity onPress={showEndDatePicker}>
           <Text style={styles.dateButtonText}>
             End Date: {format(endDate, "yyyy-MM-dd")}
           </Text>
         </TouchableOpacity>
-        {show && (
+        {showEndDate && (
           <DateTimePicker
             testID="dateTimePicker"
             value={endDate}
-            mode={mode}
+            mode={endDateMode}
             is24Hour={true}
             display="default"
             onChange={handleEndDateChange}
