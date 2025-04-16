@@ -142,23 +142,30 @@ const CreateSleepSccreen = () => {
     try {
       console.log("chek1");
       console.log("forma",form);
-      const response = await axios.post(`${BACKEND_URL}/create/challenge`, {
+      const userid=await AsyncStorage.getItem("userid")
+      console.log(userid);
+      try{
+      const response = await axios.post(`${BACKEND_URL}/create/challenge/sleep`, {
         name: form.name,
         memberqty: form.memberqty,
-        types:"Sleep",  
+        // types:"Sleep",  
         Amount: form.Amount,
         Digital_Currency: "sol",
-        Hours:"",
+        Hours:form.Hours.toString(),
         days: form.days,
         startdate: form.startdate,
         enddate: form.enddate,
-        userid: await AsyncStorage.getItem("userid"),
+        userid:userid ,
         // request: form.request,
       });
-
+      console.log("Signup response:", response.data);
       Alert.alert("Success", "Game Created Successfully");
       router.push("/(tabs)");
-      console.log("Signup response:", response.data);
+    }catch(e){
+      console.log(e);
+    }
+      
+     
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err.r);

@@ -516,6 +516,8 @@ const OfficialGames = ({ handleJoinClick }: any) => {
       id: "",
       status: "",
       members: [],
+      types:"",
+      Hours:""
     },
   ]);
   useEffect(() => {
@@ -605,13 +607,12 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           {form.map((game) => (
             <View>
               {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
-
               <View key={game.id} style={styles.gameCard}>
                 <Pressable
                   onPress={() => router.push(`/status/${game.id}`)}
                   style={({ pressed }) => [
                     { opacity: pressed ? 0.8 : 1 },
-                    { flex: 1 }, // Makes it fill the parent
+                    { flex: 1 }, 
                   ]}
                 >
                   <View
@@ -718,6 +719,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             Days
                           </Text>
                         </View>
+                        
                         <View>
                           <Text style={{ color: "white", fontSize: 13 }}>
                             {game.days}
@@ -730,6 +732,8 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                           alignItems: "center",
                         }}
                       >
+                        {game.types=="Steps"?
+                        <View>
                         <View>
                           <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
                             Daily Steps
@@ -740,7 +744,21 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             {game.Dailystep}
                           </Text>
                         </View>
-                      </View>
+                      </View>:
+                      <View>
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Daily Hours
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.Hours}
+                          </Text>
+                        </View>
+                        </View>
+                        }
+                        </View>
                       <View
                         style={{
                           justifyContent: "center",

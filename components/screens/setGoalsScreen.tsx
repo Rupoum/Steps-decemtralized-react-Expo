@@ -28,7 +28,7 @@ const SetGoalsScreen = () => {
             minimumValue={5}
             maximumValue={15}
             step={1}
-            value={sleepGoal}
+            // value={sleepGoal}
             onValueChange={(value) => setSleepGoal(value)}
             minimumTrackTintColor="#7FD4F5"
             maximumTrackTintColor="#8A9AAB"

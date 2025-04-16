@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  "https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1";
+  "http://10.5.121.76:3000/api/v1";
