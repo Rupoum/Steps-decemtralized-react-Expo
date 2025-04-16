@@ -39,18 +39,7 @@ const CreateSleepSccreen = () => {
     startdate: format(new Date(), "yyyy-MM-dd").toString(),
     enddate: format(new Date(), "yyyy-MM-dd").toString(),
   });
-  const [privateform, setprivateform] = useState({
-    name: "",
-    memberqty: 0,
-    Hours:"",
-    Amount: 0,
-    Digital_Currency: "sol",
-    days: 0,
-    type: "private",
-    startdate: format(new Date(), "yyyy-MM-dd").toString(),
-    enddate: format(new Date(), "yyyy-MM-dd").toString(),
-    request: [],
-  });
+  
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
   const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
@@ -193,19 +182,20 @@ const CreateSleepSccreen = () => {
     }
   };
   const handlePrivateCreategame = async () => {
+    console.log("chee");
     setLoading(true);
     seterror(null);
     try {
-      const response = await axios.post(`${BACKEND_URL}/challenge/private`, {
-        name: privateform.name,
-        memberqty: privateform.memberqty,
-        Hours: privateform.Hours,
-        Amount: privateform.Amount,
+      const response = await axios.post(`${BACKEND_URL}/challenge/sleep/private`, {
+        name: form.name,
+        memberqty: form.memberqty,
+        Hours: form.Hours.toString(),
+        Amount: form.Amount,
         Digital_Currency: "sol",
-        days: privateform.days,
+        days: form.days,
          types:"Sleep",
-        startdate: privateform.startdate,
-        enddate: privateform.enddate,
+        startdate: form.startdate,
+        enddate: form.enddate,
         userid: await AsyncStorage.getItem("userid"),
         request: selectedFriends,
       });
@@ -342,7 +332,7 @@ const CreateSleepSccreen = () => {
                      showEndDatePicker={showEndDatePicker}
                      handleStartDateChange={handleStartDateChange}
                      handleEndDateChange={handleEndDateChange}
-                     handleCreategame={handleCreategame}
+                     handleCreategame={handlePrivateCreategame}
                     />
                     <TouchableOpacity
                       onPress={handlePresentModalPress}
