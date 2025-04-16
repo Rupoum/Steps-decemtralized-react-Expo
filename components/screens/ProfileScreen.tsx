@@ -77,7 +77,7 @@ const ProfileScreen = () => {
       },
     ],
   };
-   const[username,setusername]=useState("");
+  const [username, setusername] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Friend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,10 +88,10 @@ const ProfileScreen = () => {
   useEffect(() => {
     Fetchfriend = async () => {
       try {
-        const username=await AsyncStorage.getItem("username");
-        if(username){
-        setusername(username);
-      }
+        const username = await AsyncStorage.getItem("username");
+        if (username) {
+          setusername(username);
+        }
         const userid = await AsyncStorage.getItem("userid");
         console.log(userid);
         const response = await axios.get(
@@ -134,7 +134,7 @@ const ProfileScreen = () => {
         userid: userid,
       });
       ToastAndroid.show("Friend request send ", ToastAndroid.LONG);
-      setRefreshTrigger(prev => !prev); 
+      setRefreshTrigger((prev) => !prev);
       console.log(response.data);
       await axios.post(`${BACKEND_URL}/add/friend`, {
         username: username,
@@ -318,9 +318,9 @@ const ProfileScreen = () => {
               </View>
             )}
           </BottomSheetModal>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/(nonav)/setGoals")}>
             <View style={styles.options}>
-              <Text style={styles.optionText}>Socials</Text>
+              <Text style={styles.optionText}>Goals</Text>
               <Ionicons
                 name="chevron-forward-outline"
                 size={24}
