@@ -41,6 +41,13 @@ export default function RootLayout() {
         options={{ title: "Game Type" }}
       />
       <Stack.Screen name="(nonav)/setGoals" options={{ title: "Set Goals" }} />
+      <Stack.Screen
+        name="(auth)/login
+      "
+        options={{
+          title: "Login",
+        }}
+      />
     </Stack>
   );
 }
