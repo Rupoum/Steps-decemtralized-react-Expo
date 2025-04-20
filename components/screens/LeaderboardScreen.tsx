@@ -5,7 +5,14 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { StyleSheet, View, Text, Image, Switch, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  Switch,
+  ActivityIndicator,
+} from "react-native";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
@@ -29,10 +36,34 @@ export default function LeaderboardScreen() {
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["30%", "53%", "75%"], []);
-   const [loading,setloading]=useState(false);
+  const [loading, setloading] = useState(false);
+  const [showSleep, setShowSleep] = useState(false);
+  const [sleepData, setSleepData] = useState<FORM[]>([]);
+
   const handleSheetChange = useCallback((index: any) => {
     console.log("handleSheetChange", index);
   }, []);
+
+  const fetchSleepData = async () => {
+    try {
+      setloading(true);
+      const response = await axios.get(`${BACKEND_URL}/total/sleep`);
+      const formattedData = response.data.data
+        .map((dat: any) => ({
+          id: dat.username,
+          username: dat.username,
+          steps: dat.steps,
+          avatar:
+            "https://c8.alamy.com/comp/2PWERD5/student-avatar-illustration-simple-cartoon-user-portrait-user-profile-icon-youth-avatar-vector-illustration-2PWERD5.jpg",
+        }))
+        .sort((a: any, b: any) => b.steps - a.steps);
+      setSleepData(formattedData);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setloading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchstep = async () => {
@@ -52,12 +83,22 @@ export default function LeaderboardScreen() {
         setform(formateddata);
       } catch (e) {
         console.log(e);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
     fetchstep();
   }, []);
+
+  useEffect(() => {
+    if (showSleep) {
+      fetchSleepData();
+    }
+  }, [showSleep]);
+
+  const toggleData = () => {
+    setShowSleep((prev) => !prev);
+  };
 
   const renderItem = ({ item, index }: { item: FORM; index: number }) => {
     return (
@@ -78,7 +119,6 @@ export default function LeaderboardScreen() {
 
   return (
     <View style={styles.container}>
-
       <LinearGradient
         colors={["#1a0033", "#4b0082", "#290d44"]}
         style={styles.gradient}
@@ -136,29 +176,35 @@ export default function LeaderboardScreen() {
                   marginBottom: 10,
                 }}
               >
-                
+                <Switch
+                  trackColor={{ false: "#767577", true: "#81b0ff" }}
+                  thumbColor={showSleep ? "#f5dd4b" : "#f4f3f4"}
+                  onValueChange={toggleData}
+                  value={showSleep}
+                />
               </View>
             </View>
           </View>
-            {loading ?(
-               <ActivityIndicator size="large" color="#00ff00" />
-            ):(
-              <View>
-                <View style={styles.headings}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#00ff00" />
+          ) : (
+            <View>
+              <View style={styles.headings}>
                 <Text style={styles.headingFont}>Rank</Text>
                 <Text style={styles.headingFont}>Avatar</Text>
                 <Text style={styles.headingFont}>User</Text>
-                <Text style={styles.headingFont}>Fitness XP</Text>
+                <Text style={styles.headingFont}>
+                  {showSleep ? "Sleep Hours" : "Fitness XP"}
+                </Text>
               </View>
- <BottomSheetFlatList
- data={form}
- keyExtractor={(item) => item.id}
- renderItem={renderItem}
- contentContainerStyle={styles.contentContainer}
-/></View>
-            )}
-          {/* </View> */}
-          
+              <BottomSheetFlatList
+                data={showSleep ? sleepData : form}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                contentContainerStyle={styles.contentContainer}
+              />
+            </View>
+          )}
         </View>
       </BottomSheet>
     </View>

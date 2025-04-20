@@ -32,14 +32,14 @@ const CreateSleepSccreen = () => {
   const [form, setform] = useState({
     name: "",
     memberqty: 0,
-    Hours:"",
+    Hours: "",
     Amount: 0,
     Digital_Currency: "sol",
     days: 0,
     startdate: format(new Date(), "yyyy-MM-dd").toString(),
     enddate: format(new Date(), "yyyy-MM-dd").toString(),
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
   const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
@@ -52,12 +52,9 @@ const CreateSleepSccreen = () => {
     "public"
   );
   const animatedValue = useRef(new Animated.Value(0)).current;
-
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [friends, setFriends] = useState([]);
-
   const [selectedFriends, setSelectedFriends] = useState([]);
-
   useEffect(() => {
     seterror(null);
     if (selectedTab === "community") {
@@ -90,7 +87,7 @@ const CreateSleepSccreen = () => {
       }
     });
   };
-  
+
   useEffect(() => {
     setform((prev) => ({ ...prev, request: selectedFriends }));
   }, [selectedFriends]);
@@ -120,7 +117,7 @@ const CreateSleepSccreen = () => {
     setStartDateMode("date");
     setShowStartDate(true);
   };
-  
+
   const showEndDatePicker = () => {
     setEndDateMode("date");
     setShowEndDate(true);
@@ -130,31 +127,32 @@ const CreateSleepSccreen = () => {
     seterror(null);
     try {
       console.log("chek1");
-      console.log("forma",form);
-      const userid=await AsyncStorage.getItem("userid")
+      console.log("forma", form);
+      const userid = await AsyncStorage.getItem("userid");
       console.log(userid);
-      try{
-      const response = await axios.post(`${BACKEND_URL}/create/challenge/sleep`, {
-        name: form.name,
-        memberqty: form.memberqty,
-        // types:"Sleep",  
-        Amount: form.Amount,
-        Digital_Currency: "sol",
-        Hours:form.Hours.toString(),
-        days: form.days,
-        startdate: form.startdate,
-        enddate: form.enddate,
-        userid:userid ,
-        // request: form.request,
-      });
-      console.log("Signup response:", response.data);
-      Alert.alert("Success", "Game Created Successfully");
-      router.push("/(tabs)");
-    }catch(e){
-      console.log(e);
-    }
-      
-     
+      try {
+        const response = await axios.post(
+          `${BACKEND_URL}/create/challenge/sleep`,
+          {
+            name: form.name,
+            memberqty: form.memberqty,
+            // types:"Sleep",
+            Amount: form.Amount,
+            Digital_Currency: "sol",
+            Hours: form.Hours.toString(),
+            days: form.days,
+            startdate: form.startdate,
+            enddate: form.enddate,
+            userid: userid,
+            // request: form.request,
+          }
+        );
+        console.log("Signup response:", response.data);
+        Alert.alert("Success", "Game Created Successfully");
+        router.push("/(tabs)");
+      } catch (e) {
+        console.log(e);
+      }
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err.r);
@@ -186,19 +184,22 @@ const CreateSleepSccreen = () => {
     setLoading(true);
     seterror(null);
     try {
-      const response = await axios.post(`${BACKEND_URL}/challenge/sleep/private`, {
-        name: form.name,
-        memberqty: form.memberqty,
-        Hours: form.Hours.toString(),
-        Amount: form.Amount,
-        Digital_Currency: "sol",
-        days: form.days,
-         types:"Sleep",
-        startdate: form.startdate,
-        enddate: form.enddate,
-        userid: await AsyncStorage.getItem("userid"),
-        request: selectedFriends,
-      });
+      const response = await axios.post(
+        `${BACKEND_URL}/challenge/sleep/private`,
+        {
+          name: form.name,
+          memberqty: form.memberqty,
+          Hours: form.Hours.toString(),
+          Amount: form.Amount,
+          Digital_Currency: "sol",
+          days: form.days,
+          types: "Sleep",
+          startdate: form.startdate,
+          enddate: form.enddate,
+          userid: await AsyncStorage.getItem("userid"),
+          request: selectedFriends,
+        }
+      );
       Alert.alert("Success", "Game Created Successfully");
       router.push("/(tabs)");
       console.log("Signup response:", response.data);
@@ -293,21 +294,21 @@ const CreateSleepSccreen = () => {
                     </View>
 
                     <GameForm
-                       form={form}
-                       setform={setform}
-                       loading={loading}
-                       error={error}
-                       startDate={startDate}
-                       endDate={endDate}
-                       showStartDate={showStartDate}
-                       showEndDate={showEndDate}
-                       startDateMode={startDateMode}
-                       endDateMode={endDateMode}
-                       showStartDatePicker={showStartDatePicker}
-                       showEndDatePicker={showEndDatePicker}
-                       handleStartDateChange={handleStartDateChange}
-                       handleEndDateChange={handleEndDateChange}
-                       handleCreategame={handleCreategame}
+                      form={form}
+                      setform={setform}
+                      loading={loading}
+                      error={error}
+                      startDate={startDate}
+                      endDate={endDate}
+                      showStartDate={showStartDate}
+                      showEndDate={showEndDate}
+                      startDateMode={startDateMode}
+                      endDateMode={endDateMode}
+                      showStartDatePicker={showStartDatePicker}
+                      showEndDatePicker={showEndDatePicker}
+                      handleStartDateChange={handleStartDateChange}
+                      handleEndDateChange={handleEndDateChange}
+                      handleCreategame={handleCreategame}
                     />
                   </View>
                 ) : (
@@ -318,21 +319,21 @@ const CreateSleepSccreen = () => {
                       </Text>
                     </View>
                     <GameForm
-                     form={form}
-                     setform={setform}
-                     loading={loading}
-                     error={error}
-                     startDate={startDate}
-                     endDate={endDate}
-                     showStartDate={showStartDate}
-                     showEndDate={showEndDate}
-                     startDateMode={startDateMode}
-                     endDateMode={endDateMode}
-                     showStartDatePicker={showStartDatePicker}
-                     showEndDatePicker={showEndDatePicker}
-                     handleStartDateChange={handleStartDateChange}
-                     handleEndDateChange={handleEndDateChange}
-                     handleCreategame={handlePrivateCreategame}
+                      form={form}
+                      setform={setform}
+                      loading={loading}
+                      error={error}
+                      startDate={startDate}
+                      endDate={endDate}
+                      showStartDate={showStartDate}
+                      showEndDate={showEndDate}
+                      startDateMode={startDateMode}
+                      endDateMode={endDateMode}
+                      showStartDatePicker={showStartDatePicker}
+                      showEndDatePicker={showEndDatePicker}
+                      handleStartDateChange={handleStartDateChange}
+                      handleEndDateChange={handleEndDateChange}
+                      handleCreategame={handlePrivateCreategame}
                     />
                     <TouchableOpacity
                       onPress={handlePresentModalPress}
@@ -411,7 +412,7 @@ const CreateSleepSccreen = () => {
     </KeyboardAvoidingView>
   );
 };
-const GameForm= ({
+const GameForm = ({
   form,
   setform,
   loading,
