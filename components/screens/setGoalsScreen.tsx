@@ -140,11 +140,11 @@ const SetGoalsScreen = () => {
   const [success, setSuccess] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [form, setform] = useState({
-    Amount: 0,
-    Hours: "",
     startdate: format(new Date(), "yyyy-MM-dd").toString(),
     enddate: format(new Date(), "yyyy-MM-dd").toString(),
   });
+  const connection = new Connection("https://api.devnet.solana.com");
+  const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
   const handleStartDateChange = (event: any, selectedDate: any) => {
     if (selectedDate) {
       const currentDate = selectedDate;
@@ -169,53 +169,56 @@ const SetGoalsScreen = () => {
     setStartDateMode("date");
     setShowStartDate(true);
   };
+  const handleRetry = () => {
+    setError(null);
+    Onsend();
+  };
+
+  const handleClose = () => {
+    setShowLoader(false);
+    setError(null);
+    setSuccess(false);
+  };
+
   const showEndDatePicker = () => {
     setEndDateMode("date");
     setShowEndDate(true);
   };
-  // const userid = await AsyncStorage.getItem("userid");
-  // const createsleepchallenge = async () => {
-  //   const sleep = await axios.post(`${BACKEND_URL}/create/stake`);
-  // };
+
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // callbacks
   const handlePresentModalPress = useCallback(() => {
+    setShowLoader(false);
     bottomSheetModalRef.current?.present();
   }, []);
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+
   const snapPoints = useMemo(() => ["50%", "75%"], []);
   const Onsend = async () => {
     setShowLoader(true);
     setLoading(true);
     setError(null);
     setSuccess(false);
-
     try {
       const publickey = await AsyncStorage.getItem("PublicKey");
       if (!publickey) {
         throw new Error("No public key found");
       }
-
+      console.log("error1");
       const balance = await connection.getBalance(new PublicKey(publickey));
-      if (!selectedGame) {
-        throw new Error("No game selected");
-      }
 
-      if (balance < selectedGame.Amount * LAMPORTS_PER_SOL) {
+      if (balance < Number(stakeAmount) * LAMPORTS_PER_SOL) {
         throw new Error("Insufficient balance");
       }
-
+      console.log("error2");
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: new PublicKey(publickey),
           toPubkey: new PublicKey(escrowpublickey),
-          lamports: LAMPORTS_PER_SOL * selectedGame.Amount,
+          lamports: LAMPORTS_PER_SOL * Number(stakeAmount),
         })
       );
-
+      console.log("error3");
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = new PublicKey(publickey);
@@ -224,11 +227,27 @@ const SetGoalsScreen = () => {
         requireAllSignatures: false,
         verifySignatures: false,
       });
-      // console.log(selectedGame.id);
-      const response = await axios.post(
-        `${BACKEND_URL}/challenge/join/public/${selectedGame.id}`,
-        { tx: serializedTransaction }
+
+      const userid = await AsyncStorage.getItem("userid");
+
+      const daysDifference = Math.ceil(
+        (new Date(form.enddate).getTime() -
+          new Date(form.startdate).getTime()) /
+          (1000 * 60 * 60 * 24)
       );
+      console.log(daysDifference);
+      console.log(form);
+      console.log(sleepGoal);
+      console.log(serializedTransaction);
+      const response = await axios.post(`${BACKEND_URL}/create/stake`, {
+        tx: serializedTransaction,
+        userid: userid,
+        amount: Number(stakeAmount),
+        Hours: sleepGoal.toString(),
+        Startdate: form.startdate.toString(),
+        enddate: form.enddate.toString(),
+        days: daysDifference,
+      });
       console.log(response.data);
       if (response.status === 200) {
         setSuccess(true);
@@ -236,6 +255,7 @@ const SetGoalsScreen = () => {
       }
     } catch (e: any) {
       setError(e);
+      console.log(e);
       ToastAndroid.show(e.message || "Transaction Failed!", ToastAndroid.SHORT);
     } finally {
       setLoading(false);
@@ -367,7 +387,7 @@ const SetGoalsScreen = () => {
                       underlayStyle={{
                         backgroundColor: "#1a0033",
                       }}
-                      // onSlideEnd={Onsend}
+                      onSlideEnd={Onsend}
                     />
                   </View>
                   {showLoader && (
@@ -375,7 +395,7 @@ const SetGoalsScreen = () => {
                       loading={loading}
                       error={error}
                       success={success}
-                      amount={selectedGame?.Amount}
+                      amount={stakeAmount}
                       onRetry={handleRetry}
                       onClose={handleClose}
                     />
@@ -485,6 +505,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#7E3887",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
+  },
+  successContainer: {
+    alignItems: "center",
+  },
+  successText: {
+    color: "green",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  successMessage: {
+    color: "white",
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: "center",
   },
 });
 
