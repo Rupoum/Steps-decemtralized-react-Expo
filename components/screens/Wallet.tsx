@@ -204,16 +204,18 @@ const Wallet = () => {
         new PublicKey(publicKey),
         1 * LAMPORTS_PER_SOL
       );
-          
+
       ToastAndroid.show("1 SOL Airdropped", ToastAndroid.SHORT);
-      router.push("/(tabs)/wallet") 
-      
+      router.push("/(tabs)/wallet");
     } catch (e: any) {
       // seterro(e);
       console.log(e);
       seterror(e);
-      ToastAndroid.show("Failed To Airdrop Try after Sometime", ToastAndroid.SHORT);
-      router.push("/(tabs)/wallet") 
+      ToastAndroid.show(
+        "Failed To Airdrop Try after Sometime",
+        ToastAndroid.SHORT
+      );
+      router.push("/(tabs)/wallet");
     }
   };
   useEffect(() => {
@@ -228,7 +230,7 @@ const Wallet = () => {
         }
 
         const [response, balance, accountInfo] = await Promise.all([
-          axios.get("https://decentrailzed-ttrack-3yr8.vercel.app/test"),
+          axios.get("http://10.5.120.75:3000/test"),
           connection.getBalance(new PublicKey(publicKey)),
           connection.getSignaturesForAddress(new PublicKey(publicKey), {
             limit: 10,
@@ -242,7 +244,7 @@ const Wallet = () => {
             );
             // console.log(account);
             if (!signature) return null;
-            console.log("test",signature.transaction.message);
+            console.log("test", signature.transaction.message);
 
             let amount = 0;
             let type = "";
@@ -384,13 +386,11 @@ const Wallet = () => {
               </TouchableOpacity> */}
             </View>
             <View style={styles.balanceContainer}>
-              
-                {/* <ActivityIndicator size="large" color="#00ff00" /> */}
-               
-                <Text style={styles.balanceText}>
-                  ${(balance / LAMPORTS_PER_SOL).toFixed(2)}
-                </Text>
-            
+              {/* <ActivityIndicator size="large" color="#00ff00" /> */}
+
+              <Text style={styles.balanceText}>
+                ${(balance / LAMPORTS_PER_SOL).toFixed(2)}
+              </Text>
             </View>
             <View
               style={{

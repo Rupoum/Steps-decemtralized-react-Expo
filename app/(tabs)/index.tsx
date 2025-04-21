@@ -439,9 +439,9 @@ const StepsCount = () => {
           />
 
           <View style={styles.setpsdiv}>
-            <Text style={styles.steptext}>{step}</Text>
-            <Text style={{ color: "white", fontSize: 20 }}>/</Text>
-            <Text style={styles.texttarget}>{usertarget}</Text>
+            {/* <Text style={styles.steptext}>{step}</Text> */}
+            {/* <Text style={{ color: "white", fontSize: 20 }}>/</Text> */}
+            <Text style={styles.texttarget}>7hr 21m</Text>
             <Text
               style={{
                 marginLeft: 5,
@@ -449,9 +449,7 @@ const StepsCount = () => {
                 fontSize: 15,
                 fontWeight: "bold",
               }}
-            >
-              steps
-            </Text>
+            ></Text>
           </View>
         </View>
       </View>
