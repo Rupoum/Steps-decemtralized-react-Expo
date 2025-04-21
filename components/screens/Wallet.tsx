@@ -231,6 +231,7 @@ const Wallet = () => {
 
         const [response, balance, accountInfo] = await Promise.all([
           axios.get("http://10.5.120.75:3000/test"),
+
           connection.getBalance(new PublicKey(publicKey)),
           connection.getSignaturesForAddress(new PublicKey(publicKey), {
             limit: 10,
