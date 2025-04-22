@@ -25,16 +25,44 @@ export default function LeaderboardScreen() {
       username: "",
     },
   ]);
+  const [sleep,setsleep]=useState([
+    {
+      steps:"",
+      username:"",
+    }
+  ])
+
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["30%", "53%", "75%"], []);
    const [loading,setloading]=useState(false);
   const handleSheetChange = useCallback((index: any) => {
     console.log("handleSheetChange", index);
   }, []);
-
   useEffect(() => {
+    const fetchsleep=async()=>{
+      try {
+        setloading(true);
+        const response = await axios.get(`${BACKEND_URL}/total/sleep`);
+        console.log(response.data.data);
+        const formateddata = response.data.data
+          .map((dat: any) => ({
+            id: dat.username,
+            username: dat.username,
+            steps: dat.steps,
+            avatar:
+              "https://c8.alamy.com/comp/2PWERD5/student-avatar-illustration-simple-cartoon-user-portrait-user-profile-icon-youth-avatar-vector-illustration-2PWERD5.jpg",
+          }))
+          .sort((a: any, b: any) => b.steps - a.steps);
+        setsleep(formateddata);
+      } catch (e) {
+        console.log(e);
+      }finally{
+        setloading(false);
+      }
+    }
     const fetchstep = async () => {
       try {
         setloading(true);
@@ -57,6 +85,7 @@ export default function LeaderboardScreen() {
       }
     };
     fetchstep();
+    fetchsleep();
   }, []);
 
   const renderItem = ({ item, index }: { item: FORM; index: number }) => {
@@ -129,6 +158,16 @@ export default function LeaderboardScreen() {
               >
                 LeaderBoard
               </Text>
+              <View>
+              <Switch
+           trackColor={{false: '#767577', true: '#81b0ff'}}
+           thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+           ios_backgroundColor="#3e3e3e"
+           onValueChange={toggleSwitch}
+
+           value={isEnabled}
+        />
+              </View>
               <View
                 style={{
                   flexDirection: "row",
@@ -136,7 +175,7 @@ export default function LeaderboardScreen() {
                   marginBottom: 10,
                 }}
               >
-                
+    
               </View>
             </View>
           </View>
@@ -148,10 +187,10 @@ export default function LeaderboardScreen() {
                 <Text style={styles.headingFont}>Rank</Text>
                 <Text style={styles.headingFont}>Avatar</Text>
                 <Text style={styles.headingFont}>User</Text>
-                <Text style={styles.headingFont}>Fitness XP</Text>
+                <Text style={styles.headingFont}> {isEnabled ? "Sleep Hours" : "Steps"}</Text>
               </View>
  <BottomSheetFlatList
- data={form}
+ data={isEnabled?sleep:form}
  keyExtractor={(item) => item.id}
  renderItem={renderItem}
  contentContainerStyle={styles.contentContainer}

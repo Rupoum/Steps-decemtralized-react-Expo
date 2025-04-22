@@ -370,6 +370,7 @@ const App = () => {
 const StepsCount = () => {
   const [error, seterror] = useState("");
   const [step, setstep] = useState(0);
+  const[sleep,setsleep]=useState("");
   useEffect(() => {
     const fetchSteps = async () => {
       try {
@@ -411,11 +412,13 @@ const StepsCount = () => {
           })
         );
         console.log("totalsleep", totalSleepTime);
+
         const totalSeconds = Math.floor(totalSleepTime / 1000);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         console.log(hours);
         console.log(minutes);
+        setsleep(hours.toString()+" "+"H"+" "+minutes.toString()+"M");
         let count = 0;
         records.forEach((record) => {
           if (
@@ -471,6 +474,8 @@ const StepsCount = () => {
           />
 
           <View style={styles.setpsdiv}>
+            {/* <Text style={styles.steptext}>{sleep}</Text> */}
+          
             <Text style={styles.steptext}>{step}</Text>
             <Text style={{ color: "white", fontSize: 20 }}>/</Text>
             <Text style={styles.texttarget}>{usertarget}</Text>
@@ -485,6 +490,23 @@ const StepsCount = () => {
               steps
             </Text>
           </View>
+          <View style={{
+            flexDirection:"row",
+            gap:"10"
+          }}>
+              <Text style={{
+                color:"white",
+                fontSize: 30,
+                marginRight: 10,
+              }}>{sleep}</Text>
+              <Text style={{
+                color:"white",
+                fontSize: 30,
+                marginRight: 10,
+              }}>
+                sleep
+              </Text>
+            </View>
         </View>
       </View>
     </View>
@@ -608,8 +630,16 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             <View>
               {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
               <View key={game.id} style={styles.gameCard}>
+
+
                 <Pressable
-                  onPress={() => router.push(`/status/${game.id}`)}
+
+onPress={() => 
+  game.types === 'sleep' 
+    ? router.push(`/sleep/[id]`)
+    : router.push(`/status/${game.id}`)
+}
+
                   style={({ pressed }) => [
                     { opacity: pressed ? 0.8 : 1 },
                     { flex: 1 }, 
@@ -1147,7 +1177,7 @@ const styles = StyleSheet.create({
   },
   steptext: {
     color: "white",
-    fontSize: 50,
+    fontSize: 30,
     marginRight: 10,
   },
   texttarget: {
