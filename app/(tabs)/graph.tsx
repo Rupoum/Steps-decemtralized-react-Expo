@@ -11,7 +11,7 @@ const Stats = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* <Graph /> */}
-      <FitbitButton/>
+      {/* <FitbitButton/> */}
     </GestureHandlerRootView>
   );
 };

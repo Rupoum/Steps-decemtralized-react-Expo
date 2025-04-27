@@ -239,15 +239,14 @@ const SetGoalsScreen = () => {
       console.log(form);
       console.log(sleepGoal);
       console.log(serializedTransaction);
+      const today = new Date().toISOString().split('T')[0];
       const response = await axios.post(`${BACKEND_URL}/create/stake`, {
         tx: serializedTransaction,
         userid: userid,
         amount: Number(stakeAmount),
         Hours: sleepGoal.toString(),
-        Startdate: form.startdate.toString(),
-        enddate: form.enddate.toString(),
-        days: daysDifference,
-      });
+        Startdate:today
+      }); 
       console.log(response.data);
       if (response.status === 200) {
         setSuccess(true);
@@ -298,7 +297,7 @@ const SetGoalsScreen = () => {
                 value={stakeAmount}
                 onChangeText={setStakeAmount}
               />
-              <View style={styles.input}>
+              {/* <View style={styles.input}>
                 <TouchableOpacity onPress={showStartDatePicker}>
                   <Text style={styles.dateButtonText}>
                     Start Date: {format(startDate, "yyyy-MM-dd")}
@@ -314,8 +313,8 @@ const SetGoalsScreen = () => {
                     onChange={handleStartDateChange}
                   />
                 )}
-              </View>
-              <View style={styles.input}>
+              </View> */}
+              {/* <View style={styles.input}>
                 <TouchableOpacity onPress={showEndDatePicker}>
                   <Text style={styles.dateButtonText}>
                     End Date: {format(endDate, "yyyy-MM-dd")}
@@ -331,7 +330,7 @@ const SetGoalsScreen = () => {
                     onChange={handleEndDateChange}
                   />
                 )}
-              </View>
+              </View> */}
               <TouchableOpacity
                 style={{
                   alignSelf: "center",
