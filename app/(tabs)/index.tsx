@@ -137,38 +137,6 @@ const App = () => {
     bottomSheetModalRef.current?.present();
   }, []);
 
-  // useEffect(() => {
-  //   async function prepare() {
-  //     try {
-  //       // Pre-load fonts, make any API calls you need to do here
-  //       await Font.loadAsync(Entypo.font);
-  //       // Artificially delay for two seconds to simulate a slow loading
-  //       // experience. Remove this if you copy and paste the code!
-  //       await new Promise(resolve => setTimeout(resolve, 2000));
-  //     } catch (e) {
-  //       console.warn(e);
-  //     } finally {
-  //       // Tell the application to render
-  //       setAppIsReady(true);
-  //     }
-  //   }
-  //   prepare();
-  // }, []);
-  // const onLayoutRootView = useCallback(() => {
-  //   if (appIsReady) {
-  //     // This tells the splash screen to hide immediately! If we call this after
-  //     // `setAppIsReady`, then we may see a blank screen while the app is
-  //     // loading its initial state and rendering its first pixels. So instead,
-  //     // we hide the splash screen once we know the root view has already
-  //     // performed layout.
-  //     SplashScreen.hide();
-  //   }
-  // }, [appIsReady]);
-
-  // if (!appIsReady) {
-  //   return null;
-  // }
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -472,13 +440,11 @@ const StepsCount = () => {
               marginTop: 20,
             }}
           />
-
+  
           <View style={styles.setpsdiv}>
-            {/* <Text style={styles.steptext}>{sleep}</Text> */}
-          
-            <Text style={styles.steptext}>{step}</Text>
-            <Text style={{ color: "white", fontSize: 20 }}>/</Text>
-            <Text style={styles.texttarget}>{usertarget}</Text>
+            {/* <Text style={styles.steptext}>{step}</Text> */}
+            {/* <Text style={{ color: "white", fontSize: 20 }}>/</Text> */}
+            <Text style={styles.texttarget}>4hr 21m</Text>
             <Text
               style={{
                 marginLeft: 5,
@@ -486,27 +452,8 @@ const StepsCount = () => {
                 fontSize: 15,
                 fontWeight: "bold",
               }}
-            >
-              steps
-            </Text>
+            ></Text>
           </View>
-          <View style={{
-            flexDirection:"row",
-            gap:"10"
-          }}>
-              <Text style={{
-                color:"white",
-                fontSize: 30,
-                marginRight: 10,
-              }}>{sleep}</Text>
-              <Text style={{
-                color:"white",
-                fontSize: 30,
-                marginRight: 10,
-              }}>
-                sleep
-              </Text>
-            </View>
         </View>
       </View>
     </View>
@@ -538,8 +485,8 @@ const OfficialGames = ({ handleJoinClick }: any) => {
       id: "",
       status: "",
       members: [],
-      types:"",
-      Hours:""
+      types: "",
+      Hours: "",
     },
   ]);
   useEffect(() => {
@@ -642,7 +589,7 @@ onPress={() =>
 
                   style={({ pressed }) => [
                     { opacity: pressed ? 0.8 : 1 },
-                    { flex: 1 }, 
+                    { flex: 1 },
                   ]}
                 >
                   <View
@@ -749,7 +696,7 @@ onPress={() =>
                             Days
                           </Text>
                         </View>
-                        
+
                         <View>
                           <Text style={{ color: "white", fontSize: 13 }}>
                             {game.days}
@@ -762,33 +709,34 @@ onPress={() =>
                           alignItems: "center",
                         }}
                       >
-                        {game.types=="Steps"?
-                        <View>
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            Daily Steps
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.Dailystep}
-                          </Text>
-                        </View>
-                      </View>:
-                      <View>
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                           Hours
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.Hours}
-                          </Text>
-                        </View>
-                        </View>
-                        }
-                        </View>
+                        {game.types == "Steps" ? (
+                          <View>
+                            <View>
+                              <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                Daily Steps
+                              </Text>
+                            </View>
+                            <View>
+                              <Text style={{ color: "white", fontSize: 13 }}>
+                                {game.Dailystep}
+                              </Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <View>
+                            <View>
+                              <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                Hours
+                              </Text>
+                            </View>
+                            <View>
+                              <Text style={{ color: "white", fontSize: 13 }}>
+                                {game.Hours}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
                       <View
                         style={{
                           justifyContent: "center",
@@ -836,8 +784,8 @@ const CommunityGames = ({ handleJoinClick }: any) => {
       enddate: "",
       id: "",
       status: "",
-      types:"",
-      Hours:""
+      types: "",
+      Hours: "",
     },
   ]);
   useEffect(() => {
@@ -1036,36 +984,37 @@ const CommunityGames = ({ handleJoinClick }: any) => {
                         </Text>
                       </View>
                     </View>
-                    
+
                     <View
                       style={{ justifyContent: "center", alignItems: "center" }}
                     >
-                      {game.types=="Steps"?
+                      {game.types == "Steps" ? (
                         <View>
+                          <View>
+                            <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                              Daily Steps
+                            </Text>
+                          </View>
+                          <View>
+                            <Text style={{ color: "white", fontSize: 13 }}>
+                              {game.Dailystep}
+                            </Text>
+                          </View>
+                        </View>
+                      ) : (
                         <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            Daily Steps
-                          </Text>
+                          <View>
+                            <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                              Hours
+                            </Text>
+                          </View>
+                          <View>
+                            <Text style={{ color: "white", fontSize: 13 }}>
+                              {game.Hours}
+                            </Text>
+                          </View>
                         </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.Dailystep}
-                          </Text>
-                        </View>
-                      </View>:
-                      <View>
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                           Hours
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.Hours}
-                          </Text>
-                        </View>
-                        </View>
-                        }
+                      )}
                     </View>
                     <View
                       style={{ justifyContent: "center", alignItems: "center" }}
