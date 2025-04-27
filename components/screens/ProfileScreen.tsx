@@ -330,7 +330,7 @@ const ProfileScreen = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>router.push("/(nonav)/Stake")}>
             <View style={styles.options}>
               <Text style={styles.optionText}>Step Provider</Text>
               <Ionicons

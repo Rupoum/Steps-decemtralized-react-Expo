@@ -99,7 +99,6 @@ const StepTable = ({ challengeId }:any) => {
 
   return (
     <View style={styles.container}>
-      {/* Header Row - Days (Horizontal) */}
       <View style={styles.headerContainer}>
         <View style={styles.cornerCell}>
           <Text style={styles.headerText}>User</Text>
@@ -120,10 +119,7 @@ const StepTable = ({ challengeId }:any) => {
           ))}
         </ScrollView>
       </View>
-
-      {/* Main Content */}
       <View style={styles.contentContainer}>
-        {/* User Column */}
         <ScrollView showsVerticalScrollIndicator={false}>
           {users.map((username, index) => (
             <View key={`user-${index}`} style={styles.userRow}>
