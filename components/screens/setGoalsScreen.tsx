@@ -244,7 +244,7 @@ const SetGoalsScreen = () => {
         tx: serializedTransaction,
         userid: userid,
         amount: Number(stakeAmount),
-        Hours: sleepGoal.toString(),
+        Hours: sleepGoal.toString()+"h",
         Startdate:today
       }); 
       console.log(response.data);

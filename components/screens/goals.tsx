@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 import { BACKEND_URL } from '@/Backendurl';
@@ -23,7 +23,6 @@ interface Stake {
 export default function StakeStatus() {
   const [stake, setStake] = useState<Stake | null>(null);
   const [loading, setLoading] = useState(true);
-  
   useEffect(() => {
     const stake=async()=>{
         setLoading(true);
@@ -31,24 +30,14 @@ export default function StakeStatus() {
         const stake=await axios.get(`${BACKEND_URL}/getstake/${userid}`)
         setStake(stake.data.stake[0]); 
     }
-    const sampleStake = {
-      id: "1696d9dd-0b89-4e05-87d0-044c71cb82c1",
-      amount: 1,
-      Hours: "8",
-      startdate: "2025-04-27",
-      Badges: [],
-      currentday: 0,
-      WithdrawAmount: 1,
-      Updateddate: "2025-04-27",
-      Userid: "b6f60f6f-59b5-4e9d-a37b-151862694bb4",
-      misseday: 0,
-      Status: "CurrentlyRunning",
-    };
 stake();
     // setStake(sampleStake);
     setLoading(false);
   }, []); 
-  
+   const destake=async()=>{
+      const response=await axios.post(`${BACKEND_URL}/destake`,{id:stake?.id})
+
+   }
 
   const calculateDaysSinceStart = (startDate: string) => {
     const start = new Date(startDate);
@@ -179,6 +168,10 @@ stake();
             Potential withdrawal: {stake.WithdrawAmount} SOL
           </Text>
         </View>
+        <TouchableOpacity onPress={destake}>
+            <Text>Destake</Text>
+         
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
