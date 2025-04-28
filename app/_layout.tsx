@@ -48,6 +48,7 @@ export default function RootLayout() {
           title: "Login",
         }}
       />
+      <Stack.Screen name="(nonav)/profile" options={{ title: "Profile" }} />
     </Stack>
   );
 }

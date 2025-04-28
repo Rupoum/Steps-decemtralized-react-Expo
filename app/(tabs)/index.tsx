@@ -241,6 +241,17 @@ const App = () => {
               }
               contentContainerStyle={{ flexGrow: 1 }}
             >
+              <TouchableOpacity onPress={() => router.push("/(nonav)/profile")}>
+                <Text
+                  style={{
+                    color: "white",
+                    marginTop: 20,
+                    marginLeft: 20,
+                  }}
+                >
+                  Profile
+                </Text>
+              </TouchableOpacity>
               <View style={{ padding: 5 }}>
                 <StepsCount />
               </View>
@@ -338,7 +349,7 @@ const App = () => {
 const StepsCount = () => {
   const [error, seterror] = useState("");
   const [step, setstep] = useState(0);
-  const[sleep,setsleep]=useState("");
+  const [sleep, setsleep] = useState("");
   useEffect(() => {
     const fetchSteps = async () => {
       try {
@@ -386,7 +397,7 @@ const StepsCount = () => {
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         console.log(hours);
         console.log(minutes);
-        setsleep(hours.toString()+" "+"H"+" "+minutes.toString()+"M");
+        setsleep(hours.toString() + " " + "H" + " " + minutes.toString() + "M");
         let count = 0;
         records.forEach((record) => {
           if (
@@ -440,7 +451,7 @@ const StepsCount = () => {
               marginTop: 20,
             }}
           />
-  
+
           <View style={styles.setpsdiv}>
             {/* <Text style={styles.steptext}>{step}</Text> */}
             {/* <Text style={{ color: "white", fontSize: 20 }}>/</Text> */}
@@ -577,16 +588,12 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             <View>
               {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
               <View key={game.id} style={styles.gameCard}>
-
-
                 <Pressable
-
-onPress={() => 
-  game.types === 'sleep' 
-    ? router.push(`/sleep/[id]`)
-    : router.push(`/status/${game.id}`)
-}
-
+                  onPress={() =>
+                    game.types === "sleep"
+                      ? router.push(`/sleep/[id]`)
+                      : router.push(`/status/${game.id}`)
+                  }
                   style={({ pressed }) => [
                     { opacity: pressed ? 0.8 : 1 },
                     { flex: 1 },
