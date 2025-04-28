@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+// import { Avatar } from "react-native-ui-lib";
 import {
   View,
   Text,
@@ -241,16 +242,22 @@ const App = () => {
               }
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              <TouchableOpacity onPress={() => router.push("/(nonav)/profile")}>
-                <Text
+              <TouchableOpacity
+                onPress={() => router.push("/(nonav)/profile")}
+                style={{
+                  alignSelf: "flex-end",
+                  marginRight: 20,
+                  marginTop: 10,
+                }}
+              >
+                <Image
+                  source={require("../../assets/images/profile.png")}
                   style={{
-                    color: "white",
-                    marginTop: 20,
-                    marginLeft: 20,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 25,
                   }}
-                >
-                  Profile
-                </Text>
+                />
               </TouchableOpacity>
               <View style={{ padding: 5 }}>
                 <StepsCount />
@@ -549,7 +556,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           }}
         >
           <Text style={styles.gamesTitle}>Official Games</Text>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={{
               paddingHorizontal: 10,
               paddingVertical: 5,
@@ -569,7 +576,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
               <Text style={{ color: "white" }}>All</Text>
               <AntDesign name="arrowright" size={15} color="white" />
             </View>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
         <ScrollView
           horizontal
@@ -839,7 +846,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         }}
       >
         <Text style={styles.gamesTitle}>Community Games</Text>
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={{
             paddingHorizontal: 10,
             paddingVertical: 5,
@@ -859,7 +866,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
             <Text style={{ color: "white" }}>All</Text>
             <AntDesign name="arrowright" size={15} color="white" />
           </View>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
       <ScrollView
         horizontal

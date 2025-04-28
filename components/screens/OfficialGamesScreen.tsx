@@ -6,10 +6,22 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
@@ -17,36 +29,45 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SlideButton from "rn-slide-button";
-interface GAME{
-  id: string,
-  name: string,
-  Amount: number,
-  days: number,
-  memberqty:number,
-  Dailystep:number ,
+interface GAME {
+  id: string;
+  name: string;
+  Amount: number;
+  days: number;
+  memberqty: number;
+  Dailystep: number;
 }
 
 const OfficialGamesScreen = () => {
-  const [game,setgame]=useState<GAME[]>([]);
+  const [game, setgame] = useState<GAME[]>([]);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
   const [selectedGame, setSelectedGame] = useState<GAME>();
+  const [loading, setLoading] = useState<boolean>(true);
   const snapPoints = useMemo(() => ["50%", "60%"], []);
-  const handleJoinClick = useCallback((game:any) => {
+  const handleJoinClick = useCallback((game: any) => {
     console.log("Joining game", game.name);
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
-  useEffect(()=>{
-    const fetchgame=async()=>{
-     const response=await axios.get(`${BACKEND_URL}/challenge/public`)
-         setgame(response.data.allchalange);
-    }
+  useEffect(() => {
+    const fetchgame = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${BACKEND_URL}/challenge/public`);
+        setgame(response.data.allchalange);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchgame();
-  },[])
+  }, []);
   const Onsend = async () => {
     try {
       const connection = new Connection("https://api.devnet.solana.com");
@@ -55,7 +76,7 @@ const OfficialGamesScreen = () => {
         Alert.alert("NO public key found");
         return;
       }
-      if(selectedGame==null){
+      if (selectedGame == null) {
         return;
       }
       const balance = await connection.getBalance(new PublicKey(publickey));
@@ -93,52 +114,6 @@ const OfficialGamesScreen = () => {
       Alert.alert(e);
     }
   };
-   
-  // const games = [
-  //   {
-  //     id: 1,
-  //     title: "Game1",
-  //     entryPrice: "2",
-  //     time: "10/3-16/03",
-  //     participants: "83",
-  //     dailySteps: "12k",
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Game2",
-  //     entryPrice: "2",
-  //     time: "10/3-16/03",
-  //     participants: "83",
-  //     dailySteps: "12k",
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Game 3",
-
-  //     entryPrice: "2",
-  //     time: "10/3-16/03",
-  //     participants: "83",
-  //     dailySteps: "12k",
-  //   },
-  //   {
-  //     id: 4,
-  //     title: "Game 4",
-
-  //     entryPrice: "2",
-  //     time: "10/3-16/03",
-  //     participants: "83",
-  //     dailySteps: "12k",
-  //   },
-  //   {
-  //     id: 5,
-  //     title: "Game 5",
-
-  //     entryPrice: "2",
-  //     time: "10/3-16/03",
-  //     participants: "83",
-  //     dailySteps: "12k",
-  //   },
-  // ];
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -148,122 +123,144 @@ const OfficialGamesScreen = () => {
           style={styles.gradient}
         >
           <ScrollView
-            contentContainerStyle={styles.container}
-            //   showsVerticalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.container,
+              loading && {
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            ]}
           >
-            {game.map((game) => (
-              <View key={game.id} style={styles.gameCard}>
-                <View
-                  style={{
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View>
-                    <Text style={styles.gameHeader}>{game.name}</Text>
-                  </View>
-                  <View>
-                    <TouchableOpacity
-                      style={styles.joinbutton}
-                      onPress={() => handleJoinClick(game)}
-                    >
-                      <Text
-                        style={{
-                          color: "white",
-                          fontSize: 16,
-                        }}
-                      >
-                        Join
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+            {loading ? (
+              <ActivityIndicator size="large" color="#ffffff" />
+            ) : (
+              game.map((game) => (
+                <View key={game.id} style={styles.gameCard}>
                   <View
                     style={{
-                      width: "90%",
-                      height: 0.5,
-
-                      marginTop: 20,
-                      backgroundColor: "#e5ccff",
-                    }}
-                  />
-                </View>
-                <View>
-                  <View
-                    style={{
-                      marginTop: 20,
+                      alignItems: "center",
                       flexDirection: "row",
                       justifyContent: "space-between",
-                      paddingHorizontal: 5,
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.gameHeader}>{game.name}</Text>
+                    </View>
+                    <View>
+                      <TouchableOpacity
+                        style={styles.joinbutton}
+                        onPress={() => handleJoinClick(game)}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 16,
+                          }}
+                        >
+                          Join
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
                     <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Entry
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.Amount}
-                        </Text>
-                      </View>
-                    </View>
+                      style={{
+                        width: "90%",
+                        height: 0.5,
+
+                        marginTop: 20,
+                        backgroundColor: "#e5ccff",
+                      }}
+                    />
+                  </View>
+                  <View>
                     <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
+                      style={{
+                        marginTop: 20,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 5,
+                      }}
                     >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Days
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Entry
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.Amount}
+                          </Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.days}
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Days
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.days}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                    <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Daily Steps
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Daily Steps
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.Dailystep}
+                          </Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.Dailystep}
-                        </Text>
-                      </View>
-                    </View>
-                    <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Players
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.memberqty}
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Players
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.memberqty}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </ScrollView>
           <BottomSheetModal
             ref={bottomSheetModalRef}

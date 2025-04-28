@@ -155,28 +155,19 @@ const ProfileScreen = () => {
         style={styles.gradient}
       >
         <View>
-          <View
+          <TouchableOpacity
+            onPress={() => router.push("/(nonav)/notification")}
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
+              padding: 10,
             }}
           >
-            <Text style={styles.header}>Profile</Text>
-
-            <TouchableOpacity
-              onPress={() => router.push("/(nonav)/notification")}
-              style={{
-                padding: 10,
-              }}
-            >
-              <Ionicons
-                name="notifications"
-                size={24}
-                color="white"
-                style={{ position: "absolute", right: 20, top: 20 }}
-              />
-            </TouchableOpacity>
-          </View>
+            <Ionicons
+              name="notifications"
+              size={24}
+              color="white"
+              style={{ position: "absolute", right: 20, top: 5 }}
+            />
+          </TouchableOpacity>
           <View style={styles.profileCard}>
             <Image
               source={require("../../assets/images/profile.png")}
@@ -329,8 +320,7 @@ const ProfileScreen = () => {
               />
             </View>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={()=>router.push("/(nonav)/Stake")}>
+          <TouchableOpacity onPress={() => router.push("/(nonav)/Stake")}>
             <View style={styles.options}>
               <Text style={styles.optionText}>Step Provider</Text>
               <Ionicons
@@ -341,7 +331,6 @@ const ProfileScreen = () => {
               />
             </View>
           </TouchableOpacity>
-
           <View style={styles.logoutContainer}>
             <TouchableOpacity style={styles.logoutButton} onPress={logout}>
               <Text style={styles.logoutText}>Logout</Text>

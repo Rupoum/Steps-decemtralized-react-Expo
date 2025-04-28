@@ -74,6 +74,7 @@
     "react-native-scrypt": "^1.2.1",
     "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "15.8.0",
+    "react-native-ui-lib": "^7.40.1",
     "react-native-web": "~0.19.13",
     "react-native-web3-wallet": "github:heroims/react-native-web3-wallet#ether6.x",
     "react-native-websocket": "^1.0.2",

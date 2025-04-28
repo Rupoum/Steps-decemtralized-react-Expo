@@ -8,73 +8,148 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SlideButton from "rn-slide-button";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
+
+interface GAME {
+  id: string;
+  title: string;
+  entryPrice: number;
+  time: string;
+  participants: number;
+  dailySteps: number;
+}
 
 const CommunityGamesScreen = () => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedGame, setSelectedGame] = useState<GAME | null>(null);
+  const [games, setGames] = useState<GAME[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [joined, setjoined] = useState([]);
+  const [form, setform] = useState([
+    {
+      name: "",
+      memberqty: 0,
+      Dailystep: 0,
+      Totalamount: 0,
+      Amount: 0,
+      Digital_Currency: "sol",
+      days: 0,
+      startdate: "",
+      enddate: "",
+      id: "",
+      status: "",
+      types: "",
+      Hours: "",
+    },
+  ]);
+  const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
 
   const snapPoints = useMemo(() => ["50%", "60%"], []);
-  const handleJoinClick = useCallback((game:any) => {
+  const handleJoinClick = useCallback((game: GAME) => {
     console.log("Joining game", game.title);
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
 
-  const games = [
-    {
-      id: 1,
-      title: "Game1",
-      entryPrice: "2",
-      time: "10/3-16/03",
-      participants: "83",
-      dailySteps: "12k",
-    },
-    {
-      id: 2,
-      title: "Game2",
-      entryPrice: "2",
-      time: "10/3-16/03",
-      participants: "83",
-      dailySteps: "12k",
-    },
-    {
-      id: 3,
-      title: "Game 12",
+  useEffect(() => {
+    const fetchuserdata = async () => {
+      try {
+        const userid = await AsyncStorage.getItem("userid");
+        //  console.log("userdid");
+        const response = await axios.get(
+          `${BACKEND_URL}/history/prev/${userid}`
+        );
+        //  console.log(response.data);
+        setjoined(response.data.Tournament);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-      entryPrice: "2",
-      time: "10/3-16/03",
-      participants: "83",
-      dailySteps: "12k",
-    },
-    {
-      id: 4,
-      title: "Game 4",
+    const fetchdata = async () => {
+      try {
+        const userid = await AsyncStorage.getItem("userid"); // Changed from "username" to "userid"
+        console.log(userid);
+        const response = await axios.get(
+          `${BACKEND_URL}/challenge/private/${userid}`
+        );
+        // console.log(response.data);
+        setform(response.data.allchalange);
+        // console.log("response", response.data.allchalange);
+      } catch (Error) {
+        console.log(Error);
+      }
+    };
+    fetchdata();
+    fetchuserdata();
+  }, []);
 
-      entryPrice: "2",
-      time: "10/3-16/03",
-      participants: "83",
-      dailySteps: "12k",
-    },
-    {
-      id: 5,
-      title: "Game 5",
-
-      entryPrice: "2",
-      time: "10/3-16/03",
-      participants: "83",
-      dailySteps: "12k",
-    },
-  ];
+  const Onsend = async () => {
+    try {
+      const connection = new Connection("https://api.devnet.solana.com");
+      const publickey = await AsyncStorage.getItem("PublicKey");
+      if (!publickey) {
+        Alert.alert("NO public key found");
+        return;
+      }
+      if (selectedGame == null) {
+        return;
+      }
+      const balance = await connection.getBalance(new PublicKey(publickey));
+      if (balance < selectedGame.entryPrice * LAMPORTS_PER_SOL) {
+        Alert.alert("Not enough credit");
+        return;
+      }
+      const signature = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: new PublicKey(publickey),
+          toPubkey: new PublicKey(escrowpublickey),
+          lamports: LAMPORTS_PER_SOL * selectedGame.entryPrice,
+        })
+      );
+      const { blockhash } = await connection.getLatestBlockhash();
+      signature.recentBlockhash = blockhash;
+      signature.feePayer = new PublicKey(publickey);
+      const serilize = signature.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false,
+      });
+      const response = await axios.post(
+        `${BACKEND_URL}/challenge/join/community/${selectedGame.id}`,
+        { tx: serilize }
+      );
+      if (response.status == 200) {
+        Alert.alert("Added to the contest");
+      }
+    } catch (e: any) {
+      console.log(e);
+      Alert.alert(e.message || "An error occurred");
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -84,122 +159,143 @@ const CommunityGamesScreen = () => {
           style={styles.gradient}
         >
           <ScrollView
-            contentContainerStyle={styles.container}
-            //   showsVerticalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.container,
+              loading && {
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            ]}
           >
-            {games.map((game) => (
-              <View key={game.id} style={styles.gameCard}>
-                <View
-                  style={{
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View>
-                    <Text style={styles.gameHeader}>{game.title}</Text>
-                  </View>
-                  <View>
-                    <TouchableOpacity
-                      style={styles.joinbutton}
-                      onPress={() => handleJoinClick(game)}
-                    >
-                      <Text
-                        style={{
-                          color: "white",
-                          fontSize: 16,
-                        }}
-                      >
-                        Join
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+            {loading ? (
+              <ActivityIndicator size="large" color="#ffffff" />
+            ) : (
+              games.map((game) => (
+                <View key={game.id} style={styles.gameCard}>
                   <View
                     style={{
-                      width: "90%",
-                      height: 0.5,
-
-                      marginTop: 20,
-                      backgroundColor: "#e5ccff",
-                    }}
-                  />
-                </View>
-                <View>
-                  <View
-                    style={{
-                      marginTop: 20,
+                      alignItems: "center",
                       flexDirection: "row",
                       justifyContent: "space-between",
-                      paddingHorizontal: 5,
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.gameHeader}>{game.title}</Text>
+                    </View>
+                    <View>
+                      <TouchableOpacity
+                        style={styles.joinbutton}
+                        onPress={() => handleJoinClick(game)}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 16,
+                          }}
+                        >
+                          Join
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
                     <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Entry
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.entryPrice}
-                        </Text>
-                      </View>
-                    </View>
+                      style={{
+                        width: "90%",
+                        height: 0.5,
+                        marginTop: 20,
+                        backgroundColor: "#e5ccff",
+                      }}
+                    />
+                  </View>
+                  <View>
                     <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
+                      style={{
+                        marginTop: 20,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 5,
+                      }}
                     >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          7 days
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Entry
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.entryPrice}
+                          </Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.time}
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            7 days
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.time}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                    <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Daily Steps
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Daily Steps
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.dailySteps}
+                          </Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.dailySteps}
-                        </Text>
-                      </View>
-                    </View>
-                    <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <View>
-                        <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                          Players
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={{ color: "white", fontSize: 13 }}>
-                          {game.participants}
-                        </Text>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View>
+                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                            Players
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={{ color: "white", fontSize: 13 }}>
+                            {game.participants}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </ScrollView>
           <BottomSheetModal
             ref={bottomSheetModalRef}
@@ -254,7 +350,7 @@ const CommunityGamesScreen = () => {
                       underlayStyle={{
                         backgroundColor: "#1a0033",
                       }}
-                      // height="30%"
+                      onSlideEnd={Onsend}
                     />
                   </View>
                 </View>
@@ -290,10 +386,8 @@ const styles = StyleSheet.create({
   gameCard: {
     backgroundColor: "rgba(0, 0, 0, 0.8)",
     borderRadius: 10,
-
     marginTop: 20,
     marginHorizontal: 20,
-
     paddingHorizontal: 15,
     paddingVertical: 20,
     paddingBottom: 40,
