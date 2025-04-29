@@ -1,4 +1,4 @@
-import { FitbitButton } from "@/components/screens/fitbit";
+import Fitbit from "@/components/screens/Firtbit";
 import GameLeaderboard from "@/components/screens/gamestatus";
 import Graph from "@/components/screens/Graph";
 import ActivityTracker from "@/components/screens/StatsScreen";
@@ -12,6 +12,7 @@ const Stats = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* <Graph /> */}
       {/* <FitbitButton/> */}
+      <Fitbit></Fitbit>
     </GestureHandlerRootView>
   );
 };
