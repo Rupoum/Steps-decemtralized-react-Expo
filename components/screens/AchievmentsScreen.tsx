@@ -120,7 +120,7 @@ const getDaysInMonth = (year, month) => {
 };
 
 const getFirstDayOfMonth = (year, month) => {
-  return new Date(year, month, 1).getDay();
+  return new Date(year, month, 1).getDay(); // Ensure Sunday starts at 0
 };
 
 const getMonthName = (month) => {
@@ -494,7 +494,7 @@ export default function AchievmentsScreen() {
     );
   };
 
-  // Calendar rendering function - moved outside of the return statement to avoid conditional rendering
+  // Calendar
   const renderCalendarContent = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -538,7 +538,7 @@ export default function AchievmentsScreen() {
             isSelected && styles.calendarDaySelected,
           ]}
           onPress={() => {
-            triggerHaptic("light");
+            triggerHaptic("heavy");
             if (isSelected) {
               setSelectedDay(null);
             } else {
@@ -645,7 +645,7 @@ export default function AchievmentsScreen() {
                   {
                     translateY: dayInfoAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [20, 0],
+                      outputRange: [10, 0],
                     }),
                   },
                 ],
@@ -782,7 +782,7 @@ export default function AchievmentsScreen() {
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        {/* Custom celebration animation using native components */}
+        {/* Custom celebration  */}
         {recentlyUnlocked && (
           <View style={styles.celebrationOverlay}>
             <View style={styles.celebrationContent}>
@@ -870,7 +870,11 @@ export default function AchievmentsScreen() {
         </View>
 
         {showCalendar ? (
-          <Animated.View
+          <Animated.ScrollView
+            contentContainerStyle={{
+              paddingBottom: 30,
+              paddingTop: 20,
+            }}
             style={[
               styles.calendarContainer,
               {
@@ -893,7 +897,7 @@ export default function AchievmentsScreen() {
             ]}
           >
             {renderCalendarContent()}
-          </Animated.View>
+          </Animated.ScrollView>
         ) : (
           <ScrollView
             contentContainerStyle={styles.badgesGrid}
@@ -903,7 +907,7 @@ export default function AchievmentsScreen() {
           </ScrollView>
         )}
 
-        <View style={styles.infoContainer}>
+        {/* <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
             <View style={[styles.infoIcon, { backgroundColor: "#8a2be2" }]}>
               <Ionicons name="trophy" size={16} color="#fff" />
@@ -921,7 +925,7 @@ export default function AchievmentsScreen() {
             </View>
             <Text style={styles.infoText}>Locked badges need more days</Text>
           </View>
-        </View>
+        </View> */}
 
         {/* Demo controls with improved styling */}
         <View style={styles.demoControls}>
@@ -1272,6 +1276,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 16,
     padding: 16,
+    paddingBottom: 20,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
@@ -1313,6 +1318,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginBottom: 12,
     paddingBottom: 8,
+
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
@@ -1371,7 +1377,8 @@ const styles = StyleSheet.create({
   },
   calendarDayDot: {
     position: "absolute",
-    bottom: 4,
+
+    bottom: 1,
   },
   // Day info styles
   dayInfoContainer: {
