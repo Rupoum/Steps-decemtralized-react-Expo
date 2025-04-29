@@ -49,6 +49,10 @@ export default function RootLayout() {
         }}
       />
       <Stack.Screen name="(nonav)/profile" options={{ title: "Profile" }} />
+      <Stack.Screen
+        name="(nonav)/achievments"
+        options={{ title: "Achievments" }}
+      />
     </Stack>
   );
 }
