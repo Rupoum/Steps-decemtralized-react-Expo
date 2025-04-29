@@ -1,53 +1,20 @@
 import { Redirect } from "expo-router";
 import { generateCodeChallenge, generateCodeVerifier } from "../utils/pkce"
 import { TouchableOpacity, View ,StyleSheet,Text ,Image, Linking} from "react-native";
+import * as AuthSession from 'expo-auth-session';
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import codegenNativeCommands from "react-native/Libraries/Utilities/codegenNativeCommands";
+import { AsyncLocalStorage } from "async_hooks";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Fitbit=()=>{
-    const [url, setUrl] = useState<string | null>(null);
-    const [processing, setProcessing] = useState(true);
-    useEffect(() => {
-        const getUrlAsync = async () => {
-          // Get the deep link used to open the app
-          const initialUrl = await Linking.getInitialURL();
-    
-          // The setTimeout is just for testing purpose
-          setTimeout(() => {
-            setUrl(initialUrl);
-            setProcessing(false);
-          }, 1000);
-        };
-    
-        getUrlAsync();
-      }, []);
-    let redirectUrl:any;
-    let codeverifer:any;
-    const getcode=async()=>{
-        const initialUrl = await Linking.getInitialURL();   
-        console.log("urls",url);
- codeverifer=generateCodeVerifier();
-   const codechallenge=await generateCodeChallenge(codeverifer);
-    redirectUrl=new URL("https://www.fitbit.com/oauth2/authorize");
-   redirectUrl.searchParams.append("client_id","23Q8LW");
-   redirectUrl.searchParams.append("response_type", "code");
-   redirectUrl.searchParams.append("code_challenge", codechallenge);
-   redirectUrl.searchParams.append("code_challenge_method", "S256");
-   redirectUrl.searchParams.append("scope", "activity profile sleep");  
-}
-getcode();
+      
  const onclick=async()=>{
     try{
-        console.log(redirectUrl.toString());
-        const supported = await Linking.canOpenURL(redirectUrl.toString());
-        if (supported) {
-          await Linking.openURL(redirectUrl.toString());
-          await localStorage.setItem("code",code) 
-        } else {
-          console.error("Don't know how to open this URL:", redirectUrl);
-        }
-    //  console.log(response);
+      const token=await gettoken();
+     console.log(token);
+      
     }
      catch(e){
         console.log(e);
@@ -101,4 +68,24 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     }
   });
+  const gettoken=async()=>{
+    let redirectUrl:any;
+    let codeverifer:any;
+ codeverifer=generateCodeVerifier();
+   const codechallenge=await generateCodeChallenge(codeverifer);
+    redirectUrl=new URL("https://www.fitbit.com/oauth2/authorize");
+   redirectUrl.searchParams.append("client_id","23Q8LW");
+   redirectUrl.searchParams.append("response_type", "code");
+   redirectUrl.searchParams.append("code_challenge", codechallenge);
+   redirectUrl.searchParams.append("code_challenge_method", "S256");
+   redirectUrl.searchParams.append("scope", "activity profile sleep");
+   console.log(redirectUrl.toString());
+   const supported= await Linking.canOpenURL(redirectUrl.toString());
+    if (supported) {
+        await Linking.openURL(redirectUrl.toString());
+        await AsyncStorage.setItem("code",codeverifer)
+      } else {
+        console.error("Don't know how to open this URL:", redirectUrl);
+      }
+  }
   export default  Fitbit;

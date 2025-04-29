@@ -319,6 +319,17 @@ const ProfileScreen = () => {
                 style={styles.optionIcon}
               />
             </View>
+          </TouchableOpacity>{" "}
+          <TouchableOpacity onPress={() => router.push("/(nonav)/achievments")}>
+            <View style={styles.options}>
+              <Text style={styles.optionText}>Achievments</Text>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={24}
+                color="white"
+                style={styles.optionIcon}
+              />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push("/(nonav)/Stake")}>
             <View style={styles.options}>
