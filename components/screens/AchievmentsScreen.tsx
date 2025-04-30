@@ -120,7 +120,7 @@ const getDaysInMonth = (year, month) => {
 };
 
 const getFirstDayOfMonth = (year, month) => {
-  return new Date(year, month, 1).getDay(); // Ensure Sunday starts at 0
+  return new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday, etc.
 };
 
 const getMonthName = (month) => {
@@ -181,6 +181,388 @@ const triggerHaptic = (type = "light") => {
   }
 };
 
+// New Calendar Component
+const SleepCalendar = ({
+  currentDate,
+  onChangeDate,
+  sleepData,
+  selectedDay,
+  onSelectDay,
+  currentStreak,
+}) => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const today = new Date();
+
+  // Get days in month and first day of month
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDayOfMonth = getFirstDayOfMonth(year, month);
+
+  // Calculate days from previous month to show
+  const daysFromPrevMonth = firstDayOfMonth;
+
+  // Calculate total rows needed (including days from prev/next month)
+  const totalDays = daysFromPrevMonth + daysInMonth;
+  const rows = Math.ceil(totalDays / 7);
+
+  // Generate calendar data
+  const generateCalendarDays = () => {
+    const days = [];
+
+    // Previous month days
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevMonthYear = month === 0 ? year - 1 : year;
+    const daysInPrevMonth = getDaysInMonth(prevMonthYear, prevMonth);
+
+    for (let i = 0; i < daysFromPrevMonth; i++) {
+      const day = daysInPrevMonth - daysFromPrevMonth + i + 1;
+      const date = new Date(prevMonthYear, prevMonth, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      days.push({
+        day,
+        month: prevMonth,
+        year: prevMonthYear,
+        dateStr,
+        isCurrentMonth: false,
+        data: sleepData[dateStr],
+      });
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      const isToday =
+        today.getDate() === day &&
+        today.getMonth() === month &&
+        today.getFullYear() === year;
+
+      days.push({
+        day,
+        month,
+        year,
+        dateStr,
+        isCurrentMonth: true,
+        isToday,
+        data: sleepData[dateStr],
+      });
+    }
+
+    // Next month days to fill the last row
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextMonthYear = month === 11 ? year + 1 : year;
+    const remainingDays = rows * 7 - days.length;
+
+    for (let day = 1; day <= remainingDays; day++) {
+      const date = new Date(nextMonthYear, nextMonth, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      days.push({
+        day,
+        month: nextMonth,
+        year: nextMonthYear,
+        dateStr,
+        isCurrentMonth: false,
+        data: sleepData[dateStr],
+      });
+    }
+
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
+
+  // Render weekday headers
+  const renderWeekdayHeaders = () => {
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    return (
+      <View style={styles.weekdayHeaderRow}>
+        {weekdays.map((weekday, index) => (
+          <View key={`weekday-${index}`} style={styles.weekdayHeaderCell}>
+            <Text style={styles.weekdayHeaderText}>{weekday}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // Render calendar grid
+  const renderCalendarGrid = () => {
+    const rows = [];
+    const days = [...calendarDays];
+
+    // Create rows of 7 days
+    while (days.length) {
+      rows.push(days.splice(0, 7));
+    }
+
+    return rows.map((row, rowIndex) => (
+      <View key={`row-${rowIndex}`} style={styles.calendarRow}>
+        {row.map((day, dayIndex) => {
+          const isSelected =
+            selectedDay &&
+            selectedDay.day === day.day &&
+            selectedDay.month === day.month &&
+            selectedDay.year === day.year;
+
+          const isSuccess = day.data && day.data.success;
+          const isMissed = day.data && !day.data.success;
+
+          return (
+            <TouchableOpacity
+              key={`day-${rowIndex}-${dayIndex}`}
+              style={[
+                styles.calendarDayCell,
+                !day.isCurrentMonth && styles.calendarDayNotCurrentMonth,
+                day.isToday && styles.calendarDayToday,
+                isSelected && styles.calendarDaySelected,
+              ]}
+              onPress={() => {
+                if (day.isCurrentMonth) {
+                  triggerHaptic("light");
+                  onSelectDay(isSelected ? null : day);
+                }
+              }}
+              activeOpacity={day.isCurrentMonth ? 0.7 : 1}
+            >
+              <LinearGradient
+                colors={
+                  isSuccess
+                    ? ["#8a2be2", "#6a5acd"]
+                    : isMissed
+                    ? ["#ff6b6b", "#ff4757"]
+                    : ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  styles.calendarDayInner,
+                  !day.isCurrentMonth && styles.calendarDayInnerNotCurrentMonth,
+                  day.isToday && styles.calendarDayInnerToday,
+                  isSelected && styles.calendarDayInnerSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.calendarDayText,
+                    !day.isCurrentMonth &&
+                      styles.calendarDayTextNotCurrentMonth,
+                    (isSuccess || day.isToday || isMissed) &&
+                      styles.calendarDayTextHighlight,
+                  ]}
+                >
+                  {day.day}
+                </Text>
+                {day.data && day.isCurrentMonth && (
+                  <View style={styles.calendarDayIndicator}>
+                    {isSuccess ? (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={12}
+                        color="#fff"
+                      />
+                    ) : (
+                      <Ionicons name="close-circle" size={12} color="#fff" />
+                    )}
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    ));
+  };
+
+  // Render month navigation
+  const renderMonthNavigation = () => {
+    return (
+      <View style={styles.monthNavigationContainer}>
+        <TouchableOpacity
+          style={styles.monthNavigationButton}
+          onPress={() => {
+            const newDate = new Date(year, month - 1, 1);
+            onChangeDate(newDate);
+            triggerHaptic("medium");
+          }}
+        >
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <Text style={styles.monthYearText}>
+          {getMonthName(month)} {year}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.monthNavigationButton}
+          onPress={() => {
+            const newDate = new Date(year, month + 1, 1);
+            onChangeDate(newDate);
+            triggerHaptic("medium");
+          }}
+        >
+          <Ionicons name="chevron-forward" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Render calendar stats
+  const renderCalendarStats = () => {
+    // Count successful days in current month
+    const successfulDaysThisMonth = calendarDays.filter(
+      (day) => day.isCurrentMonth && day.data && day.data.success
+    ).length;
+
+    // Total days with data in current month
+    const daysWithDataThisMonth = calendarDays.filter(
+      (day) => day.isCurrentMonth && day.data
+    ).length;
+
+    // Success rate
+    const successRate =
+      daysWithDataThisMonth > 0
+        ? Math.round((successfulDaysThisMonth / daysWithDataThisMonth) * 100)
+        : 0;
+
+    return (
+      <View style={styles.calendarStatsContainer}>
+        <LinearGradient
+          colors={["rgba(138, 43, 226, 0.2)", "rgba(106, 90, 205, 0.2)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.calendarStatsGradient}
+        >
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{currentStreak}</Text>
+            <Text style={styles.statLabel}>Current Streak</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{successfulDaysThisMonth}</Text>
+            <Text style={styles.statLabel}>Success This Month</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{successRate}%</Text>
+            <Text style={styles.statLabel}>Success Rate</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
+
+  // Render calendar legend
+  const renderCalendarLegend = () => {
+    return (
+      <View style={styles.calendarLegendContainer}>
+        <View style={styles.legendItem}>
+          <LinearGradient
+            colors={["#8a2be2", "#6a5acd"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.legendColor}
+          />
+          <Text style={styles.legendText}>Sleep Goal Met</Text>
+        </View>
+
+        <View style={styles.legendItem}>
+          <LinearGradient
+            colors={["#ff6b6b", "#ff4757"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.legendColor}
+          />
+          <Text style={styles.legendText}>Missed Goal</Text>
+        </View>
+
+        <View style={styles.legendItem}>
+          <View
+            style={[
+              styles.legendColor,
+              {
+                backgroundColor: "#4b0082",
+                borderWidth: 2,
+                borderColor: "#fff",
+              },
+            ]}
+          />
+          <Text style={styles.legendText}>Today</Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.calendarContainer}>
+      {renderMonthNavigation()}
+      {renderWeekdayHeaders()}
+      {renderCalendarGrid()}
+      {renderCalendarLegend()}
+      {renderCalendarStats()}
+    </View>
+  );
+};
+
+// Day Info Component
+const DayInfoPanel = ({ day, onClose }) => {
+  if (!day) return null;
+
+  return (
+    <View style={styles.dayInfoContainer}>
+      <View style={styles.dayInfoHeader}>
+        <Text style={styles.dayInfoTitle}>
+          {day.day} {getMonthName(day.month)} {day.year}
+        </Text>
+        <TouchableOpacity
+          style={styles.dayInfoCloseButton}
+          onPress={() => {
+            triggerHaptic("light");
+            onClose();
+          }}
+        >
+          <Ionicons name="close" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {day.data ? (
+        <View style={styles.dayInfoContent}>
+          <View style={styles.dayInfoRow}>
+            <View style={styles.dayInfoIconContainer}>
+              <Ionicons
+                name={day.data.success ? "checkmark-circle" : "close-circle"}
+                size={24}
+                color={day.data.success ? "#8a2be2" : "#ff6b6b"}
+              />
+            </View>
+            <View style={styles.dayInfoTextContainer}>
+              <Text style={styles.dayInfoStatus}>
+                {day.data.success ? "Sleep Goal Met" : "Sleep Goal Missed"}
+              </Text>
+              <Text style={styles.dayInfoHours}>
+                {day.data.hours.toFixed(1)} hours of sleep
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.dayInfoContent}>
+          <Text style={styles.dayInfoNoData}>
+            No sleep data available for this day
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function AchievmentsScreen() {
   // Current streak days - this would come from your app's state management
   const [currentStreak, setCurrentStreak] = useState(21);
@@ -207,42 +589,25 @@ export default function AchievmentsScreen() {
   // Pulse animation for newly unlocked badges - moved outside of renderBadge
   useEffect(() => {
     if (recentlyUnlocked) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ]),
-        { iterations: 3 }
-      ).start();
-    } else {
-      pulseAnim.setValue(1);
+      // Just set a timeout to clear the celebration
+      setTimeout(() => {
+        setRecentlyUnlocked(null);
+      }, 3000);
     }
-  }, [recentlyUnlocked, pulseAnim]);
+  }, [recentlyUnlocked]);
 
   useEffect(() => {
     // Generate mock sleep data
     setSleepData(generateMockSleepData());
 
-    // Animate badges in sequence when screen loads
-    const animations = badgeAnimations.map((anim, index) => {
-      return Animated.timing(anim, {
+    // Simple fade-in for badges
+    badgeAnimations.forEach((anim) => {
+      Animated.timing(anim, {
         toValue: 1,
-        duration: 400,
-        delay: index * 100,
+        duration: 300,
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
-      });
+      }).start();
     });
-
-    Animated.stagger(50, animations).start();
   }, []);
 
   useEffect(() => {
@@ -340,16 +705,7 @@ export default function AchievmentsScreen() {
       opacity: badgeAnimations[index],
       transform: [
         {
-          scale: badgeAnimations[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.5, 1],
-          }),
-        },
-        {
-          translateY: badgeAnimations[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [50, 0],
-          }),
+          scale: badgeAnimations[index],
         },
       ],
     };
@@ -367,9 +723,7 @@ export default function AchievmentsScreen() {
           }}
           activeOpacity={0.9}
         >
-          <Animated.View
-            style={{ transform: [{ scale: isNewlyUnlocked ? pulseAnim : 1 }] }}
-          >
+          <View>
             {isAchieved ? (
               <View style={styles.badgeWrapper}>
                 {/* Improved badge design */}
@@ -444,7 +798,7 @@ export default function AchievmentsScreen() {
                 </View>
               </BlurView>
             )}
-          </Animated.View>
+          </View>
 
           {selectedBadge === badge.id && (
             <Animated.View
@@ -491,286 +845,6 @@ export default function AchievmentsScreen() {
           )}
         </TouchableOpacity>
       </Animated.View>
-    );
-  };
-
-  // Calendar
-  const renderCalendarContent = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDayOfMonth = getFirstDayOfMonth(year, month);
-    const today = new Date();
-
-    // Create calendar days
-    const days = [];
-
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<View key={`empty-${i}`} style={styles.calendarDay} />);
-    }
-
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split("T")[0];
-      const dayData = sleepData[dateStr];
-
-      const isToday =
-        today.getDate() === day &&
-        today.getMonth() === month &&
-        today.getFullYear() === year;
-
-      const isSuccess = dayData && dayData.success;
-      const isMissed = dayData && !dayData.success;
-      const isSelected =
-        selectedDay &&
-        selectedDay.day === day &&
-        selectedDay.month === month &&
-        selectedDay.year === year;
-
-      days.push(
-        <TouchableOpacity
-          key={`day-${day}`}
-          style={[
-            styles.calendarDay,
-            isToday && styles.calendarDayToday,
-            isSelected && styles.calendarDaySelected,
-          ]}
-          onPress={() => {
-            triggerHaptic("heavy");
-            if (isSelected) {
-              setSelectedDay(null);
-            } else {
-              setSelectedDay({
-                day,
-                month,
-                year,
-                data: dayData,
-                dateStr,
-              });
-            }
-          }}
-        >
-          <LinearGradient
-            colors={
-              isSuccess
-                ? ["#8a2be2", "#6a5acd"]
-                : isMissed
-                ? ["#ff6b6b", "#ff4757"]
-                : ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              styles.calendarDayInner,
-              isToday && styles.calendarDayTodayInner,
-              isSelected && styles.calendarDaySelectedInner,
-            ]}
-          >
-            <Text
-              style={[
-                styles.calendarDayText,
-                (isSuccess || isToday || isMissed) &&
-                  styles.calendarDayTextLight,
-              ]}
-            >
-              {day}
-            </Text>
-            {dayData && (
-              <View style={styles.calendarDayDot}>
-                {isSuccess ? (
-                  <Ionicons name="checkmark-circle" size={12} color="#fff" />
-                ) : (
-                  <Ionicons name="close-circle" size={12} color="#fff" />
-                )}
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      );
-    }
-
-    return (
-      <>
-        <View style={styles.calendarHeader}>
-          <TouchableOpacity
-            style={styles.calendarNavButton}
-            onPress={() => {
-              const newDate = new Date(currentDate);
-              newDate.setMonth(newDate.getMonth() - 1);
-              setCurrentDate(newDate);
-              setSelectedDay(null);
-              triggerHaptic("medium");
-            }}
-          >
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          <Text style={styles.calendarTitle}>
-            {getMonthName(month)} {year}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.calendarNavButton}
-            onPress={() => {
-              const newDate = new Date(currentDate);
-              newDate.setMonth(newDate.getMonth() + 1);
-              setCurrentDate(newDate);
-              setSelectedDay(null);
-              triggerHaptic("medium");
-            }}
-          >
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.calendarDaysOfWeek}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <Text key={day} style={styles.calendarDayOfWeek}>
-              {day}
-            </Text>
-          ))}
-        </View>
-
-        <View style={styles.calendarGrid}>{days}</View>
-
-        {selectedDay && (
-          <Animated.View
-            style={[
-              styles.dayInfoContainer,
-              {
-                opacity: dayInfoAnim,
-                transform: [
-                  {
-                    translateY: dayInfoAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [10, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <View style={styles.dayInfoHeader}>
-              <Text style={styles.dayInfoTitle}>
-                {selectedDay.day} {getMonthName(selectedDay.month)}{" "}
-                {selectedDay.year}
-              </Text>
-              <TouchableOpacity
-                style={styles.dayInfoCloseButton}
-                onPress={() => {
-                  triggerHaptic("light");
-                  setSelectedDay(null);
-                }}
-              >
-                <Ionicons name="close" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            {selectedDay.data ? (
-              <View style={styles.dayInfoContent}>
-                <View style={styles.dayInfoRow}>
-                  <View style={styles.dayInfoIconContainer}>
-                    <Ionicons
-                      name={
-                        selectedDay.data.success
-                          ? "checkmark-circle"
-                          : "close-circle"
-                      }
-                      size={24}
-                      color={selectedDay.data.success ? "#8a2be2" : "#ff6b6b"}
-                    />
-                  </View>
-                  <View style={styles.dayInfoTextContainer}>
-                    <Text style={styles.dayInfoStatus}>
-                      {selectedDay.data.success
-                        ? "Sleep Goal Met"
-                        : "Sleep Goal Missed"}
-                    </Text>
-                    <Text style={styles.dayInfoHours}>
-                      {selectedDay.data.hours.toFixed(1)} hours of sleep
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.dayInfoContent}>
-                <Text style={styles.dayInfoNoData}>
-                  No sleep data available for this day
-                </Text>
-              </View>
-            )}
-          </Animated.View>
-        )}
-
-        <View style={styles.calendarLegend}>
-          <View style={styles.legendItem}>
-            <LinearGradient
-              colors={["#8a2be2", "#6a5acd"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.legendColor}
-            />
-            <Text style={styles.legendText}>Sleep Goal Met</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <LinearGradient
-              colors={["#ff6b6b", "#ff4757"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.legendColor}
-            />
-            <Text style={styles.legendText}>Missed Goal</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                {
-                  backgroundColor: "#4b0082",
-                  borderWidth: 2,
-                  borderColor: "#fff",
-                },
-              ]}
-            />
-            <Text style={styles.legendText}>Today</Text>
-          </View>
-        </View>
-
-        <View style={styles.calendarStats}>
-          <LinearGradient
-            colors={["rgba(138, 43, 226, 0.2)", "rgba(106, 90, 205, 0.2)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.calendarStatsGradient}
-          >
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{currentStreak}</Text>
-              <Text style={styles.statLabel}>Current Streak</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {Object.values(sleepData).filter((day) => day.success).length}
-              </Text>
-              <Text style={styles.statLabel}>Total Success</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {Object.values(sleepData)
-                  .reduce(
-                    (sum, day) => (day.success ? sum + day.hours : sum),
-                    0
-                  )
-                  .toFixed(0)}
-              </Text>
-              <Text style={styles.statLabel}>Hours Slept</Text>
-            </View>
-          </LinearGradient>
-        </View>
-      </>
     );
   };
 
@@ -870,13 +944,9 @@ export default function AchievmentsScreen() {
         </View>
 
         {showCalendar ? (
-          <Animated.ScrollView
-            contentContainerStyle={{
-              paddingBottom: 30,
-              paddingTop: 20,
-            }}
+          <Animated.View
             style={[
-              styles.calendarContainer,
+              styles.calendarWrapper,
               {
                 opacity: calendarAnim,
                 transform: [
@@ -896,8 +966,40 @@ export default function AchievmentsScreen() {
               },
             ]}
           >
-            {renderCalendarContent()}
-          </Animated.ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <SleepCalendar
+                currentDate={currentDate}
+                onChangeDate={setCurrentDate}
+                sleepData={sleepData}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
+                currentStreak={currentStreak}
+              />
+
+              {selectedDay && (
+                <Animated.View
+                  style={[
+                    {
+                      opacity: dayInfoAnim,
+                      transform: [
+                        {
+                          translateY: dayInfoAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [10, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <DayInfoPanel
+                    day={selectedDay}
+                    onClose={() => setSelectedDay(null)}
+                  />
+                </Animated.View>
+              )}
+            </ScrollView>
+          </Animated.View>
         ) : (
           <ScrollView
             contentContainerStyle={styles.badgesGrid}
@@ -907,27 +1009,7 @@ export default function AchievmentsScreen() {
           </ScrollView>
         )}
 
-        {/* <View style={styles.infoContainer}>
-          <View style={styles.infoItem}>
-            <View style={[styles.infoIcon, { backgroundColor: "#8a2be2" }]}>
-              <Ionicons name="trophy" size={16} color="#fff" />
-            </View>
-            <Text style={styles.infoText}>Colored badges are achieved</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <View
-              style={[
-                styles.infoIcon,
-                { backgroundColor: "rgba(255,255,255,0.2)" },
-              ]}
-            >
-              <Ionicons name="lock-closed" size={16} color="#fff" />
-            </View>
-            <Text style={styles.infoText}>Locked badges need more days</Text>
-          </View>
-        </View> */}
-
-        {/* Demo controls with improved styling */}
+        {/* Demo controls */}
         <View style={styles.demoControls}>
           <TouchableOpacity
             style={[styles.demoButton, styles.decrementButton]}
@@ -1192,37 +1274,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8a2be2",
   },
-  infoContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-  },
-  infoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  infoText: {
-    fontSize: 14,
-    color: "#fff",
-    fontWeight: "500",
-  },
   demoControls: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -1271,13 +1322,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 10,
   },
-  // Enhanced Calendar styles
+  // New Calendar Styles
+  calendarWrapper: {
+    flex: 1,
+    marginBottom: 20,
+  },
   calendarContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 16,
     padding: 16,
-    paddingBottom: 20,
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
     shadowColor: "#000",
@@ -1286,13 +1340,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-  calendarHeader: {
+  monthNavigationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
-  calendarNavButton: {
+  monthNavigationButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -1305,7 +1359,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  calendarTitle: {
+  monthYearText: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
@@ -1313,32 +1367,42 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  calendarDaysOfWeek: {
+  weekdayHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 12,
+    marginBottom: 8,
     paddingBottom: 8,
-
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
-  calendarDayOfWeek: {
-    width: (width - 64) / 7,
-    textAlign: "center",
+  weekdayHeaderCell: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  weekdayHeaderText: {
     fontSize: 12,
     fontWeight: "600",
     color: "rgba(255, 255, 255, 0.7)",
     letterSpacing: 1,
   },
-  calendarGrid: {
+  calendarRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
+    marginBottom: 4,
   },
-  calendarDay: {
-    width: (width - 64) / 7,
-    height: (width - 64) / 7,
+  calendarDayCell: {
+    flex: 1,
+    aspectRatio: 1,
     padding: 2,
+  },
+  calendarDayNotCurrentMonth: {
+    opacity: 0.4,
+  },
+  calendarDayToday: {
+    padding: 0,
+  },
+  calendarDaySelected: {
+    transform: [{ scale: 1.1 }],
+    zIndex: 1,
   },
   calendarDayInner: {
     flex: 1,
@@ -1351,18 +1415,14 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  calendarDayToday: {
-    padding: 0,
+  calendarDayInnerNotCurrentMonth: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
-  calendarDayTodayInner: {
+  calendarDayInnerToday: {
     borderWidth: 2,
     borderColor: "#fff",
   },
-  calendarDaySelected: {
-    transform: [{ scale: 1.1 }],
-    zIndex: 1,
-  },
-  calendarDaySelectedInner: {
+  calendarDayInnerSelected: {
     borderWidth: 2,
     borderColor: "#ffd700",
   },
@@ -1371,16 +1431,78 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255, 255, 255, 0.8)",
   },
-  calendarDayTextLight: {
+  calendarDayTextNotCurrentMonth: {
+    color: "rgba(255, 255, 255, 0.4)",
+  },
+  calendarDayTextHighlight: {
     color: "#fff",
     fontWeight: "700",
   },
-  calendarDayDot: {
+  calendarDayIndicator: {
     position: "absolute",
-
-    bottom: 1,
+    bottom: 2,
   },
-  // Day info styles
+  calendarLegendContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  legendText: {
+    fontSize: 12,
+    color: "#fff",
+  },
+  calendarStatsContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  },
+  calendarStatsGradient: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    borderRadius: 12,
+    padding: 12,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statDivider: {
+    width: 1,
+    height: "80%",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "500",
+  },
+  // Day Info Styles
   dayInfoContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 12,
@@ -1447,65 +1569,5 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.6)",
     textAlign: "center",
     padding: 8,
-  },
-  calendarLegend: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  legendColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#fff",
-  },
-  calendarStats: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-  },
-  calendarStatsGradient: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    borderRadius: 12,
-    padding: 12,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statDivider: {
-    width: 1,
-    height: "80%",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "500",
   },
 });
