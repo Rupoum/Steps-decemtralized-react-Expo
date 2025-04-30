@@ -151,29 +151,21 @@ const App = () => {
       try {
         const clientId = "23Q8LW";
         const clientSecret = "b7ad7ce14620face8ab633f237c071bb";
-        const redirectUri = "com.youval21.stepsdecentralized://expo-development-client/?url=http%3A%2F%2F192.168.29.157%3A8081"
-      
-        // Encode client_id and client_secret in Base64
-        const authHeader = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
-      
+
         const tokenResponse = await axios.post(
           "https://api.fitbit.com/oauth2/token",
-          `client_id=${clientId}&` +
-            `grant_type=authorization_code&` +
-            `code=${code}&` +
-            `redirect_uri=${redirectUri}&` +
-            `code_verifier=${codeverifier}`,
+           `client_id=${clientId}&code=${code}&code_verifier="6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p"&grant_type=authorization_code`,
           {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
-              Authorization: authHeader, // Add the Authorization header
+              // "Authorization":"Basic MjNROExXTDpiN2FkN2NlMTQ2MjBmYWNlOGFiNjMzZjIzN2MwNzFiYg=="
             },
           }
         );
-      
+        console.log(tokenResponse);
         console.log("Token Response:", tokenResponse.data);
-      } catch (error) {
-        console.error("Error exchanging code for tokens:", error.response?.data || error.message);
+      } catch (error:any) {
+        console.error("Error exchanging code for tokens:", error);
       }
       
     };
@@ -551,6 +543,20 @@ const OfficialGames = ({ handleJoinClick }: any) => {
       Hours: "",
     },
   ]);
+   const scrollViewRef = useRef(null);
+   const [isAtEnd, setIsAtEnd] = useState(false);
+   const [scrollEnabled, setScrollEnabled] = useState(true);
+   const handleScroll = (event:any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+    if (isEnd && !isAtEnd) {
+      setIsAtEnd(true);
+      // setScrollEnabled(false);
+    } else if (!isEnd && isAtEnd) {
+      setIsAtEnd(false);
+      setScrollEnabled(true);
+    }
+  };
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
@@ -623,17 +629,22 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           </TouchableOpacity>
         </View>
         <ScrollView
+        ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.gamesScrollContent,
-            form.length <= 4 && {
-              alignSelf: "center",
-              width: 1400,
-              paddingRight: "40%",
-              paddingLeft: 0,
-            },
-          ]}
+          scrollEnabled={scrollEnabled}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+          // contentContainerStyle={[
+          //   styles.gamesScrollContent,
+          //   form.length <= 4 && {
+          //     alignSelf: "center",
+          //     width: 1400,
+          //     paddingRight: "40%",
+          //     paddingLeft: 0,
+          //   },
+          // ]}
         >
           {form.map((game) => (
             <View>
@@ -818,9 +829,11 @@ const OfficialGames = ({ handleJoinClick }: any) => {
               </View>
               {/* </Link> */}
               {/* </Pressable> */}
+              
             </View>
           ))}
         </ScrollView>
+        
       </View>
     </BottomSheetModalProvider>
   );
@@ -846,6 +859,20 @@ const CommunityGames = ({ handleJoinClick }: any) => {
       Hours: "",
     },
   ]);
+  const scrollViewRef = useRef(null);
+  const [isAtEnd, setIsAtEnd] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const handleScroll = (event:any) => {
+   const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+   const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+   if (isEnd && !isAtEnd) {
+     setIsAtEnd(true);
+     // setScrollEnabled(false);
+   } else if (!isEnd && isAtEnd) {
+     setIsAtEnd(false);
+     setScrollEnabled(true);
+   }
+ };
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
@@ -913,18 +940,23 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         </TouchableOpacity>
       </View>
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.gamesScrollContent,
-          form.length <= 4 && {
-            alignSelf: "center",
-            width: 1400,
-            paddingRight: "40%",
-            paddingLeft: 0,
-          },
-        ]}
-      >
+        ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          scrollEnabled={scrollEnabled}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+          // contentContainerStyle={[
+          //   styles.gamesScrollContent,
+          //   form.length <= 4 && {
+          //     alignSelf: "center",
+          //     width: 1400,
+          //     paddingRight: "40%",
+          //     paddingLeft: 0,
+          //   },
+          // ]}
+        >
         {form.map((game) => (
           <View>
             <View key={game.name} style={styles.gameCard}>
@@ -1294,6 +1326,9 @@ const styles = StyleSheet.create({
   gameDetailItem: {
     flex: 1,
     alignItems: "center",
+  },
+  scrollContent: {
+    paddingHorizontal: 10,
   },
   gameDetailLabel: {
     color: "#bfbfbf",

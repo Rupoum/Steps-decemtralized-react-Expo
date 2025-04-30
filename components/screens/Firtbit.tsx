@@ -8,8 +8,7 @@ import codegenNativeCommands from "react-native/Libraries/Utilities/codegenNativ
 import { AsyncLocalStorage } from "async_hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Fitbit=()=>{
-      
+const Fitbit=()=>{  
  const onclick=async()=>{
     try{
       const token=await gettoken();
@@ -70,9 +69,12 @@ const styles = StyleSheet.create({
   });
   const gettoken=async()=>{
     let redirectUrl:any;
-    let codeverifer:any;
- codeverifer=generateCodeVerifier();
-   const codechallenge=await generateCodeChallenge(codeverifer);
+ const codeverifer=generateCodeVerifier();
+ console.log("codeverifersssss",codeverifer);
+ await AsyncStorage.setItem("codes",codeverifer)
+   const codechallenge=await generateCodeChallenge("6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p");
+  console.log("codechhaa",codechallenge);  
+   await AsyncStorage.setItem("code",codechallenge)
     redirectUrl=new URL("https://www.fitbit.com/oauth2/authorize");
    redirectUrl.searchParams.append("client_id","23Q8LW");
    redirectUrl.searchParams.append("response_type", "code");
@@ -83,7 +85,7 @@ const styles = StyleSheet.create({
    const supported= await Linking.canOpenURL(redirectUrl.toString());
     if (supported) {
         await Linking.openURL(redirectUrl.toString());
-        await AsyncStorage.setItem("code",codeverifer)
+       
       } else {
         console.error("Don't know how to open this URL:", redirectUrl);
       }

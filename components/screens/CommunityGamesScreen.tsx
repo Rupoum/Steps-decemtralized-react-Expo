@@ -6,8 +6,16 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -21,93 +29,71 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SlideButton from "rn-slide-button";
-import {
-  Connection,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
-
 interface GAME {
   id: string;
-  title: string;
-  entryPrice: number;
-  time: string;
-  participants: number;
-  dailySteps: number;
+  name: string;
+  Amount: number;
+  days: number;
+  memberqty: number;
+  Dailystep: number;
+  types:string;
+  startdate:string,
+  status:string,
+  members:string,
+  Hours:string
 }
 
-const CommunityGamesScreen = () => {
+const OfficialGamesScreen = () => {
+  const [game, setgame] = useState<GAME[]>([]);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [selectedGame, setSelectedGame] = useState<GAME | null>(null);
-  const [games, setGames] = useState<GAME[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [joined, setjoined] = useState([]);
-  const [form, setform] = useState([
-    {
-      name: "",
-      memberqty: 0,
-      Dailystep: 0,
-      Totalamount: 0,
-      Amount: 0,
-      Digital_Currency: "sol",
-      days: 0,
-      startdate: "",
-      enddate: "",
-      id: "",
-      status: "",
-      types: "",
-      Hours: "",
-    },
-  ]);
   const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
-
+  const [selectedGame, setSelectedGame] = useState<GAME>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const[joined,setjoined]=useState([]);
   const snapPoints = useMemo(() => ["50%", "60%"], []);
-  const handleJoinClick = useCallback((game: GAME) => {
-    console.log("Joining game", game.title);
+  const handleJoinClick = useCallback((game: any) => {
+    console.log("Joining game", game.name);
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
-
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
-        const userid = await AsyncStorage.getItem("userid");
-        //  console.log("userdid");
+        const userid = await AsyncStorage.getItem("username");
+        console.log("userdid");
         const response = await axios.get(
-          `${BACKEND_URL}/history/prev/${userid}`
+          `${BACKEND_URL}/challenge/private/${userid}`
         );
-        //  console.log(response.data);
-        setjoined(response.data.Tournament);
+         console.log(response.data);
+        setjoined(response.data.allchalange);
       } catch (error) {
         console.log(error);
       }
     };
-
-    const fetchdata = async () => {
+    fetchuserdata();
+    const fetchgame = async () => {
+      setLoading(true);
       try {
-        const userid = await AsyncStorage.getItem("userid"); // Changed from "username" to "userid"
-        console.log(userid);
+        const userid = await AsyncStorage.getItem("username");
+        console.log("userdid");
         const response = await axios.get(
           `${BACKEND_URL}/challenge/private/${userid}`
         );
-        // console.log(response.data);
-        setform(response.data.allchalange);
-        // console.log("response", response.data.allchalange);
-      } catch (Error) {
-        console.log(Error);
+        setgame(response.data.allchalange);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchdata();
-    fetchuserdata();
+    fetchgame();
   }, []);
-
   const Onsend = async () => {
     try {
       const connection = new Connection("https://api.devnet.solana.com");
@@ -120,15 +106,18 @@ const CommunityGamesScreen = () => {
         return;
       }
       const balance = await connection.getBalance(new PublicKey(publickey));
-      if (balance < selectedGame.entryPrice * LAMPORTS_PER_SOL) {
+      console.log(selectedGame.Amount);
+      if (balance < selectedGame.Amount * LAMPORTS_PER_SOL) {
         Alert.alert("Not enough credit");
         return;
       }
+      console.log("chh");
+      console.log(publickey);
       const signature = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: new PublicKey(publickey),
           toPubkey: new PublicKey(escrowpublickey),
-          lamports: LAMPORTS_PER_SOL * selectedGame.entryPrice,
+          lamports: LAMPORTS_PER_SOL * selectedGame.Amount,
         })
       );
       const { blockhash } = await connection.getLatestBlockhash();
@@ -138,16 +127,17 @@ const CommunityGamesScreen = () => {
         requireAllSignatures: false,
         verifySignatures: false,
       });
+      console.log("chekc1");
       const response = await axios.post(
-        `${BACKEND_URL}/challenge/join/community/${selectedGame.id}`,
+        `${BACKEND_URL}/challenge/join/public/${selectedGame.id}`,
         { tx: serilize }
       );
       if (response.status == 200) {
-        Alert.alert("Added to the contest");
+        Alert.alert("ADDed to the contest");
       }
     } catch (e: any) {
       console.log(e);
-      Alert.alert(e.message || "An error occurred");
+      Alert.alert(e);
     }
   };
 
@@ -168,134 +158,191 @@ const CommunityGamesScreen = () => {
               },
             ]}
           >
-            {loading ? (
-              <ActivityIndicator size="large" color="#ffffff" />
-            ) : (
-              games.map((game) => (
-                <View key={game.id} style={styles.gameCard}>
-                  <View
-                    style={{
-                      alignItems: "center",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.gameHeader}>{game.title}</Text>
-                    </View>
-                    <View>
-                      <TouchableOpacity
-                        style={styles.joinbutton}
-                        onPress={() => handleJoinClick(game)}
-                      >
-                        <Text
-                          style={{
-                            color: "white",
-                            fontSize: 16,
-                          }}
-                        >
-                          Join
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: "90%",
-                        height: 0.5,
-                        marginTop: 20,
-                        backgroundColor: "#e5ccff",
-                      }}
-                    />
-                  </View>
-                  <View>
-                    <View
-                      style={{
-                        marginTop: 20,
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        paddingHorizontal: 5,
-                      }}
-                    >
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
+            {game.map((game) => (
                         <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            Entry
-                          </Text>
+                          {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
+                          <View key={game.id} style={styles.gameCard}>
+                            <Pressable
+                              onPress={() =>
+                                game.types === "sleep"
+                                  ? router.push(`/sleep/[id]`)
+                                  : router.push(`/status/${game.id}`)
+                              }
+                              style={({ pressed }) => [
+                                { opacity: pressed ? 0.8 : 1 },
+                                { flex: 1 },
+                              ]}
+                            >
+                              <View
+                                style={{
+                                  alignItems: "center",
+                                  flexDirection: "row",
+                                  justifyContent: "space-between",
+                                  paddingHorizontal: 10,
+                                }}
+                              >
+                                <View>
+                                  <Text style={styles.gameHeader}>{game.name}</Text>
+                                  <View>
+                                    <Text
+                                      style={{
+                                        color: "gray",
+                                        fontSize: 12,
+                                      }}
+                                    >
+                                      {game.startdate}
+                                    </Text>
+                                  </View>
+                                </View>
+                                {joined.some((join) => join.id == game.id) ||
+                                game.memberqty == game.members.length ? (
+                                  <View>
+                                    <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                      {game.memberqty == game.members.length
+                                        ? "Full"
+                                        : " Joined"}
+                                    </Text>
+                                    <Text
+                                      style={{
+                                        color: "white",
+                                        fontSize: 11,
+                                      }}
+                                    >
+                                      {game.status}
+                                    </Text>
+                                  </View>
+                                ) : (
+                                  <View>
+                                    <TouchableOpacity
+                                      style={styles.joinbutton}
+                                      onPress={() => handleJoinClick(game)}
+                                    >
+                                      <Text
+                                        style={{
+                                          color: "white",
+                                          fontSize: 16,
+                                        }}
+                                      >
+                                        Join
+                                      </Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                )}
+                              </View>
+                              <View
+                                style={{
+                                  marginTop: 10,
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <View
+                                  style={{
+                                    width: "90%",
+                                    height: 0.5,
+                                    marginTop: 15,
+                                    backgroundColor: "#e5ccff",
+                                  }}
+                                />
+                              </View>
+                              <View>
+                                <View
+                                  style={{
+                                    marginTop: 10,
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    paddingHorizontal: 5,
+                                  }}
+                                >
+                                  <View style={{ alignItems: "center" }}>
+                                    <View>
+                                      <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                        Entry
+                                      </Text>
+                                    </View>
+                                    <View>
+                                      <Text style={{ color: "white", fontSize: 13 }}>
+                                        {game.Amount}
+                                      </Text>
+                                    </View>
+                                  </View>
+                                  <View
+                                    style={{
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <View>
+                                      <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                        Days
+                                      </Text>
+                                    </View>
+            
+                                    <View>
+                                      <Text style={{ color: "white", fontSize: 13 }}>
+                                        {game.days}
+                                      </Text>
+                                    </View>
+                                  </View>
+                                  <View
+                                    style={{
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {game.types == "Steps" ? (
+                                      <View>
+                                        <View>
+                                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                            Daily Steps
+                                          </Text>
+                                        </View>
+                                        <View>
+                                          <Text style={{ color: "white", fontSize: 13 }}>
+                                            {game.Dailystep}
+                                          </Text>
+                                        </View>
+                                      </View>
+                                    ) : (
+                                      <View>
+                                        <View>
+                                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                            Hours
+                                          </Text>
+                                        </View>
+                                        <View>
+                                          <Text style={{ color: "white", fontSize: 13 }}>
+                                            {game.Hours}
+                                          </Text>
+                                        </View>
+                                      </View>
+                                    )}
+                                  </View>
+                                  <View
+                                    style={{
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <View>
+                                      <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
+                                        Players
+                                      </Text>
+                                    </View>
+                                    <View>
+                                      <Text style={{ color: "white", fontSize: 13 }}>
+                                        {game.memberqty}
+                                      </Text>
+                                    </View>
+                                  </View>
+                                </View>
+                              </View>
+                            </Pressable>
+                          </View>
+                          {/* </Link> */}
+                          {/* </Pressable> */}
                         </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.entryPrice}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            7 days
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.time}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            Daily Steps
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.dailySteps}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View>
-                          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>
-                            Players
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={{ color: "white", fontSize: 13 }}>
-                            {game.participants}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              ))
-            )}
+                      ))}
           </ScrollView>
           <BottomSheetModal
             ref={bottomSheetModalRef}
@@ -326,14 +373,14 @@ const CommunityGamesScreen = () => {
                     }}
                   >
                     <Text style={styles.bottomSheetTitle}>
-                      {selectedGame.title}
+                      {selectedGame.name}
                     </Text>
                     <Text
                       style={{
                         color: "white",
                       }}
                     >
-                      You Pay: {selectedGame.entryPrice}
+                      You Pay: {selectedGame.Amount}
                     </Text>
                     <SlideButton
                       title="Slide To Confirm"
@@ -351,6 +398,7 @@ const CommunityGamesScreen = () => {
                         backgroundColor: "#1a0033",
                       }}
                       onSlideEnd={Onsend}
+                      // height="30%"
                     />
                   </View>
                 </View>
@@ -386,8 +434,10 @@ const styles = StyleSheet.create({
   gameCard: {
     backgroundColor: "rgba(0, 0, 0, 0.8)",
     borderRadius: 10,
+
     marginTop: 20,
     marginHorizontal: 20,
+
     paddingHorizontal: 15,
     paddingVertical: 20,
     paddingBottom: 40,
@@ -421,4 +471,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CommunityGamesScreen;
+export default OfficialGamesScreen;
