@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 // import { Avatar } from "react-native-ui-lib";
+import { Skeleton } from '@rneui/themed';
 import {
   View,
   Text,
@@ -146,8 +147,7 @@ const App = () => {
       const code = parse.searchParams.get('code');
       console.log("code", code);
       const codeverifier = await AsyncStorage.getItem("code");
-      console.log("codeverifier", codeverifier);
-      
+      console.log("codeverifier", codeverifier);   
       try {
         const clientId = "23Q8LW";
         const clientSecret = "b7ad7ce14620face8ab633f237c071bb";
@@ -173,7 +173,6 @@ const App = () => {
     Linking.addEventListener('url', ({ url }) => handleRedirect(url));
     // handleRedirect();
   })
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -259,6 +258,7 @@ const App = () => {
     }, 2000);
   }, []);
   return (
+
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar
         animated={true}
@@ -525,6 +525,7 @@ interface Game {
 const OfficialGames = ({ handleJoinClick }: any) => {
   const [error, seterror] = useState("");
   const [joined, setjoined] = useState([]);
+  const[loading,setloading]=useState(false);
   const [form, setform] = useState([
     {
       name: "",
@@ -560,6 +561,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
+        setloading(true);
         const userid = await AsyncStorage.getItem("userid");
         console.log("userdid");
         const response = await axios.get(
@@ -569,16 +571,21 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
+      }finally{
+        setloading(false);
       }
     };
     const fetchdata = async () => {
       try {
+        setloading(true);
         const response = await axios.get(`${BACKEND_URL}/challenge/public`);
         // console.log(response.data);
         setform(response.data.allchalange);
         // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
+      }finally{
+        setloading(false);
       }
     };
     fetchdata();
@@ -606,6 +613,8 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           }}
         >
           <Text style={styles.gamesTitle}>Official Games</Text>
+          
+          
           <TouchableOpacity
             style={{
               paddingHorizontal: 10,
@@ -628,6 +637,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             </View>
           </TouchableOpacity>
         </View>
+    
         <ScrollView
         ref={scrollViewRef}
           horizontal
@@ -648,6 +658,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         >
           {form.map((game) => (
             <View>
+                 {loading?<Skeleton height={80} width={250} animation="pulse"LinearGradientComponent></Skeleton>:<View>
               {/* <Pressable onPress={() => router.navigate('/status/', { [id]: "2" })}> */}
               <View key={game.id} style={styles.gameCard}>
                 <Pressable
@@ -829,7 +840,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
               </View>
               {/* </Link> */}
               {/* </Pressable> */}
-              
+          </View>}
             </View>
           ))}
         </ScrollView>
