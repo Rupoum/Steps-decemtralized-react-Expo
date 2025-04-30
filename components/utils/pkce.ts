@@ -1,22 +1,22 @@
-// utils/pkce.ts
-import crypto from "crypto";
+import * as Crypto from 'expo-crypto';
 
 export function generateCodeVerifier(): string {
-  return base64URLEncode(crypto.randomBytes(32));
+  const randomBytes = Crypto.getRandomBytes(32);
+  return base64URLEncode(randomBytes);
 }
 
-export function generateCodeChallenge(codeVerifier: string): string {
-  return base64URLEncode(sha256(codeVerifier));
-}
+export const generateCodeChallenge = async (codeVerifier: string): Promise<string> => {
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    codeVerifier
+  );
+  return base64URLEncode(digest);
+};
 
-function sha256(buffer: string): Buffer {
-  return crypto.createHash("sha256").update(buffer).digest();
-}
-
-function base64URLEncode(buffer: Buffer | string): string {
-  return buffer
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+function base64URLEncode(buffer: Uint8Array | string): string {
+  const str = typeof buffer === 'string' ? buffer : Buffer.from(buffer).toString('base64');
+  return str
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { Stack } from "expo-router";
-
+import { linking } from "@/components/screens/linking";
 export default function RootLayout() {
   return (
     <Stack
@@ -12,7 +12,10 @@ export default function RootLayout() {
         headerTitleStyle: {
           fontWeight: "bold",
         },
+      
       }}
+      
+      linking={linking} 
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
@@ -30,7 +33,7 @@ export default function RootLayout() {
       />
       <Stack.Screen
         name="(nonav)/historyGames"
-        options={{ title: "History" }}
+        options={{ title: " " }}
       />
       <Stack.Screen
         name="(nonav)/notification"

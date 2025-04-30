@@ -19,6 +19,7 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -88,6 +89,7 @@ const TransactionLoader = ({
     }
   }, [loading, spinValue]);
 
+
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
@@ -137,6 +139,48 @@ const App = () => {
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
+  useEffect(()=>{
+    const handleRedirect = async (url:string) => {
+      const parse=new URL(url);
+      console.log("pars",parse);
+      const code = parse.searchParams.get('code');
+      console.log("code", code);
+      const codeverifier = await AsyncStorage.getItem("code");
+      console.log("codeverifier", codeverifier);
+      
+      try {
+        const clientId = "23Q8LW";
+        const clientSecret = "b7ad7ce14620face8ab633f237c071bb";
+        const redirectUri = "com.youval21.stepsdecentralized://expo-development-client/?url=http%3A%2F%2F192.168.29.157%3A8081"
+      
+        // Encode client_id and client_secret in Base64
+        const authHeader = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
+      
+        const tokenResponse = await axios.post(
+          "https://api.fitbit.com/oauth2/token",
+          `client_id=${clientId}&` +
+            `grant_type=authorization_code&` +
+            `code=${code}&` +
+            `redirect_uri=${redirectUri}&` +
+            `code_verifier=${codeverifier}`,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Authorization: authHeader, // Add the Authorization header
+            },
+          }
+        );
+      
+        console.log("Token Response:", tokenResponse.data);
+      } catch (error) {
+        console.error("Error exchanging code for tokens:", error.response?.data || error.message);
+      }
+      
+    };
+    // Linking.getInitialURL().then(handleRedirect);
+    Linking.addEventListener('url', ({ url }) => handleRedirect(url));
+    // handleRedirect();
+  })
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
