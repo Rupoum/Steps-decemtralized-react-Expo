@@ -13,101 +13,91 @@ import axios from "axios";
 import { BACKEND_URL } from "@/Backendurl";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-interface user{
-  id:number,
-  username:string
+interface user {
+  id: number;
+  username: string;
 }
 const NotificationsScreen = () => {
-  const [username,setusername]=useState<user[]>([]);
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      message: "Xyz sent you a friend request",
-      type: "friend_request",
-    },
-    {
-      id: "3",
-      message: "ABcd sent you a friend request",
-      type: "friend_request",
-    },
-  ]);
+  const [username, setusername] = useState<user[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const userid = await AsyncStorage.getItem("userid");
+      const response = await axios.get(
+        `${BACKEND_URL}/friend/request/${userid}`
+      );
+      const username: [] = response.data.message;
+      const formattedMessage = username.map((username, index) => ({
+        id: index + 1,
+        username,
+      }));
+      setusername(formattedMessage);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNotifications = async () => {
-      setIsLoading(true);
-      try {
-        const userid = await AsyncStorage.getItem("userid");
-        console.log(userid);
-        const response = await axios.get(
-          `${BACKEND_URL}/friend/request/${userid}`
-        );
-        const username:[]=response.data.message;
-        const formatedmessage=username.map((username,index)=>({
-           id:index+1,
-           username
-        }))
-        console.log(formatedmessage);
-        setusername(formatedmessage);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchNotifications();
   }, []);
 
-  const handleAccept = async (notificationId: string,username:string) => {
-    try { 
-      const userid=await AsyncStorage.getItem("userid");
+  const handleAccept = async (notificationId: string, username: string) => {
+    try {
+      const userid = await AsyncStorage.getItem("userid");
       await axios.post(`${BACKEND_URL}/accept/friend`, {
-        userid:userid,
-        username:username,
-        bool:true
+        userid: userid,
+        username: username,
+        bool: true,
       });
-      setNotifications((prev) =>
+      setusername((prev) =>
         prev.filter((notification) => notification.id !== notificationId)
       );
+      fetchNotifications(); // Refresh notifications
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
   };
+
   const handleDecline = async (notificationId: string) => {
     try {
-      const userid=await AsyncStorage.getItem("userid");
-      const response=await axios.post(`${BACKEND_URL}/accept/friend`, {
-        userid:userid,
-        username:username,
-        bool:false
+      const userid = await AsyncStorage.getItem("userid");
+      await axios.post(`${BACKEND_URL}/accept/friend`, {
+        userid: userid,
+        username: username,
+        bool: false,
       });
-      // if(res)
-      router.push("/(nonav)/notification")  
-      setNotifications((prev) =>
+      setusername((prev) =>
         prev.filter((notification) => notification.id !== notificationId)
       );
+      fetchNotifications(); // Refresh notifications
     } catch (error) {
       console.error("Error declining friend request:", error);
     }
   };
+
   const renderNotification = ({ item }: any) => (
     <View style={styles.notificationItem}>
-      <Text style={styles.notificationText}>{item.username} sent you a friend request</Text>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => handleAccept(item.id,item.username)}
-          >
-            <Ionicons name="checkmark-circle" size={30} color="green" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.declineButton}
-            onPress={() => handleDecline(item.username)}
-          >
-            <Ionicons name="close-circle" size={30} color="red" />
-          </TouchableOpacity>
-        </View>
-      
+      <Text style={styles.notificationText}>
+        {item.username} sent you a friend request
+      </Text>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={styles.acceptButton}
+          onPress={() => handleAccept(item.id, item.username)}
+        >
+          <Ionicons name="checkmark-circle" size={30} color="green" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.declineButton}
+          onPress={() => handleDecline(item.username)}
+        >
+          <Ionicons name="close-circle" size={30} color="red" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 

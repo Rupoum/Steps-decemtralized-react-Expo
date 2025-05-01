@@ -22,8 +22,8 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSignInSuccess
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const configureGoogleSignIn = async () => {
-    await GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
+    GoogleSignin.configure({
+      webClientId: '297646595436-5mkc7f3js1s945jcqd5d2gvibkc9a67r.apps.googleusercontent.com', 
       offlineAccess: true, 
       forceCodeForRefreshToken: true, 
     });
@@ -50,16 +50,18 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSignInSuccess
   };
 
   const handleSignInSuccess = (data: any) => {
-    onSignInSuccess({
-      idToken: data.idToken,
+    // Safely extract user data (new response format)
+    const userData = {
+      idToken: data.idToken || '',
       user: {
-        id: data.user.id,
-        name: [data.user.givenName, data.user.familyName].filter(Boolean).join(' '),
-        email: data.user.email,
-        photo: data.user.photo,
+        id: data.user?.id || data.id || '', // Fallback for different formats
+        name: [data.user?.givenName, data.user?.familyName].filter(Boolean).join(' ') || 'No name',
+        email: data.user?.email || '',
+        photo: data.user?.photo || null,
       },
-    });
-  };
+    };
+    onSignInSuccess(userData);
+  };;
 
   const handleSignInError = (error: NativeModuleError) => {
     switch (error.code) {

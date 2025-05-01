@@ -5,7 +5,7 @@
     "platforms": ["android", "ios", "web"],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/splash-screen.png",
+    "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -37,9 +37,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-screen.png",
+          "image": "./assets/images/splash-icon-light.png",
           "imageWidth": 200,
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#332AB2"
         }
       ],
       [
