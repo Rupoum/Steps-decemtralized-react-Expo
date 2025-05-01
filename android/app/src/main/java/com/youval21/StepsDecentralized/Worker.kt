@@ -86,7 +86,6 @@ class HealthDataWorker(appContext: Context, workerParams: WorkerParameters) :
         startTime.toInstant(),
         now.toInstant()
     )
-    
     val request = ReadRecordsRequest(
         recordType = SleepSessionRecord::class,
         timeRangeFilter = timeRangeFilter

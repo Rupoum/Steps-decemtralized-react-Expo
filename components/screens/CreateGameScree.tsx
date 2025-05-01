@@ -163,7 +163,6 @@ const CreateGameScreen = () => {
           console.error("Error parsing error response:", parseError);
           ToastAndroid.show("An unexpected error occurred.", ToastAndroid.LONG);
         }
-        
       } else {
         console.log(err);
         seterror("An unexpected error occurred. Please try again.");
