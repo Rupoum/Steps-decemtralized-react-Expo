@@ -38,6 +38,23 @@ const ProfileScreen = () => {
     "friends"
   );
   const animatedValue = useRef(new Animated.Value(0)).current;
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const userid = await AsyncStorage.getItem("userid");
+        const response = await axios.get(
+          `${BACKEND_URL}/friend/request/${userid}`
+        );
+        setNotificationCount(response.data.message.length);
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
+
+    fetchNotificationCount();
+  }, []);
 
   interface Friend {
     username: string;
@@ -159,14 +176,40 @@ const ProfileScreen = () => {
             onPress={() => router.push("/(nonav)/notification")}
             style={{
               padding: 10,
+              position: "relative",
             }}
           >
             <Ionicons
               name="notifications"
               size={24}
-              color="white"
-              style={{ position: "absolute", right: 20, top: 5 }}
+              color="#FFD700" // Gold color for the icon
+              style={{ position: "absolute", right: 20, top: 7 }}
             />
+            {notificationCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: -0,
+                  backgroundColor: "#FF4500",
+                  borderRadius: 10,
+                  width: 18,
+                  height: 18,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF", // White color for the badge text
+                    fontSize: 12,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {notificationCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <View style={styles.profileCard}>
             <Image
@@ -319,7 +362,7 @@ const ProfileScreen = () => {
                 style={styles.optionIcon}
               />
             </View>
-          </TouchableOpacity>{" "}
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push("/(nonav)/achievments")}>
             <View style={styles.options}>
               <Text style={styles.optionText}>Achievments</Text>
