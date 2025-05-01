@@ -56,8 +56,12 @@ const CreateGameScreen = () => {
   const [date, setDate] = useState(new Date(1598051730000));
   const [mode, setMode] = useState("date");
   const [show, setShow] = useState(false);
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+   const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
+    const [endDateMode, setEndDateMode] = useState<"date" | "time">("date");
+    const [showStartDate, setShowStartDate] = useState(false);
+    const [showEndDate, setShowEndDate] = useState(false);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState<"public" | "community">(
     "public"
   );
@@ -100,34 +104,36 @@ const CreateGameScreen = () => {
       }
     });
   };
+    const handleStartDateChange = (event: any, selectedDate: any) => {
+      if (selectedDate) {
+        const currentDate = selectedDate;
+        setShowStartDate(false);
+        setStartDate(currentDate);
+        setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
+      } else {
+        setShowStartDate(false);
+      }
+    };
+  
+    const handleEndDateChange = (event: any, selectedDate: any) => {
+      if (selectedDate) {
+        const currentDate = selectedDate;
+        setShowEndDate(false);
+        setEndDate(currentDate);
+        setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
+      } else {
+        setShowEndDate(false);
+      }
+    };
+  
 
   useEffect(() => {
     setform((prev) => ({ ...prev, request: selectedFriends }));
   }, [selectedFriends]);
 
-  const showMode = (currentMode: any) => {
-    setShow(true);
-    setMode(currentMode);
-  };
 
-  const showDatepicker = () => {
-    showMode("date");
-  };
 
-  const handleStartDateChange = (event: any, selectedDate: any) => {
-    const currentDate = selectedDate || startDate;
-    setShow(false);
-    setStartDate(currentDate);
-    setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
-  };
-
-  const handleEndDateChange = (event: any, selectedDate: any) => {
-    const currentDate = selectedDate || endDate;
-    setShow(false);
-    setEndDate(currentDate);
-    setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
-  };
-
+  
   const handleCreategame = async () => {
     setLoading(true);
     seterror(null);
@@ -236,6 +242,15 @@ const CreateGameScreen = () => {
       },
     ],
   };
+  const showStartDatePicker = () => {
+    setStartDateMode("date");
+    setShowStartDate(true);
+  };
+
+  const showEndDatePicker = () => {
+    setEndDateMode("date");
+    setShowEndDate(true);
+  };
 
   const handleSheetChanges = useCallback((index: number) => {
     // console.log("handleSheetChanges", index);
@@ -281,18 +296,21 @@ const CreateGameScreen = () => {
                     </View>
 
                     <GameForm
-                      form={form}
-                      setform={setform}
-                      loading={loading}
-                      error={error}
-                      startDate={startDate}
-                      endDate={endDate}
-                      show={show}
-                      mode={mode}
-                      showMode={showMode}
-                      handleStartDateChange={handleStartDateChange}
-                      handleEndDateChange={handleEndDateChange}
-                      handleCreategame={handleCreategame}
+                 form={form}
+                 setform={setform}
+                 loading={loading}
+                 error={error}
+                 startDate={startDate}
+                 endDate={endDate}
+                 showStartDate={showStartDate}
+                 showEndDate={showEndDate}
+                 startDateMode={startDateMode}
+                 endDateMode={endDateMode}
+                 showStartDatePicker={showStartDatePicker}
+                 showEndDatePicker={showEndDatePicker}
+                 handleStartDateChange={handleStartDateChange}
+                 handleEndDateChange={handleEndDateChange}
+                 handleCreategame={handleCreategame}
                     />
                   </View>
                 ) : (
@@ -303,18 +321,21 @@ const CreateGameScreen = () => {
                       </Text>
                     </View>
                     <GameForm
-                      form={privateform}
-                      setform={setprivateform}
-                      loading={loading}
-                      error={error}
-                      startDate={startDate}
-                      endDate={endDate}
-                      show={show}
-                      mode={mode}
-                      showMode={showMode}
-                      handleStartDateChange={handleStartDateChange}
-                      handleEndDateChange={handleEndDateChange}
-                      handleCreategame={handlePrivateCreategame}
+                 form={form}
+                 setform={setform}
+                 loading={loading}
+                 error={error}
+                 startDate={startDate}
+                 endDate={endDate}
+                 showStartDate={showStartDate}
+                 showEndDate={showEndDate}
+                 startDateMode={startDateMode}
+                 endDateMode={endDateMode}
+                 showStartDatePicker={showStartDatePicker}
+                 showEndDatePicker={showEndDatePicker}
+                 handleStartDateChange={handleStartDateChange}
+                 handleEndDateChange={handleEndDateChange}
+                 handleCreategame={handlePrivateCreategame}
                     />
                     <TouchableOpacity
                       onPress={handlePresentModalPress}
@@ -400,9 +421,12 @@ const GameForm = ({
   error,
   startDate,
   endDate,
-  show,
-  mode,
-  showMode,
+  showStartDate,
+  showEndDate,
+  startDateMode,
+  endDateMode,
+  showStartDatePicker,
+  showEndDatePicker,
   handleStartDateChange,
   handleEndDateChange,
   handleCreategame,
@@ -436,14 +460,13 @@ const GameForm = ({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="DailySteps"
+          placeholder="Step Target"
           placeholderTextColor="#999"
-          onChangeText={(e) => setform({ ...form, Dailystep: parseInt(e) })}
-          keyboardType="number-pad"
+          onChangeText={(e) => setform({ ...form,  Dailystep: parseInt(e) })}
+          keyboardType="name-phone-pad"
           autoCapitalize="none"
         />
       </View>
-
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -469,16 +492,16 @@ const GameForm = ({
         />
       </View>
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={() => showMode("date")}>
+        <TouchableOpacity onPress={showStartDatePicker}>
           <Text style={styles.dateButtonText}>
             Start Date: {format(startDate, "yyyy-MM-dd")}
           </Text>
         </TouchableOpacity>
-        {show && (
+        {showStartDate && (
           <DateTimePicker
             testID="dateTimePicker"
             value={startDate}
-            mode={mode}
+            mode={startDateMode}
             is24Hour={true}
             display="default"
             onChange={handleStartDateChange}
@@ -486,16 +509,16 @@ const GameForm = ({
         )}
       </View>
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={() => showMode("date")}>
+        <TouchableOpacity onPress={showEndDatePicker}>
           <Text style={styles.dateButtonText}>
             End Date: {format(endDate, "yyyy-MM-dd")}
           </Text>
         </TouchableOpacity>
-        {show && (
+        {showEndDate && (
           <DateTimePicker
             testID="dateTimePicker"
             value={endDate}
-            mode={mode}
+            mode={endDateMode}
             is24Hour={true}
             display="default"
             onChange={handleEndDateChange}
@@ -522,6 +545,7 @@ const GameForm = ({
     </View>
   );
 };
+
 
 // Styles
 const styles = StyleSheet.create({

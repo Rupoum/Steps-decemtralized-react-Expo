@@ -1,79 +1,118 @@
-import React from 'react';
-import { StyleSheet, Text, View, Platform, ScrollView } from 'react-native';
-import { AirbnbRating } from '@rneui/themed';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
+import {
+  GoogleSignin,
+  statusCodes,
+  NativeModuleError,
+} from '@react-native-google-signin/google-signin';
 
-type RatingsComponentProps = {};
+interface UserData {
+  idToken: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    photo?: string;
+  };
+}
+interface GoogleSignInButtonProps {
+  onSignInSuccess: (data: UserData) => void;
+}
+const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSignInSuccess }) => {
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-const Ratings: React.FunctionComponent<RatingsComponentProps> = () => {
-const ratingCompleted = (rating: number) => {
-  console.log('Rating is: ' + rating);
-};
+  const configureGoogleSignIn = async () => {
+    await GoogleSignin.configure({
+      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
+      offlineAccess: true, 
+      forceCodeForRefreshToken: true, 
+    });
+  };
 
-const ratingProps = {};
-return (
-  <View style={styles.container}>
-    <ScrollView style={styles.viewContainer}>
-      <View
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginBottom: 30,
-        }}
-      >
-        <AirbnbRating />
-        <AirbnbRating isDisabled={true}/>
-        <AirbnbRating
-          count={11}
-          reviews={[
-            'Terrible',
-            'Bad',
-            'Meh',
-            'OK',
-            'Good',
-            'Hmm...',
-            'Very Good',
-            'Wow',
-            'Amazing',
-            'Unbelievable',
-            'Jesus',
-          ]}
-          defaultRating={11}
-          size={20}
-        />
-      </View>
-    </ScrollView>
-  </View>
-);
+  const handleSignIn = async () => {
+    if (Platform.OS !== 'android') {
+      Alert.alert('Warning', 'This sign-in method is optimized for Android');
+      return;
+    }
+
+    setIsSigningIn(true);
+    try {
+      await configureGoogleSignIn();
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      
+      const userInfo = await GoogleSignin.signIn();
+      handleSignInSuccess(userInfo);
+    } catch (error) {
+      handleSignInError(error as NativeModuleError);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleSignInSuccess = (data: any) => {
+    onSignInSuccess({
+      idToken: data.idToken,
+      user: {
+        id: data.user.id,
+        name: [data.user.givenName, data.user.familyName].filter(Boolean).join(' '),
+        email: data.user.email,
+        photo: data.user.photo,
+      },
+    });
+  };
+
+  const handleSignInError = (error: NativeModuleError) => {
+    switch (error.code) {
+      case statusCodes.SIGN_IN_CANCELLED:
+        Alert.alert('Sign in cancelled');
+        break;
+      case statusCodes.IN_PROGRESS:
+        Alert.alert('Sign in already in progress');
+        break;
+      case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+        Alert.alert(
+          'Google Play Services Required',
+          'Please update Google Play Services'
+        );
+        break;
+      default:
+        Alert.alert('Error', error.message || 'Unknown error occurred');
+        console.error('Google SignIn Error:', error);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={[styles.button, isSigningIn && styles.buttonDisabled]}
+      onPress={handleSignIn}
+      disabled={isSigningIn}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.buttonText}>
+        {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
+      </Text>
+    </TouchableOpacity>
+  );
 };
 
 const styles = StyleSheet.create({
-container: {
-  flex: 1,
-},
-headingContainer: {
-  paddingTop: 50,
-},
-titleText: {
-  fontSize: 25,
-  fontWeight: 'bold',
-  textAlign: 'center',
-  paddingVertical: 5,
-  fontFamily: Platform.OS === 'ios' ? 'Menlo-Bold' : '',
-  color: '#27ae60',
-},
-subtitleText: {
-  fontSize: 18,
-  fontWeight: '400',
-  textAlign: 'center',
-  fontFamily: Platform.OS === 'ios' ? 'Trebuchet MS' : '',
-  color: '#34495e',
-},
-viewContainer: {
-  flex: 1,
-},
-rating: {
-  paddingVertical: 10,
-},
+  button: {
+    backgroundColor: '#4285F4',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 4,
+    elevation: 3,
+    minWidth: 200,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
 
-export default Ratings;
+export default GoogleSignInButton;
