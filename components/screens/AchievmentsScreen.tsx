@@ -762,7 +762,16 @@ const MilestoneTimeline = ({ currentStreak, badges }) => {
   // Find the next milestone
   const nextMilestone = badges.find((badge) => badge.days > currentStreak);
 
-  // Calculate progress to next milestone
+  // Get all achieved milestones
+  const achievedMilestones = badges.filter(
+    (badge) => badge.days <= currentStreak
+  );
+  const lastAchievedMilestone =
+    achievedMilestones.length > 0
+      ? achievedMilestones[achievedMilestones.length - 1]
+      : null;
+
+  // Calculate progress to next milestone - FIXED CALCULATION
   const progressPercentage = nextMilestone
     ? Math.min(100, (currentStreak / nextMilestone.days) * 100)
     : 100;
@@ -770,7 +779,6 @@ const MilestoneTimeline = ({ currentStreak, badges }) => {
   return (
     <View style={styles.milestoneContainer}>
       <View style={styles.milestoneHeader}>
-        {/* <Text style={styles.milestoneTitle}>Your Sleep Journey</Text> */}
         {nextMilestone && (
           <Text style={styles.nextMilestoneText}>
             Next milestone: {nextMilestone.days} Days
@@ -789,32 +797,46 @@ const MilestoneTimeline = ({ currentStreak, badges }) => {
         </View>
 
         <View style={styles.milestoneMarkers}>
-          {badges.map((badge) => (
+          {/* Show only achieved milestones and the next one */}
+          {achievedMilestones.map((badge) => (
             <View
               key={badge.id}
               style={[
                 styles.milestoneMarker,
                 {
-                  left: `${Math.min(
-                    100,
-                    (badge.days / (nextMilestone?.days || 90)) * 100
-                  )}%`,
+                  left: `${(badge.days / (nextMilestone?.days || 90)) * 100}%`,
                 },
-                currentStreak >= badge.days && styles.milestoneMarkerAchieved,
+                styles.milestoneMarkerAchieved,
               ]}
             >
-              <Ionicons
-                name={
-                  currentStreak >= badge.days ? badge.icon : "ellipse-outline"
-                }
-                size={16}
-                color={
-                  currentStreak >= badge.days ? "#fff" : "rgba(255,255,255,0.5)"
-                }
-              />
+              <Ionicons name={badge.icon} size={16} color="#fff" />
               <Text style={styles.milestoneMarkerText}>{badge.days}</Text>
             </View>
           ))}
+
+          {/* Show the next milestone */}
+          {nextMilestone && (
+            <View
+              style={[
+                styles.milestoneMarker,
+                {
+                  left: `${Math.min(
+                    100,
+                    (nextMilestone.days / (nextMilestone.days || 90)) * 100
+                  )}%`,
+                },
+              ]}
+            >
+              <Ionicons
+                name={nextMilestone.icon}
+                size={16}
+                color="rgba(255,255,255,0.5)"
+              />
+              <Text style={styles.milestoneMarkerText}>
+                {nextMilestone.days}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
