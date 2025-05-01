@@ -55,7 +55,7 @@ import {
 import Entypo from "@expo/vector-icons/Entypo";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
-import { fonts } from "@rneui/base";
+import { color, fonts, Icon, Slider } from "@rneui/base";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FadeInDown } from "react-native-reanimated";
 interface GAme {
@@ -172,6 +172,7 @@ const App = () => {
       }
       
     };
+
     // Linking.getInitialURL().then(handleRedirect);
     Linking.addEventListener('url', ({ url }) => handleRedirect(url));
     // handleRedirect();
@@ -443,7 +444,8 @@ const StepsCount = () => {
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         console.log(hours);
         console.log(minutes);
-        setsleep(hours.toString() + " " + "H" + " " + minutes.toString() + "M");
+        setsleep(hours.toString()+ "h" +" "+ minutes.toString() + "m");
+      
         let count = 0;
         records.forEach((record) => {
           if (
@@ -453,6 +455,23 @@ const StepsCount = () => {
           }
         });
         setstep(count);
+        const userid=await AsyncStorage.getItem("userid");
+        console.log("usri",userid);
+        console.log(sleep);
+        console.log("step",step)
+        try{
+          const steps=step.toString();
+          console.log(steps);
+          const response =await axios.post(`${BACKEND_URL}/regular/update`,{steps,userid});
+          const sleepresponse=await axios.post(`${BACKEND_URL}/regular/update/sleep`,{hours:sleep,userid})
+
+          console.log("heety");
+        console.log(response);
+        }
+        catch(e){
+          console.log("dasd");
+          console.log(e);
+        }
       } catch (err) {
         console.error("Error fetching steps:", err);
         seterror("Failed to fetch steps. Please try again.");
@@ -462,25 +481,85 @@ const StepsCount = () => {
   });
   const usertarget = 5000;
   return (
-    <LinearGradient
-    colors={['#FFFFFF', '#FFD7D7']}
-    start={{ x: 0.5, y: 0 }}
-    end={{ x: 0.5, y: 1 }}
-    style={styles.stepbox}
-  >
-     
-      <Card.Title>Todays Step</Card.Title>
-      
-      <Card.Divider/>
-      <View ><Text style={styles.StepTarget}>
-       100  
-      </Text>
+    <View>
+    <View>
+      <View style={styles.stepsCard}>
+        <Text
+          style={[
+            styles.text,
+            {
+              fontSize: 15,
+              marginBottom: 5,
+              color: "#9e9a99",
+            },
+          ]}
+        >
+          Open Health Connect to sync
+        </Text>
+        <Text
+          style={[
+            styles.text,
+            {
+              color: "#9e9a99",
+              fontSize: 12,
+            },
+          ]}
+        >
+          (wait for few minutes)
+        </Text>
+        <Image
+          source={require("../../assets/images/sleep2.png")}
+          style={{
+            width: 170,
+            height: 200,
+            resizeMode: "contain",
+            marginTop: 20,
+          }}
+        />
+             <Slider
+        value={step}
+        minimumValue={0}
+        maximumValue={usertarget}
+        disabled={true}
+        // thumbTintColor="#4CAF50"
+        // minimumTrackTintColor="#4CAF50"
+        // maximumTrackTintColor="#e0e0e0"
+        // trackStyle={{ height: 5, backgroundColor: 'transparent' }}
+        // thumbStyle={{ height: 20, width: 20, backgroundColor: 'transparent' }}
+        thumbProps={{
+          children: (
+            <Icon
+              name="heartbeat"
+              type="font-awesome"
+              size={20}
+              reverse
+              containerStyle={{ bottom: 20, right: 20 }}
+              color={color()}
+            />
+          ),
+        }}
+        style={styles.slider}
+      />
+
+        <View style={styles.setpsdiv}>
+          <Text style={styles.steptext}>{step}</Text>
+          <Text style={{ color: "white", fontSize: 20 }}>/</Text>
+          <Text style={styles.texttarget}>{usertarget}</Text>
+          <Text
+            style={{
+              marginLeft: 5,
+              color: "#9e9a99",
+              fontSize: 15,
+              fontWeight: "bold",
+            }}
+          >
+            steps
+          </Text>
+        </View>
 
       </View>
-     {/* </LinearGradient> */}
-    
-     </LinearGradient>
-  
+    </View>
+  </View>
   );
 };
 interface Game {
@@ -631,10 +710,14 @@ const OfficialGames = ({ handleJoinClick }: any) => {
     {loading ? (
       <Skeleton 
         animation="pulse" 
-        style={[styles.gameCard, { height: 180 }]} 
+        style={styles.gameCard} 
+        height={170}
+        width={320}
         LinearGradientComponent={LinearGradient}
       />
     ) : (
+      <View>
+       
       <Animated.View 
         entering={FadeInDown.duration(400).delay(200)}
         style={[
@@ -865,6 +948,8 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           </Pressable>
         </LinearGradient>
       </Animated.View>
+      </View>
+  
     )}
   </View>
 ))}
@@ -1003,10 +1088,12 @@ const CommunityGames = ({ handleJoinClick }: any) => {
   <View key={game.id}>
     {loading ? (
       <Skeleton 
-        animation="pulse" 
-        style={[styles.gameCard, { height: 180 }]} 
-        LinearGradientComponent={LinearGradient}
-      />
+      animation="pulse" 
+      style={styles.gameCard} 
+      height={170}
+      width={320}
+      LinearGradientComponent={LinearGradient}
+    />
     ) : (
       <Animated.View 
         entering={FadeInDown.duration(400).delay(200)}
@@ -1335,6 +1422,131 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
+  sleepTargetText: {
+    fontSize: 16,
+    color: '#9e9a99',
+    marginLeft: 5,
+  },
+  sleepVisual: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  sleepHourBlock: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: '#e0e0e0',
+    marginRight: 5,
+  },
+  sleepHourFilled: {
+    backgroundColor: '#5C6BC0',
+  },
+  syncContainer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+  },
+  proggressContainer: {
+    marginBottom: 25,
+  },
+  proggressTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#9e9a99',
+    marginBottom: 10,
+  },
+  header: {
+    marginBottom: 15,
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  statsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+ 
+  badgeContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+  },
+  badge: {
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  successBadge: {
+    backgroundColor: '#e8f5e9',
+  },
+  sleepProgress: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 10,
+  },
+  
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2196f3',
+  },
+  slider: {
+    width: '100%',
+    height: 10,
+    marginBottom: 10,
+  },
+  setpsdiv: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  steptext: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  stepsSeparator: {
+    color: '#9e9a99', 
+    fontSize: 20,
+    marginHorizontal: 5,
+  },
+  texttarget: {
+    fontSize: 20,
+    color: '#9e9a99',
+  },
+  stepsLabel: {
+    marginLeft: 5,
+    color: '#9e9a99',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  sleepContainer: {
+    marginBottom: 25,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  sleepTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#9e9a99',
+    marginBottom: 10,
+  },
   gameHeader: {
     color: 'white',
     fontSize: 18,
@@ -1375,25 +1587,17 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-  steptext: {
-    color: "white",
-    fontSize: 30,
-    marginRight: 10,
-  },
-  texttarget: {
-    color: "white",
-    fontSize: 30,
-  },
+
   text: {
     color: "white",
     fontSize: 24,
     marginBottom: 20,
   },
-  setpsdiv: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  // setpsdiv: {
+  //   flexDirection: "row",
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
   stepsCard: {
     backgroundColor: "#1a0033",
     padding: 10,
@@ -1447,6 +1651,11 @@ const styles = StyleSheet.create({
   //   justifyContent: "center",
   //   alignItems: "center",
   // },
+  sleepText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#5C6BC0',
+  },
   gamebttn: {
     backgroundColor: "#7E38B7",
     flexDirection: "row",
@@ -1605,16 +1814,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
-  StepText:{
-    fontFamily:"Oldschool Grotesk Var Trial",
-     fontWeight:"600",
-    fontSize:50,
+  syncText: {
+    fontSize: 15,
+    marginBottom: 5,
+    color: '#9e9a99',
   },
-  StepTarget:{
-    fontFamily:"Oldschool Grotesk Var Trial",
-     fontWeight:"300",
-    fontSize:20,
-  }
+  syncHint: {
+    color: '#9e9a99',
+    fontSize: 12,
+    marginBottom: 15,
+  },
+  sleepImage: {
+    width: 170,
+    height: 200,
+    resizeMode: 'contain',
+    marginTop: 20,
+  },
+  // steptext: {
+  //   fontSize: 24,2
+  //   fontWeight: 'bold',
+  //   color: '#4CAF50',
+  // },
 });
 
 export default App;
