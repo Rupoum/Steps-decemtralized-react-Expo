@@ -1,4 +1,5 @@
 import React from "react";
+
 import { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -18,7 +19,7 @@ import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 
-// Badge data with days and descriptions
+// Badge data with days, descriptions, and themed designs
 const BADGES = [
   {
     id: 1,
@@ -26,6 +27,12 @@ const BADGES = [
     description: "One week of consistent sleep",
     icon: "moon",
     color: "#8a2be2",
+    tier: "Bronze",
+    theme: {
+      background: ["#2c3e50", "#4a69bd"],
+      icon: "moon",
+      name: "Moon & Stars",
+    },
   },
   {
     id: 2,
@@ -33,6 +40,12 @@ const BADGES = [
     description: "Two weeks of healthy sleep habits",
     icon: "bed",
     color: "#7b68ee",
+    tier: "Bronze",
+    theme: {
+      background: ["#6a5acd", "#9370db"],
+      icon: "bed",
+      name: "Comfy Bed",
+    },
   },
   {
     id: 3,
@@ -40,6 +53,12 @@ const BADGES = [
     description: "Three weeks of quality rest",
     icon: "star",
     color: "#9370db",
+    tier: "Silver",
+    theme: {
+      background: ["#4b0082", "#8a2be2"],
+      icon: "star",
+      name: "Shooting Star",
+    },
   },
   {
     id: 4,
@@ -47,6 +66,12 @@ const BADGES = [
     description: "One month sleep master",
     icon: "trophy",
     color: "#6a5acd",
+    tier: "Silver",
+    theme: {
+      background: ["#1a0033", "#4b0082"],
+      icon: "trophy",
+      name: "Trophy",
+    },
   },
   {
     id: 5,
@@ -54,6 +79,12 @@ const BADGES = [
     description: "A month and a half of dedication",
     icon: "ribbon",
     color: "#5e4fa2",
+    tier: "Gold",
+    theme: {
+      background: ["#5e4fa2", "#3a0066"],
+      icon: "ribbon",
+      name: "Ribbon",
+    },
   },
   {
     id: 6,
@@ -61,6 +92,12 @@ const BADGES = [
     description: "Two months sleep champion",
     icon: "medal",
     color: "#4b0082",
+    tier: "Gold",
+    theme: {
+      background: ["#4b0082", "#3a0066"],
+      icon: "medal",
+      name: "Medal",
+    },
   },
   {
     id: 7,
@@ -68,6 +105,12 @@ const BADGES = [
     description: "Consistent sleep warrior",
     icon: "shield",
     color: "#3a0066",
+    tier: "Platinum",
+    theme: {
+      background: ["#3a0066", "#1a0033"],
+      icon: "shield",
+      name: "Shield",
+    },
   },
   {
     id: 8,
@@ -75,6 +118,12 @@ const BADGES = [
     description: "Sleep transformation complete!",
     icon: "diamond",
     color: "#1a0033",
+    tier: "Platinum",
+    theme: {
+      background: ["#1a0033", "#000"],
+      icon: "diamond",
+      name: "Crown",
+    },
   },
 ];
 
@@ -120,7 +169,7 @@ const getDaysInMonth = (year, month) => {
 };
 
 const getFirstDayOfMonth = (year, month) => {
-  return new Date(year, month, 1).getDay(); // Ensure Sunday starts at 0
+  return new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday, etc.
 };
 
 const getMonthName = (month) => {
@@ -181,7 +230,613 @@ const triggerHaptic = (type = "light") => {
   }
 };
 
-export default function AchievmentsScreen() {
+// New Calendar Component
+const SleepCalendar = ({
+  currentDate,
+  onChangeDate,
+  sleepData,
+  selectedDay,
+  onSelectDay,
+  currentStreak,
+}) => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const today = new Date();
+
+  // Get days in month and first day of month
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDayOfMonth = getFirstDayOfMonth(year, month);
+
+  // Calculate days from previous month to show
+  const daysFromPrevMonth = firstDayOfMonth;
+
+  // Calculate total rows needed (including days from prev/next month)
+  const totalDays = daysFromPrevMonth + daysInMonth;
+  const rows = Math.ceil(totalDays / 7);
+
+  // Generate calendar data
+  const generateCalendarDays = () => {
+    const days = [];
+
+    // Previous month days
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevMonthYear = month === 0 ? year - 1 : year;
+    const daysInPrevMonth = getDaysInMonth(prevMonthYear, prevMonth);
+
+    for (let i = 0; i < daysFromPrevMonth; i++) {
+      const day = daysInPrevMonth - daysFromPrevMonth + i + 1;
+      const date = new Date(prevMonthYear, prevMonth, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      days.push({
+        day,
+        month: prevMonth,
+        year: prevMonthYear,
+        dateStr,
+        isCurrentMonth: false,
+        data: sleepData[dateStr],
+      });
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      const isToday =
+        today.getDate() === day &&
+        today.getMonth() === month &&
+        today.getFullYear() === year;
+
+      days.push({
+        day,
+        month,
+        year,
+        dateStr,
+        isCurrentMonth: true,
+        isToday,
+        data: sleepData[dateStr],
+      });
+    }
+
+    // Next month days to fill the last row
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextMonthYear = month === 11 ? year + 1 : year;
+    const remainingDays = rows * 7 - days.length;
+
+    for (let day = 1; day <= remainingDays; day++) {
+      const date = new Date(nextMonthYear, nextMonth, day);
+      const dateStr = date.toISOString().split("T")[0];
+
+      days.push({
+        day,
+        month: nextMonth,
+        year: nextMonthYear,
+        dateStr,
+        isCurrentMonth: false,
+        data: sleepData[dateStr],
+      });
+    }
+
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
+
+  // Render weekday headers
+  const renderWeekdayHeaders = () => {
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    return (
+      <View style={styles.weekdayHeaderRow}>
+        {weekdays.map((weekday, index) => (
+          <View key={`weekday-${index}`} style={styles.weekdayHeaderCell}>
+            <Text style={styles.weekdayHeaderText}>{weekday}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // Render calendar grid
+  const renderCalendarGrid = () => {
+    const rows = [];
+    const days = [...calendarDays];
+
+    // Create rows of 7 days
+    while (days.length) {
+      rows.push(days.splice(0, 7));
+    }
+
+    return rows.map((row, rowIndex) => (
+      <View key={`row-${rowIndex}`} style={styles.calendarRow}>
+        {row.map((day, dayIndex) => {
+          const isSelected =
+            selectedDay &&
+            selectedDay.day === day.day &&
+            selectedDay.month === day.month &&
+            selectedDay.year === day.year;
+
+          const isSuccess = day.data && day.data.success;
+          const isMissed = day.data && !day.data.success;
+
+          return (
+            <TouchableOpacity
+              key={`day-${rowIndex}-${dayIndex}`}
+              style={[
+                styles.calendarDayCell,
+                !day.isCurrentMonth && styles.calendarDayNotCurrentMonth,
+                day.isToday && styles.calendarDayToday,
+                isSelected && styles.calendarDaySelected,
+              ]}
+              onPress={() => {
+                if (day.isCurrentMonth) {
+                  triggerHaptic("light");
+                  onSelectDay(isSelected ? null : day);
+                }
+              }}
+              activeOpacity={day.isCurrentMonth ? 0.7 : 1}
+            >
+              <LinearGradient
+                colors={
+                  isSuccess
+                    ? ["#8a2be2", "#6a5acd"]
+                    : isMissed
+                    ? ["#ff6b6b", "#ff4757"]
+                    : ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  styles.calendarDayInner,
+                  !day.isCurrentMonth && styles.calendarDayInnerNotCurrentMonth,
+                  day.isToday && styles.calendarDayInnerToday,
+                  isSelected && styles.calendarDayInnerSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.calendarDayText,
+                    !day.isCurrentMonth &&
+                      styles.calendarDayTextNotCurrentMonth,
+                    (isSuccess || day.isToday || isMissed) &&
+                      styles.calendarDayTextHighlight,
+                  ]}
+                >
+                  {day.day}
+                </Text>
+                {day.data && day.isCurrentMonth && (
+                  <View style={styles.calendarDayIndicator}>
+                    {isSuccess ? (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={12}
+                        color="#fff"
+                      />
+                    ) : (
+                      <Ionicons name="close-circle" size={12} color="#fff" />
+                    )}
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    ));
+  };
+
+  // Render month navigation
+  const renderMonthNavigation = () => {
+    return (
+      <View style={styles.monthNavigationContainer}>
+        <TouchableOpacity
+          style={styles.monthNavigationButton}
+          onPress={() => {
+            const newDate = new Date(year, month - 1, 1);
+            onChangeDate(newDate);
+            triggerHaptic("medium");
+          }}
+        >
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <Text style={styles.monthYearText}>
+          {getMonthName(month)} {year}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.monthNavigationButton}
+          onPress={() => {
+            const newDate = new Date(year, month + 1, 1);
+            onChangeDate(newDate);
+            triggerHaptic("medium");
+          }}
+        >
+          <Ionicons name="chevron-forward" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Render calendar stats
+  const renderCalendarStats = () => {
+    // Count successful days in current month
+    const successfulDaysThisMonth = calendarDays.filter(
+      (day) => day.isCurrentMonth && day.data && day.data.success
+    ).length;
+
+    // Total days with data in current month
+    const daysWithDataThisMonth = calendarDays.filter(
+      (day) => day.isCurrentMonth && day.data
+    ).length;
+
+    // Success rate
+    const successRate =
+      daysWithDataThisMonth > 0
+        ? Math.round((successfulDaysThisMonth / daysWithDataThisMonth) * 100)
+        : 0;
+
+    return (
+      <View style={styles.calendarStatsContainer}>
+        <LinearGradient
+          colors={["rgba(138, 43, 226, 0.2)", "rgba(106, 90, 205, 0.2)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.calendarStatsGradient}
+        >
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{currentStreak}</Text>
+            <Text style={styles.statLabel}>Current Streak</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{successfulDaysThisMonth}</Text>
+            <Text style={styles.statLabel}>Success This Month</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{successRate}%</Text>
+            <Text style={styles.statLabel}>Success Rate</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
+
+  // Render calendar legend
+  const renderCalendarLegend = () => {
+    return (
+      <View style={styles.calendarLegendContainer}>
+        <View style={styles.legendItem}>
+          <LinearGradient
+            colors={["#8a2be2", "#6a5acd"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.legendColor}
+          />
+          <Text style={styles.legendText}>Sleep Goal Met</Text>
+        </View>
+
+        <View style={styles.legendItem}>
+          <LinearGradient
+            colors={["#ff6b6b", "#ff4757"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.legendColor}
+          />
+          <Text style={styles.legendText}>Missed Goal</Text>
+        </View>
+
+        <View style={styles.legendItem}>
+          <View
+            style={[
+              styles.legendColor,
+              {
+                backgroundColor: "#4b0082",
+                borderWidth: 2,
+                borderColor: "#fff",
+              },
+            ]}
+          />
+          <Text style={styles.legendText}>Today</Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.calendarContainer}>
+      {renderMonthNavigation()}
+      {renderWeekdayHeaders()}
+      {renderCalendarGrid()}
+      {renderCalendarLegend()}
+      {renderCalendarStats()}
+    </View>
+  );
+};
+
+// Day Info Component
+const DayInfoPanel = ({ day, onClose }) => {
+  if (!day) return null;
+
+  return (
+    <View style={styles.dayInfoContainer}>
+      <View style={styles.dayInfoHeader}>
+        <Text style={styles.dayInfoTitle}>
+          {day.day} {getMonthName(day.month)} {day.year}
+        </Text>
+        <TouchableOpacity
+          style={styles.dayInfoCloseButton}
+          onPress={() => {
+            triggerHaptic("light");
+            onClose();
+          }}
+        >
+          <Ionicons name="close" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {day.data ? (
+        <View style={styles.dayInfoContent}>
+          <View style={styles.dayInfoRow}>
+            <View style={styles.dayInfoIconContainer}>
+              <Ionicons
+                name={day.data.success ? "checkmark-circle" : "close-circle"}
+                size={24}
+                color={day.data.success ? "#8a2be2" : "#ff6b6b"}
+              />
+            </View>
+            <View style={styles.dayInfoTextContainer}>
+              <Text style={styles.dayInfoStatus}>
+                {day.data.success ? "Sleep Goal Met" : "Sleep Goal Missed"}
+              </Text>
+              <Text style={styles.dayInfoHours}>
+                {day.data.hours.toFixed(1)} hours of sleep
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.dayInfoContent}>
+          <Text style={styles.dayInfoNoData}>
+            No sleep data available for this day
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// Badge Card Component
+const BadgeCard = ({
+  badge,
+  isAchieved,
+  onPress,
+  isSelected,
+  currentStreak,
+  isNewlyUnlocked,
+}) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isNewlyUnlocked) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isNewlyUnlocked, pulseAnim]);
+
+  return (
+    <TouchableOpacity
+      style={styles.badgeCardContainer}
+      onPress={() => {
+        triggerHaptic("light");
+        onPress(badge.id);
+      }}
+      activeOpacity={0.9}
+    >
+      <Animated.View
+        style={[
+          styles.badgeCardInner,
+          isSelected && styles.badgeCardSelected,
+          isNewlyUnlocked && { transform: [{ scale: pulseAnim }] },
+        ]}
+      >
+        <LinearGradient
+          colors={badge.theme.background}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.badgeCardGradient}
+        >
+          {isAchieved ? (
+            <View style={styles.badgeWrapper}>
+              {/* <View style={styles.badgeTierTag}>
+                <Text style={styles.badgeTierText}>{badge.tier}</Text>
+              </View> */}
+              <View style={styles.badgeIconContainer}>
+                <Ionicons name={badge.icon} size={40} color="#fff" />
+              </View>
+              <Text style={styles.badgeThemeName}>{badge.theme.name}</Text>
+              <Text style={styles.badgeDays}>{badge.days}</Text>
+              <Text style={styles.badgeLabel}>DAYS</Text>
+              {isNewlyUnlocked && (
+                <View style={styles.newBadgeTag}>
+                  <Text style={styles.newBadgeText}>NEW!</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <BlurView intensity={80} tint="dark" style={styles.blurBadge}>
+              <View style={styles.badgeWrapper}>
+                <View style={styles.badgeTierTag}>
+                  <Text style={[styles.badgeTierText, { opacity: 0.5 }]}>
+                    {badge.tier}
+                  </Text>
+                </View>
+                <View style={[styles.badgeIconContainer, { opacity: 0.5 }]}>
+                  <Ionicons
+                    name={`${badge.icon}-outline`}
+                    size={40}
+                    color="#fff"
+                  />
+                </View>
+                <Text style={[styles.badgeThemeName, { opacity: 0.5 }]}>
+                  {badge.theme.name}
+                </Text>
+                <Text style={[styles.badgeDays, { opacity: 0.5 }]}>
+                  {badge.days}
+                </Text>
+                <Text style={[styles.badgeLabel, { opacity: 0.5 }]}>DAYS</Text>
+                <View style={styles.lockOverlay}>
+                  <Ionicons
+                    name="lock-closed"
+                    size={24}
+                    color="rgba(255,255,255,0.7)"
+                  />
+                </View>
+              </View>
+            </BlurView>
+          )}
+        </LinearGradient>
+      </Animated.View>
+
+      {isSelected && (
+        <View style={styles.badgeDetailCard}>
+          <View style={styles.badgeInfoHeader}>
+            <Text style={styles.badgeTitle}>{badge.days} Day Streak</Text>
+            {isAchieved && (
+              <View style={styles.achievedTag}>
+                <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                <Text style={styles.achievedTagText}>Achieved</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.badgeDescription}>{badge.description}</Text>
+          {!isAchieved && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${Math.min(
+                        100,
+                        (currentStreak / badge.days) * 100
+                      )}%`,
+                      backgroundColor: badge.color,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.badgeRemaining}>
+                {badge.days - currentStreak} more days to unlock
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+// Milestone Timeline Component
+const MilestoneTimeline = ({ currentStreak, badges }) => {
+  // Find the next milestone
+  const nextMilestone = badges.find((badge) => badge.days > currentStreak);
+
+  // Calculate progress to next milestone
+  const progressPercentage = nextMilestone
+    ? Math.min(100, (currentStreak / nextMilestone.days) * 100)
+    : 100;
+
+  return (
+    <View style={styles.milestoneContainer}>
+      <View style={styles.milestoneHeader}>
+        {/* <Text style={styles.milestoneTitle}>Your Sleep Journey</Text> */}
+        {nextMilestone && (
+          <Text style={styles.nextMilestoneText}>
+            Next milestone: {nextMilestone.days} Days
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.progressBarContainer}>
+        <View style={styles.progressBarBackground}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${progressPercentage}%` },
+            ]}
+          />
+        </View>
+
+        <View style={styles.milestoneMarkers}>
+          {badges.map((badge) => (
+            <View
+              key={badge.id}
+              style={[
+                styles.milestoneMarker,
+                {
+                  left: `${Math.min(
+                    100,
+                    (badge.days / (nextMilestone?.days || 90)) * 100
+                  )}%`,
+                },
+                currentStreak >= badge.days && styles.milestoneMarkerAchieved,
+              ]}
+            >
+              <Ionicons
+                name={
+                  currentStreak >= badge.days ? badge.icon : "ellipse-outline"
+                }
+                size={16}
+                color={
+                  currentStreak >= badge.days ? "#fff" : "rgba(255,255,255,0.5)"
+                }
+              />
+              <Text style={styles.milestoneMarkerText}>{badge.days}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.userFeedbackCard}>
+        <LinearGradient
+          colors={["rgba(138, 43, 226, 0.3)", "rgba(106, 90, 205, 0.3)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.userFeedbackGradient}
+        >
+          <Ionicons name="star" size={24} color="#ffd700" />
+          <Text style={styles.userFeedbackText}>
+            You've slept well for {currentStreak} days! That's better than 95%
+            of users!
+          </Text>
+        </LinearGradient>
+      </View>
+    </View>
+  );
+};
+
+export default function AchievementsScreen() {
   // Current streak days - this would come from your app's state management
   const [currentStreak, setCurrentStreak] = useState(21);
   const [selectedBadge, setSelectedBadge] = useState(null);
@@ -204,25 +859,35 @@ export default function AchievmentsScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const dayInfoAnim = useRef(new Animated.Value(0)).current;
 
-  // Pulse animation for newly unlocked badges - moved outside of renderBadge
+  // Separate unlocked and locked badges
+  const unlockedBadges = BADGES.filter((badge) => currentStreak >= badge.days);
+  const lockedBadges = BADGES.filter((badge) => currentStreak < badge.days);
+
+  // Pulse animation for newly unlocked badges
   useEffect(() => {
     if (recentlyUnlocked) {
+      // Start pulse animation
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 500,
+            toValue: 1.1,
+            duration: 800,
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 800,
             useNativeDriver: true,
           }),
-        ]),
-        { iterations: 3 }
+        ])
       ).start();
+
+      // Just set a timeout to clear the celebration
+      setTimeout(() => {
+        setRecentlyUnlocked(null);
+      }, 3000);
     } else {
+      // Stop animation
       pulseAnim.setValue(1);
     }
   }, [recentlyUnlocked, pulseAnim]);
@@ -231,18 +896,15 @@ export default function AchievmentsScreen() {
     // Generate mock sleep data
     setSleepData(generateMockSleepData());
 
-    // Animate badges in sequence when screen loads
-    const animations = badgeAnimations.map((anim, index) => {
-      return Animated.timing(anim, {
+    // Simple fade-in for badges
+    badgeAnimations.forEach((anim, index) => {
+      Animated.timing(anim, {
         toValue: 1,
-        duration: 400,
-        delay: index * 100,
+        duration: 300,
+        delay: index * 50, // Staggered animation
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
-      });
+      }).start();
     });
-
-    Animated.stagger(50, animations).start();
   }, []);
 
   useEffect(() => {
@@ -331,447 +993,8 @@ export default function AchievmentsScreen() {
     }
   }, [selectedDay, dayInfoAnim]);
 
-  const renderBadge = (badge, index) => {
-    const isAchieved = currentStreak >= badge.days;
-    const isNewlyUnlocked = recentlyUnlocked === badge.id;
-
-    // Animation style for each badge
-    const animatedStyle = {
-      opacity: badgeAnimations[index],
-      transform: [
-        {
-          scale: badgeAnimations[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.5, 1],
-          }),
-        },
-        {
-          translateY: badgeAnimations[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [50, 0],
-          }),
-        },
-      ],
-    };
-
-    return (
-      <Animated.View
-        key={badge.id}
-        style={[styles.badgeContainer, animatedStyle]}
-      >
-        <TouchableOpacity
-          style={{ width: "100%" }}
-          onPress={() => {
-            triggerHaptic("light");
-            setSelectedBadge(selectedBadge === badge.id ? null : badge.id);
-          }}
-          activeOpacity={0.9}
-        >
-          <Animated.View
-            style={{ transform: [{ scale: isNewlyUnlocked ? pulseAnim : 1 }] }}
-          >
-            {isAchieved ? (
-              <View style={styles.badgeWrapper}>
-                {/* Improved badge design */}
-                <LinearGradient
-                  colors={["#1a0033", "#4b0082", "#8a2be2"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.badgeCircle}
-                >
-                  <View style={styles.badgeInnerCircle}>
-                    <View style={styles.badgeIconContainer}>
-                      <Ionicons name={`${badge.icon}`} size={32} color="#fff" />
-                    </View>
-                    <Text style={styles.badgeDays}>{badge.days}</Text>
-                    <Text style={styles.badgeLabel}>DAYS</Text>
-                  </View>
-                </LinearGradient>
-
-                {/* Badge rim/border */}
-                <View style={styles.badgeRim} />
-              </View>
-            ) : (
-              <BlurView intensity={80} tint="dark" style={styles.blurBadge}>
-                <View style={styles.badgeWrapper}>
-                  <View
-                    style={[
-                      styles.badgeCircle,
-                      { backgroundColor: "rgba(255, 255, 255, 0.1)" },
-                    ]}
-                  >
-                    <View style={styles.badgeInnerCircle}>
-                      <View
-                        style={[
-                          styles.badgeIconContainer,
-                          { backgroundColor: "rgba(138, 43, 226, 0.2)" },
-                        ]}
-                      >
-                        <Ionicons
-                          name={`${badge.icon}-outline`}
-                          size={32}
-                          color="#8a2be2"
-                          style={{ opacity: 0.5 }}
-                        />
-                      </View>
-                      <Text
-                        style={[
-                          styles.badgeDays,
-                          { color: "#8a2be2", opacity: 0.5 },
-                        ]}
-                      >
-                        {badge.days}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.badgeLabel,
-                          { color: "#8a2be2", opacity: 0.5 },
-                        ]}
-                      >
-                        DAYS
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Lock icon overlay */}
-                  <View style={styles.lockOverlay}>
-                    <Ionicons
-                      name="lock-closed"
-                      size={24}
-                      color="rgba(255,255,255,0.7)"
-                    />
-                  </View>
-                </View>
-              </BlurView>
-            )}
-          </Animated.View>
-
-          {selectedBadge === badge.id && (
-            <Animated.View
-              style={[
-                styles.badgeInfo,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ scale: scaleAnim }],
-                },
-              ]}
-            >
-              <View style={styles.badgeInfoHeader}>
-                <Text style={styles.badgeTitle}>{badge.days} Day Streak</Text>
-                {isAchieved && (
-                  <View style={styles.achievedTag}>
-                    <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                    <Text style={styles.achievedTagText}>Achieved</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.badgeDescription}>{badge.description}</Text>
-              {!isAchieved && (
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        {
-                          width: `${Math.min(
-                            100,
-                            (currentStreak / badge.days) * 100
-                          )}%`,
-                          backgroundColor: badge.color,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.badgeRemaining}>
-                    {badge.days - currentStreak} more days to unlock
-                  </Text>
-                </View>
-              )}
-            </Animated.View>
-          )}
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
-
-  // Calendar
-  const renderCalendarContent = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDayOfMonth = getFirstDayOfMonth(year, month);
-    const today = new Date();
-
-    // Create calendar days
-    const days = [];
-
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<View key={`empty-${i}`} style={styles.calendarDay} />);
-    }
-
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split("T")[0];
-      const dayData = sleepData[dateStr];
-
-      const isToday =
-        today.getDate() === day &&
-        today.getMonth() === month &&
-        today.getFullYear() === year;
-
-      const isSuccess = dayData && dayData.success;
-      const isMissed = dayData && !dayData.success;
-      const isSelected =
-        selectedDay &&
-        selectedDay.day === day &&
-        selectedDay.month === month &&
-        selectedDay.year === year;
-
-      days.push(
-        <TouchableOpacity
-          key={`day-${day}`}
-          style={[
-            styles.calendarDay,
-            isToday && styles.calendarDayToday,
-            isSelected && styles.calendarDaySelected,
-          ]}
-          onPress={() => {
-            triggerHaptic("heavy");
-            if (isSelected) {
-              setSelectedDay(null);
-            } else {
-              setSelectedDay({
-                day,
-                month,
-                year,
-                data: dayData,
-                dateStr,
-              });
-            }
-          }}
-        >
-          <LinearGradient
-            colors={
-              isSuccess
-                ? ["#8a2be2", "#6a5acd"]
-                : isMissed
-                ? ["#ff6b6b", "#ff4757"]
-                : ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              styles.calendarDayInner,
-              isToday && styles.calendarDayTodayInner,
-              isSelected && styles.calendarDaySelectedInner,
-            ]}
-          >
-            <Text
-              style={[
-                styles.calendarDayText,
-                (isSuccess || isToday || isMissed) &&
-                  styles.calendarDayTextLight,
-              ]}
-            >
-              {day}
-            </Text>
-            {dayData && (
-              <View style={styles.calendarDayDot}>
-                {isSuccess ? (
-                  <Ionicons name="checkmark-circle" size={12} color="#fff" />
-                ) : (
-                  <Ionicons name="close-circle" size={12} color="#fff" />
-                )}
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      );
-    }
-
-    return (
-      <>
-        <View style={styles.calendarHeader}>
-          <TouchableOpacity
-            style={styles.calendarNavButton}
-            onPress={() => {
-              const newDate = new Date(currentDate);
-              newDate.setMonth(newDate.getMonth() - 1);
-              setCurrentDate(newDate);
-              setSelectedDay(null);
-              triggerHaptic("medium");
-            }}
-          >
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          <Text style={styles.calendarTitle}>
-            {getMonthName(month)} {year}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.calendarNavButton}
-            onPress={() => {
-              const newDate = new Date(currentDate);
-              newDate.setMonth(newDate.getMonth() + 1);
-              setCurrentDate(newDate);
-              setSelectedDay(null);
-              triggerHaptic("medium");
-            }}
-          >
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.calendarDaysOfWeek}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <Text key={day} style={styles.calendarDayOfWeek}>
-              {day}
-            </Text>
-          ))}
-        </View>
-
-        <View style={styles.calendarGrid}>{days}</View>
-
-        {selectedDay && (
-          <Animated.View
-            style={[
-              styles.dayInfoContainer,
-              {
-                opacity: dayInfoAnim,
-                transform: [
-                  {
-                    translateY: dayInfoAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [10, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <View style={styles.dayInfoHeader}>
-              <Text style={styles.dayInfoTitle}>
-                {selectedDay.day} {getMonthName(selectedDay.month)}{" "}
-                {selectedDay.year}
-              </Text>
-              <TouchableOpacity
-                style={styles.dayInfoCloseButton}
-                onPress={() => {
-                  triggerHaptic("light");
-                  setSelectedDay(null);
-                }}
-              >
-                <Ionicons name="close" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            {selectedDay.data ? (
-              <View style={styles.dayInfoContent}>
-                <View style={styles.dayInfoRow}>
-                  <View style={styles.dayInfoIconContainer}>
-                    <Ionicons
-                      name={
-                        selectedDay.data.success
-                          ? "checkmark-circle"
-                          : "close-circle"
-                      }
-                      size={24}
-                      color={selectedDay.data.success ? "#8a2be2" : "#ff6b6b"}
-                    />
-                  </View>
-                  <View style={styles.dayInfoTextContainer}>
-                    <Text style={styles.dayInfoStatus}>
-                      {selectedDay.data.success
-                        ? "Sleep Goal Met"
-                        : "Sleep Goal Missed"}
-                    </Text>
-                    <Text style={styles.dayInfoHours}>
-                      {selectedDay.data.hours.toFixed(1)} hours of sleep
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.dayInfoContent}>
-                <Text style={styles.dayInfoNoData}>
-                  No sleep data available for this day
-                </Text>
-              </View>
-            )}
-          </Animated.View>
-        )}
-
-        <View style={styles.calendarLegend}>
-          <View style={styles.legendItem}>
-            <LinearGradient
-              colors={["#8a2be2", "#6a5acd"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.legendColor}
-            />
-            <Text style={styles.legendText}>Sleep Goal Met</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <LinearGradient
-              colors={["#ff6b6b", "#ff4757"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.legendColor}
-            />
-            <Text style={styles.legendText}>Missed Goal</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                {
-                  backgroundColor: "#4b0082",
-                  borderWidth: 2,
-                  borderColor: "#fff",
-                },
-              ]}
-            />
-            <Text style={styles.legendText}>Today</Text>
-          </View>
-        </View>
-
-        <View style={styles.calendarStats}>
-          <LinearGradient
-            colors={["rgba(138, 43, 226, 0.2)", "rgba(106, 90, 205, 0.2)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.calendarStatsGradient}
-          >
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{currentStreak}</Text>
-              <Text style={styles.statLabel}>Current Streak</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {Object.values(sleepData).filter((day) => day.success).length}
-              </Text>
-              <Text style={styles.statLabel}>Total Success</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {Object.values(sleepData)
-                  .reduce(
-                    (sum, day) => (day.success ? sum + day.hours : sum),
-                    0
-                  )
-                  .toFixed(0)}
-              </Text>
-              <Text style={styles.statLabel}>Hours Slept</Text>
-            </View>
-          </LinearGradient>
-        </View>
-      </>
-    );
+  const handleBadgePress = (badgeId) => {
+    setSelectedBadge(selectedBadge === badgeId ? null : badgeId);
   };
 
   return (
@@ -782,7 +1005,7 @@ export default function AchievmentsScreen() {
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        {/* Custom celebration  */}
+        {/* Custom celebration */}
         {recentlyUnlocked && (
           <View style={styles.celebrationOverlay}>
             <View style={styles.celebrationContent}>
@@ -799,7 +1022,7 @@ export default function AchievmentsScreen() {
         )}
 
         <View style={styles.header}>
-          <Text style={styles.title}>Sleep Streak Badges</Text>
+          {/* <Text style={styles.title}>Sleep Achievements</Text> */}
 
           <View style={styles.headerButtons}>
             <TouchableOpacity
@@ -870,13 +1093,9 @@ export default function AchievmentsScreen() {
         </View>
 
         {showCalendar ? (
-          <Animated.ScrollView
-            contentContainerStyle={{
-              paddingBottom: 30,
-              paddingTop: 20,
-            }}
+          <Animated.View
             style={[
-              styles.calendarContainer,
+              styles.calendarWrapper,
               {
                 opacity: calendarAnim,
                 transform: [
@@ -896,38 +1115,87 @@ export default function AchievmentsScreen() {
               },
             ]}
           >
-            {renderCalendarContent()}
-          </Animated.ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <SleepCalendar
+                currentDate={currentDate}
+                onChangeDate={setCurrentDate}
+                sleepData={sleepData}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
+                currentStreak={currentStreak}
+              />
+
+              {selectedDay && (
+                <Animated.View
+                  style={[
+                    {
+                      opacity: dayInfoAnim,
+                      transform: [
+                        {
+                          translateY: dayInfoAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [10, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <DayInfoPanel
+                    day={selectedDay}
+                    onClose={() => setSelectedDay(null)}
+                  />
+                </Animated.View>
+              )}
+            </ScrollView>
+          </Animated.View>
         ) : (
           <ScrollView
-            contentContainerStyle={styles.badgesGrid}
+            contentContainerStyle={styles.badgesContainer}
             showsVerticalScrollIndicator={false}
           >
-            {BADGES.map(renderBadge)}
+            {/* Milestone tracker */}
+            <MilestoneTimeline currentStreak={currentStreak} badges={BADGES} />
+
+            {/* Unlocked badges section */}
+            <View style={styles.badgeSection}>
+              <Text style={styles.badgeSectionTitle}>Unlocked Badges</Text>
+              <View style={styles.badgesGrid}>
+                {unlockedBadges.map((badge) => (
+                  <BadgeCard
+                    key={badge.id}
+                    badge={badge}
+                    isAchieved={true}
+                    onPress={handleBadgePress}
+                    isSelected={selectedBadge === badge.id}
+                    currentStreak={currentStreak}
+                    isNewlyUnlocked={recentlyUnlocked === badge.id}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* Locked badges section */}
+            <View style={styles.badgeSection}>
+              <Text style={styles.badgeSectionTitle}>Locked Badges</Text>
+              <View style={styles.badgesGrid}>
+                {lockedBadges.map((badge) => (
+                  <BadgeCard
+                    key={badge.id}
+                    badge={badge}
+                    isAchieved={false}
+                    onPress={handleBadgePress}
+                    isSelected={selectedBadge === badge.id}
+                    currentStreak={currentStreak}
+                    isNewlyUnlocked={false}
+                  />
+                ))}
+              </View>
+            </View>
           </ScrollView>
         )}
 
-        {/* <View style={styles.infoContainer}>
-          <View style={styles.infoItem}>
-            <View style={[styles.infoIcon, { backgroundColor: "#8a2be2" }]}>
-              <Ionicons name="trophy" size={16} color="#fff" />
-            </View>
-            <Text style={styles.infoText}>Colored badges are achieved</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <View
-              style={[
-                styles.infoIcon,
-                { backgroundColor: "rgba(255,255,255,0.2)" },
-              ]}
-            >
-              <Ionicons name="lock-closed" size={16} color="#fff" />
-            </View>
-            <Text style={styles.infoText}>Locked badges need more days</Text>
-          </View>
-        </View> */}
-
-        {/* Demo controls with improved styling */}
+        {/* Demo controls */}
         <View style={styles.demoControls}>
           <TouchableOpacity
             style={[styles.demoButton, styles.decrementButton]}
@@ -1037,68 +1305,91 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
   },
+  badgesContainer: {
+    paddingBottom: 20,
+  },
+  badgeSection: {
+    marginBottom: 24,
+  },
+  badgeSectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 16,
+    paddingLeft: 8,
+  },
   badgesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    paddingBottom: 20,
   },
-  badgeContainer: {
+  badgeCardContainer: {
     width: width / 2 - 24,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  badgeWrapper: {
+  badgeCardInner: {
     width: "100%",
     aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  // Improved badge styling
-  badgeCircle: {
-    width: "90%",
-    height: "90%",
-    borderRadius: 1000,
+    borderRadius: 16,
     overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
-  badgeInnerCircle: {
-    width: "95%",
-    height: "95%",
-    borderRadius: 1000,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  badgeCardSelected: {
+    borderWidth: 2,
+    borderColor: "#ffd700",
+  },
+  badgeCardGradient: {
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    padding: 16,
+  },
+  badgeWrapper: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  badgeTierTag: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  badgeTierText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   badgeIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
   },
-  badgeRim: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    borderRadius: 1000,
-    borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+  badgeThemeName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+    textAlign: "center",
   },
   badgeDays: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "white",
     textShadowColor: "rgba(0, 0, 0, 0.3)",
@@ -1113,13 +1404,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     opacity: 0.9,
   },
+  newBadgeTag: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    backgroundColor: "#ffd700",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  newBadgeText: {
+    color: "#000",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
   blurBadge: {
     width: "100%",
-    aspectRatio: 1,
-    borderRadius: 1000,
+    height: "100%",
+    borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   lockOverlay: {
     position: "absolute",
@@ -1128,9 +1433,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0, 0, 0, 0.3)",
-    borderRadius: 1000,
   },
-  badgeInfo: {
+  badgeDetailCard: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 16,
     borderRadius: 16,
@@ -1192,37 +1496,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8a2be2",
   },
-  infoContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-  },
-  infoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  infoText: {
-    fontSize: 14,
-    color: "#fff",
-    fontWeight: "500",
-  },
   demoControls: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -1271,13 +1544,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 10,
   },
-  // Enhanced Calendar styles
+  // Calendar Styles
+  calendarWrapper: {
+    flex: 1,
+    marginBottom: 20,
+  },
   calendarContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 16,
     padding: 16,
-    paddingBottom: 20,
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
     shadowColor: "#000",
@@ -1286,13 +1562,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-  calendarHeader: {
+  monthNavigationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
-  calendarNavButton: {
+  monthNavigationButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -1305,7 +1581,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  calendarTitle: {
+  monthYearText: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
@@ -1313,32 +1589,42 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  calendarDaysOfWeek: {
+  weekdayHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 12,
+    marginBottom: 8,
     paddingBottom: 8,
-
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
-  calendarDayOfWeek: {
-    width: (width - 64) / 7,
-    textAlign: "center",
+  weekdayHeaderCell: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  weekdayHeaderText: {
     fontSize: 12,
     fontWeight: "600",
     color: "rgba(255, 255, 255, 0.7)",
     letterSpacing: 1,
   },
-  calendarGrid: {
+  calendarRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
+    marginBottom: 4,
   },
-  calendarDay: {
-    width: (width - 64) / 7,
-    height: (width - 64) / 7,
+  calendarDayCell: {
+    flex: 1,
+    aspectRatio: 1,
     padding: 2,
+  },
+  calendarDayNotCurrentMonth: {
+    opacity: 0.4,
+  },
+  calendarDayToday: {
+    padding: 0,
+  },
+  calendarDaySelected: {
+    transform: [{ scale: 1.1 }],
+    zIndex: 1,
   },
   calendarDayInner: {
     flex: 1,
@@ -1351,18 +1637,14 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  calendarDayToday: {
-    padding: 0,
+  calendarDayInnerNotCurrentMonth: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
-  calendarDayTodayInner: {
+  calendarDayInnerToday: {
     borderWidth: 2,
     borderColor: "#fff",
   },
-  calendarDaySelected: {
-    transform: [{ scale: 1.1 }],
-    zIndex: 1,
-  },
-  calendarDaySelectedInner: {
+  calendarDayInnerSelected: {
     borderWidth: 2,
     borderColor: "#ffd700",
   },
@@ -1371,16 +1653,78 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255, 255, 255, 0.8)",
   },
-  calendarDayTextLight: {
+  calendarDayTextNotCurrentMonth: {
+    color: "rgba(255, 255, 255, 0.4)",
+  },
+  calendarDayTextHighlight: {
     color: "#fff",
     fontWeight: "700",
   },
-  calendarDayDot: {
+  calendarDayIndicator: {
     position: "absolute",
-
-    bottom: 1,
+    bottom: 2,
   },
-  // Day info styles
+  calendarLegendContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  legendText: {
+    fontSize: 12,
+    color: "#fff",
+  },
+  calendarStatsContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  },
+  calendarStatsGradient: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    borderRadius: 12,
+    padding: 12,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statDivider: {
+    width: 1,
+    height: "80%",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "500",
+  },
+  // Day Info Styles
   dayInfoContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 12,
@@ -1448,64 +1792,79 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 8,
   },
-  calendarLegend: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  // Milestone Timeline Styles
+  milestoneContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
-  legendItem: {
+  milestoneHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 16,
   },
-  legendColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#fff",
-  },
-  calendarStats: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-  },
-  calendarStatsGradient: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    borderRadius: 12,
-    padding: 12,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statDivider: {
-    width: 1,
-    height: "80%",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  statValue: {
-    fontSize: 24,
+  milestoneTitle: {
+    fontSize: 18,
     fontWeight: "bold",
     color: "#fff",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
-  statLabel: {
-    fontSize: 12,
+  nextMilestoneText: {
+    fontSize: 14,
+    color: "#ffd700",
+    fontWeight: "600",
+  },
+  progressBarContainer: {
+    marginBottom: 20,
+  },
+  progressBarBackground: {
+    height: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#8a2be2",
+    borderRadius: 4,
+  },
+  milestoneMarkers: {
+    position: "relative",
+    height: 40,
+    marginTop: 8,
+  },
+  milestoneMarker: {
+    position: "absolute",
+    alignItems: "center",
+    transform: [{ translateX: -8 }],
+  },
+  milestoneMarkerAchieved: {
+    transform: [{ translateX: -8 }],
+  },
+  milestoneMarkerText: {
+    fontSize: 10,
     color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "500",
+    marginTop: 2,
+    marginRight: 4,
+  },
+  userFeedbackCard: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  userFeedbackGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  userFeedbackText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 12,
   },
 });
