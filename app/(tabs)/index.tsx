@@ -5,8 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-// import { Avatar } from "react-native-ui-lib";
-import { Skeleton } from '@rneui/themed';
+
+import { LinearProgress, Skeleton } from "@rneui/themed";
 import {
   View,
   Text,
@@ -21,9 +21,11 @@ import {
   Animated,
   Pressable,
   Linking,
+  PanResponder,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card } from '@rneui/themed';
+import { Card } from "@rneui/themed";
 
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -58,6 +60,7 @@ import * as Font from "expo-font";
 import { color, fonts, Icon, Slider } from "@rneui/base";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FadeInDown } from "react-native-reanimated";
+import { Easing } from "react-native";
 interface GAme {
   Amount: number;
   id: string;
@@ -143,21 +146,21 @@ const App = () => {
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
-  useEffect(()=>{
-    const handleRedirect = async (url:string) => {
-      const parse=new URL(url);
-      console.log("pars",parse);
-      const code = parse.searchParams.get('code');
+  useEffect(() => {
+    const handleRedirect = async (url: string) => {
+      const parse = new URL(url);
+      console.log("pars", parse);
+      const code = parse.searchParams.get("code");
       console.log("code", code);
       const codeverifier = await AsyncStorage.getItem("code");
-      console.log("codeverifier", codeverifier);   
+      console.log("codeverifier", codeverifier);
       try {
         const clientId = "23Q8LW";
         const clientSecret = "b7ad7ce14620face8ab633f237c071bb";
 
         const tokenResponse = await axios.post(
           "https://api.fitbit.com/oauth2/token",
-           `client_id=${clientId}&code=${code}&code_verifier="6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p"&grant_type=authorization_code`,
+          `client_id=${clientId}&code=${code}&code_verifier="6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p"&grant_type=authorization_code`,
           {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
@@ -167,16 +170,15 @@ const App = () => {
         );
         console.log(tokenResponse);
         console.log("Token Response:", tokenResponse.data);
-      } catch (error:any) {
+      } catch (error: any) {
         console.error("Error exchanging code for tokens:", error);
       }
-      
     };
 
     // Linking.getInitialURL().then(handleRedirect);
-    Linking.addEventListener('url', ({ url }) => handleRedirect(url));
+    Linking.addEventListener("url", ({ url }) => handleRedirect(url));
     // handleRedirect();
-  })
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -261,8 +263,8 @@ const App = () => {
       setRefreshing(false);
     }, 2000);
   }, []);
-  return (
 
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar
         animated={true}
@@ -301,6 +303,7 @@ const App = () => {
               </TouchableOpacity>
               <View style={{ padding: 5 }}>
                 <StepsCount />
+                {/* <SwipeableCards /> */}
               </View>
               <View></View>
               <View>
@@ -396,7 +399,7 @@ const App = () => {
 const StepsCount = () => {
   const [error, seterror] = useState("");
   const [step, setstep] = useState(0);
-  const [sleep, setsleep] = useState("");
+  const [sleep, setsleep] = useState("1h 0m");
   useEffect(() => {
     const fetchSteps = async () => {
       try {
@@ -444,8 +447,8 @@ const StepsCount = () => {
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         console.log(hours);
         console.log(minutes);
-        setsleep(hours.toString()+ "h" +" "+ minutes.toString() + "m");
-      
+        setsleep(hours.toString() + "h" + " " + minutes.toString() + "m");
+
         let count = 0;
         records.forEach((record) => {
           if (
@@ -455,20 +458,25 @@ const StepsCount = () => {
           }
         });
         setstep(count);
-        const userid=await AsyncStorage.getItem("userid");
-        console.log("usri",userid);
+        const userid = await AsyncStorage.getItem("userid");
+        console.log("usri", userid);
         console.log(sleep);
-        console.log("step",step)
-        try{
-          const steps=step.toString();
+        console.log("step", step);
+        try {
+          const steps = step.toString();
           console.log(steps);
-          const response =await axios.post(`${BACKEND_URL}/regular/update`,{steps,userid});
-          const sleepresponse=await axios.post(`${BACKEND_URL}/regular/update/sleep`,{hours:sleep,userid})
+          const response = await axios.post(`${BACKEND_URL}/regular/update`, {
+            steps,
+            userid,
+          });
+          const sleepresponse = await axios.post(
+            `${BACKEND_URL}/regular/update/sleep`,
+            { hours: sleep, userid }
+          );
 
           console.log("heety");
-        console.log(response);
-        }
-        catch(e){
+          console.log(response);
+        } catch (e) {
           console.log("dasd");
           console.log(e);
         }
@@ -479,87 +487,327 @@ const StepsCount = () => {
     };
     fetchSteps();
   });
-  const usertarget = 5000;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const progress = Math.min(step / usertarget, 1);
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 800,
+      useNativeDriver: false,
+      easing: Easing.out(Easing.ease),
+    }).start();
+  }, [step, sleep]);
+
+  // const progressAnim2 = useRef(new Animated.Value(0)).current;
+  // useEffect(() => {
+  //   const match = sleep.match(/(\d+)h\s*(\d+)m/);
+  //   if (match) {
+  //     const hours = parseInt(match[1], 10);
+  //     const minutes = parseInt(match[2], 10);
+  //     const totalSleepInMinutes = hours * 60 + minutes;
+  //     const targetSleepInMinutes = sleeptarget * 60;
+
+  //     const progress = Math.min(totalSleepInMinutes / targetSleepInMinutes, 1);
+
+  //     progressAnim2.setValue(0); // reset before animating
+  //     Animated.timing(progressAnim2, {
+  //       toValue: progress,
+  //       duration: 1000,
+  //       useNativeDriver: false,
+  //       easing: Easing.out(Easing.ease),
+  //     }).start();
+  //   }
+  // }, [sleep]);
+
+  const usertarget = 100;
+  const sleeptarget = 10;
   return (
     <View>
-    <View>
-      <View style={styles.stepsCard}>
-        <Text
-          style={[
-            styles.text,
-            {
-              fontSize: 15,
-              marginBottom: 5,
-              color: "#9e9a99",
-            },
-          ]}
-        >
-          Open Health Connect to sync
-        </Text>
-        <Text
-          style={[
-            styles.text,
-            {
-              color: "#9e9a99",
-              fontSize: 12,
-            },
-          ]}
-        >
-          (wait for few minutes)
-        </Text>
-        <Image
-          source={require("../../assets/images/sleep2.png")}
-          style={{
-            width: 170,
-            height: 200,
-            resizeMode: "contain",
-            marginTop: 20,
-          }}
-        />
-             <Slider
-        value={step}
-        minimumValue={0}
-        maximumValue={usertarget}
-        disabled={true}
-        // thumbTintColor="#4CAF50"
-        // minimumTrackTintColor="#4CAF50"
-        // maximumTrackTintColor="#e0e0e0"
-        // trackStyle={{ height: 5, backgroundColor: 'transparent' }}
-        // thumbStyle={{ height: 20, width: 20, backgroundColor: 'transparent' }}
-        thumbProps={{
-          children: (
-            <Icon
-              name="heartbeat"
-              type="font-awesome"
-              size={20}
-              reverse
-              containerStyle={{ bottom: 20, right: 20 }}
-              color={color()}
-            />
-          ),
-        }}
-        style={styles.slider}
-      />
-
-        <View style={styles.setpsdiv}>
-          <Text style={styles.steptext}>{step}</Text>
-          <Text style={{ color: "white", fontSize: 20 }}>/</Text>
-          <Text style={styles.texttarget}>{usertarget}</Text>
+      <View>
+        <View style={styles.stepsCard}>
           <Text
+            style={[
+              styles.text,
+              {
+                fontSize: 15,
+                marginBottom: 5,
+                color: "#9e9a99",
+              },
+            ]}
+          >
+            Open Health Connect to sync
+          </Text>
+          <Text
+            style={[
+              styles.text,
+              {
+                color: "#9e9a99",
+                fontSize: 12,
+              },
+            ]}
+          >
+            (wait for few minutes)
+          </Text>
+          <Image
+            source={require("../../assets/images/sleep2.png")}
             style={{
-              marginLeft: 5,
-              color: "#9e9a99",
-              fontSize: 15,
-              fontWeight: "bold",
+              width: 170,
+              height: 200,
+              resizeMode: "contain",
+              marginTop: 20,
+            }}
+          />
+          <View
+            style={{
+              height: 10,
+              width: "80%",
+              backgroundColor: "#3E3E3E",
+              borderRadius: 10,
+              overflow: "hidden",
+              marginTop: 20,
+              alignSelf: "center",
             }}
           >
-            steps
-          </Text>
+            <Animated.View
+              style={[
+                {
+                  height: "100%",
+                  backgroundColor: "#34D399", // Emerald green
+                  borderRadius: 10,
+                },
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
+              ]}
+            />
+          </View>
+          <View style={styles.setpsdiv}>
+            <Text style={styles.steptext}>{step}</Text>
+            <Text style={{ color: "white", fontSize: 20 }}>/</Text>
+            <Text style={styles.texttarget}>{usertarget}</Text>
+            <Text
+              style={{
+                marginLeft: 5,
+                color: "#9e9a99",
+                fontSize: 15,
+                fontWeight: "bold",
+              }}
+            >
+              steps
+            </Text>
+          </View>
+          {/* <View
+            style={{
+              height: 10,
+              width: "80%",
+              backgroundColor: "#3E3E3E",
+              borderRadius: 10,
+              overflow: "hidden",
+              marginTop: 20,
+              alignSelf: "center",
+            }}
+          >
+            <Animated.View
+              style={[
+                {
+                  height: "100%",
+                  backgroundColor: "#34D399", // Emerald green
+                  borderRadius: 10,
+                },
+                {
+                  width: progressAnim2.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
+              ]}
+            />
+          </View> */}
+          <View style={styles.setpsdiv}>
+            <Text style={styles.steptext}>{sleep}</Text>
+            <Text style={{ color: "white", fontSize: 20 }}>/</Text>
+            <Text style={styles.texttarget}>{sleeptarget}</Text>
+            <Text
+              style={{
+                marginLeft: 5,
+                color: "#9e9a99",
+                fontSize: 15,
+                fontWeight: "bold",
+              }}
+            >
+              hr
+            </Text>
+          </View>
         </View>
-
       </View>
     </View>
-  </View>
+  );
+};
+// const SleepCard = () => {
+//   const [sleep, setsleep] = useState("0h 0m");
+
+//   // Fetch logic same as in StepsCount but only sleep part
+//   // Or pass sleep from parent if preferred
+
+//   return (
+//     <View>
+//       <View>
+//         <View style={styles.stepsCard}>
+//           <Text
+//             style={[
+//               styles.text,
+//               {
+//                 fontSize: 15,
+//                 marginBottom: 5,
+//                 color: "#9e9a99",
+//               },
+//             ]}
+//           >
+//             Open Health Connect to sync
+//           </Text>
+//           <Text
+//             style={[
+//               styles.text,
+//               {
+//                 color: "#9e9a99",
+//                 fontSize: 12,
+//               },
+//             ]}
+//           >
+//             (wait for few minutes)
+//           </Text>
+//           <Image
+//             source={require("../../assets/images/sleep2.png")}
+//             style={{
+//               width: 170,
+//               height: 200,
+//               resizeMode: "contain",
+//               marginTop: 20,
+//             }}
+//           />
+//           <View
+//             style={{
+//               height: 10,
+//               width: "80%",
+//               backgroundColor: "#3E3E3E",
+//               borderRadius: 10,
+//               overflow: "hidden",
+//               marginTop: 20,
+//               alignSelf: "center",
+//             }}
+//           >
+//             {/* <Animated.View
+//             style={[
+//               {
+//                 height: "100%",
+//                 backgroundColor: "#34D399", // Emerald green
+//                 borderRadius: 10,
+//               },
+//               {
+//                 width: progressAnim.interpolate({
+//                   inputRange: [0, 1],
+//                   outputRange: ["0%", "100%"],
+//                 }),
+//               },
+//             ]}
+//           /> */}
+//           </View>
+//           <View style={styles.setpsdiv}>
+//             <Text style={styles.steptext}>2hr</Text>
+//             <Text style={{ color: "white", fontSize: 20 }}>/</Text>
+//             <Text style={styles.texttarget}>10hr</Text>
+//             <Text
+//               style={{
+//                 marginLeft: 5,
+//                 color: "#9e9a99",
+//                 fontSize: 15,
+//                 fontWeight: "bold",
+//               }}
+//             >
+//               steps
+//             </Text>
+//           </View>
+//         </View>
+//       </View>
+//     </View>
+//   );
+// };
+const SwipeableCards = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const SCREEN_WIDTH = Dimensions.get("window").width;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > 10,
+      onPanResponderMove: Animated.event([null, { dx: translateX }], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx < -100 && currentIndex < 1) {
+          // Swipe left
+          Animated.timing(translateX, {
+            toValue: -SCREEN_WIDTH,
+            duration: 300,
+            useNativeDriver: false,
+          }).start(() => setCurrentIndex(1));
+        } else if (gesture.dx > 100 && currentIndex > 0) {
+          // Swipe right
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: false,
+          }).start(() => setCurrentIndex(0));
+        } else {
+          // Snap back
+          Animated.spring(translateX, {
+            toValue: currentIndex === 0 ? 0 : -SCREEN_WIDTH,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          {
+            height: 430, // Adjust based on card height
+            overflow: "hidden",
+          },
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <StepsCount />
+        </View>
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <SleepCard />
+        </View>
+      </Animated.View>
+    </View>
   );
 };
 interface Game {
@@ -574,7 +822,7 @@ interface Game {
 const OfficialGames = ({ handleJoinClick }: any) => {
   const [error, seterror] = useState("");
   const [joined, setjoined] = useState([]);
-  const[loading,setloading]=useState(false);
+  const [loading, setloading] = useState(false);
   const [form, setform] = useState([
     {
       name: "",
@@ -593,12 +841,13 @@ const OfficialGames = ({ handleJoinClick }: any) => {
       Hours: "",
     },
   ]);
-   const scrollViewRef = useRef(null);
-   const [isAtEnd, setIsAtEnd] = useState(false);
-   const [scrollEnabled, setScrollEnabled] = useState(true);
-   const handleScroll = (event:any) => {
+  const scrollViewRef = useRef(null);
+  const [isAtEnd, setIsAtEnd] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const handleScroll = (event: any) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+    const isEnd =
+      layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
     if (isEnd && !isAtEnd) {
       setIsAtEnd(true);
       // setScrollEnabled(false);
@@ -620,7 +869,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -633,7 +882,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -662,8 +911,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           }}
         >
           <Text style={styles.gamesTitle}>Official Games</Text>
-          
-          
+
           <TouchableOpacity
             style={{
               paddingHorizontal: 10,
@@ -686,9 +934,9 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             </View>
           </TouchableOpacity>
         </View>
-    
+
         <ScrollView
-        ref={scrollViewRef}
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={scrollEnabled}
@@ -706,255 +954,337 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           // ]}
         >
           {form.map((game) => (
-  <View key={game.id}>
-    {loading ? (
-      <Skeleton 
-        animation="pulse" 
-        style={styles.gameCard} 
-        height={170}
-        width={320}
-        LinearGradientComponent={LinearGradient}
-      />
-    ) : (
-      <View>
-       
-      <Animated.View 
-        entering={FadeInDown.duration(400).delay(200)}
-        style={[
-          styles.gameCard,
-          {
-            shadowColor: "#9d4edd",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: 10,
-          }
-        ]}
-      >
-        <LinearGradient
-          colors={['#2b0f45', '#3b1a63', '#4b2387']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ 
-            borderRadius: 16,
-            overflow: 'hidden',
-            borderLeftWidth: 4,
-            borderLeftColor: game.status === 'Active' ? '#00ff00' : 
-                             game.status === 'Upcoming' ? '#ffaa00' : 
-                             game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-          }}
-        >
-          <Pressable
-            onPress={() => router.push(`/status/${game.id}`)}
-            style={({ pressed }) => [
-              { opacity: pressed ? 0.8 : 1 },
-              { flex: 1 },
-              { padding: 16 }
-            ]}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
-          >
-            {/* Header Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.gameHeader, { 
-                  fontSize: 18, 
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                  color: '#ffffff'
-                }]}>
-                  {game.name}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="calendar" size={12} color="#bfbfbf" />
-                  <Text style={{
-                    color: "#bfbfbf",
-                    fontSize: 12,
-                    marginLeft: 4
-                  }}>
-                    {game.startdate}
-                  </Text>
-                </View>
-              </View>
-              
-              <View>
-                {joined.some((join) => join.id == game.id) ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 12,
-                      flexDirection: 'row',
-                      alignItems: 'center'
-                    }}>
-                      <MaterialCommunityIcons name="check-circle" size={14} color="#00ff00" />
-                      <Text style={{ 
-                        color: "#ffffff", 
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        marginLeft: 4
-                      }}>
-                        Joined
-                      </Text>
-                    </View>
-                    <View style={{
-                      marginTop: 4,
-                      backgroundColor: game.status === 'Active' ? 'rgba(0, 255, 0, 0.2)' : 
-                                      game.status === 'Upcoming' ? 'rgba(255, 170, 0, 0.2)' : 
-                                      game.status === 'Completed' ? 'rgba(255, 85, 85, 0.2)' : 'rgba(157, 78, 221, 0.2)',
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 8
-                    }}>
-                      <Text style={{
-                        color: game.status === 'Active' ? '#00ff00' : 
-                               game.status === 'Upcoming' ? '#ffaa00' : 
-                               game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-                        fontSize: 11,
-                        fontWeight: 'bold'
-                      }}>
-                        {game.status}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#9d4edd',
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      shadowColor: "#9d4edd",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 6,
-                      elevation: 5,
-                    }}
-                    onPress={() => {
-                      // // Add haptic feedback if available
-                      // if (ReactNativeHapticFeedback) {
-                      //   ReactNativeHapticFeedback.trigger('impactMedium');
-                      // }
-                      handleJoinClick(game);
-                    }}
-                    activeOpacity={0.7}
+            <View key={game.id}>
+              {loading ? (
+                <Skeleton
+                  animation="pulse"
+                  style={styles.gameCard}
+                  height={170}
+                  width={320}
+                  LinearGradientComponent={LinearGradient}
+                />
+              ) : (
+                <View>
+                  <Animated.View
+                    entering={FadeInDown.duration(400).delay(200)}
+                    style={[
+                      styles.gameCard,
+                      {
+                        shadowColor: "#9d4edd",
+                        shadowOffset: { width: 0, height: 8 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 12,
+                        elevation: 10,
+                      },
+                    ]}
                   >
-                    <Text style={{
-                      color: "white",
-                      fontSize: 16,
-                      fontWeight: 'bold'
-                    }}>
-                      Join
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
+                    <LinearGradient
+                      colors={["#2b0f45", "#3b1a63", "#4b2387"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        borderLeftWidth: 4,
+                        padding: 7,
+                        borderLeftColor:
+                          game.status === "Active"
+                            ? "#00ff00"
+                            : game.status === "Upcoming"
+                            ? "#ffaa00"
+                            : game.status === "Completed"
+                            ? "#ff5555"
+                            : "#9d4edd",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => router.push(`/status/${game.id}`)}
+                        style={({ pressed }) => [
+                          { opacity: pressed ? 0.8 : 1 },
+                          { flex: 1 },
+                          { padding: 16 },
+                        ]}
+                        android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                      >
+                        {/* Header Section */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={[
+                                styles.gameHeader,
+                                {
+                                  fontSize: 18,
+                                  fontWeight: "bold",
+                                  marginBottom: 4,
+                                  color: "#ffffff",
+                                },
+                              ]}
+                            >
+                              {game.name}
+                            </Text>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <MaterialCommunityIcons
+                                name="calendar"
+                                size={12}
+                                color="#bfbfbf"
+                              />
+                              <Text
+                                style={{
+                                  color: "#bfbfbf",
+                                  fontSize: 12,
+                                  marginLeft: 4,
+                                }}
+                              >
+                                {game.startdate}
+                              </Text>
+                            </View>
+                          </View>
 
-            {/* Divider with glow effect */}
-            <View style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginVertical: 16,
-            }}>
-              <LinearGradient
-                colors={['rgba(229, 204, 255, 0.1)', 'rgba(229, 204, 255, 0.6)', 'rgba(229, 204, 255, 0.1)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  width: "100%",
-                  height: 1,
-                }}
-              />
-            </View>
+                          <View>
+                            {joined.some((join) => join.id == game.id) ? (
+                              <View style={{ alignItems: "center" }}>
+                                <View
+                                  style={{
+                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 6,
+                                    borderRadius: 12,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <MaterialCommunityIcons
+                                    name="check-circle"
+                                    size={14}
+                                    color="#00ff00"
+                                  />
+                                  <Text
+                                    style={{
+                                      color: "#ffffff",
+                                      fontSize: 12,
+                                      fontWeight: "bold",
+                                      marginLeft: 4,
+                                    }}
+                                  >
+                                    Joined
+                                  </Text>
+                                </View>
+                                <View
+                                  style={{
+                                    marginTop: 4,
+                                    backgroundColor:
+                                      game.status === "Active"
+                                        ? "rgba(0, 255, 0, 0.2)"
+                                        : game.status === "Upcoming"
+                                        ? "rgba(255, 170, 0, 0.2)"
+                                        : game.status === "Completed"
+                                        ? "rgba(255, 85, 85, 0.2)"
+                                        : "rgba(157, 78, 221, 0.2)",
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 8,
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      color:
+                                        game.status === "Active"
+                                          ? "#00ff00"
+                                          : game.status === "Upcoming"
+                                          ? "#ffaa00"
+                                          : game.status === "Completed"
+                                          ? "#ff5555"
+                                          : "#9d4edd",
+                                      fontSize: 11,
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {game.status}
+                                  </Text>
+                                </View>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: "#9d4edd",
+                                  paddingHorizontal: 20,
+                                  paddingVertical: 10,
+                                  borderRadius: 12,
+                                  shadowColor: "#9d4edd",
+                                  shadowOffset: { width: 0, height: 4 },
+                                  shadowOpacity: 0.3,
+                                  shadowRadius: 6,
+                                  elevation: 5,
+                                }}
+                                onPress={() => {
+                                  // // Add haptic feedback if available
+                                  // if (ReactNativeHapticFeedback) {
+                                  //   ReactNativeHapticFeedback.trigger('impactMedium');
+                                  // }
+                                  handleJoinClick(game);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text
+                                  style={{
+                                    color: "white",
+                                    fontSize: 16,
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  Join
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
 
-            {/* Game Stats Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingHorizontal: 5,
-            }}>
-              {/* Entry */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="cash" size={16} color="#9d4edd" />
+                        {/* Divider with glow effect */}
+                        <View
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            marginVertical: 16,
+                          }}
+                        >
+                          <LinearGradient
+                            colors={[
+                              "rgba(229, 204, 255, 0.1)",
+                              "rgba(229, 204, 255, 0.6)",
+                              "rgba(229, 204, 255, 0.1)",
+                            ]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{
+                              width: "100%",
+                              height: 1,
+                            }}
+                          />
+                        </View>
+
+                        {/* Game Stats Section */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            paddingHorizontal: 5,
+                          }}
+                        >
+                          {/* Entry */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="cash"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Entry</Text>
+                            <Text style={styles.statValue}>{game.Amount}</Text>
+                          </View>
+
+                          {/* Days */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="calendar-range"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Days</Text>
+                            <Text style={styles.statValue}>{game.days}</Text>
+                          </View>
+
+                          {/* Steps/Hours */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name={
+                                  game.types == "Steps"
+                                    ? "shoe-print"
+                                    : "clock-outline"
+                                }
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>
+                              {game.types == "Steps" ? "Daily Steps" : "Hours"}
+                            </Text>
+                            <Text style={styles.statValue}>
+                              {game.types == "Steps"
+                                ? game.Dailystep
+                                : game.Hours}
+                            </Text>
+                          </View>
+
+                          {/* Players */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="account-group"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Players</Text>
+                            <Text style={styles.statValue}>
+                              {game.memberqty}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Prize indicator */}
+                        <View
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            backgroundColor: "#FFD700",
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderBottomLeftRadius: 12,
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          {/* <MaterialCommunityIcons
+                            name="trophy"
+                            size={12}
+                            color="#000"
+                          /> */}
+                          <Text
+                            style={{
+                              color: "#000",
+                              fontSize: 10,
+                              fontWeight: "bold",
+                              marginLeft: 2,
+                            }}
+                          >
+                            {game.Totalamount}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </LinearGradient>
+                  </Animated.View>
                 </View>
-                <Text style={styles.statLabel}>Entry</Text>
-                <Text style={styles.statValue}>{game.Amount}</Text>
-              </View>
-
-              {/* Days */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="calendar-range" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Days</Text>
-                <Text style={styles.statValue}>{game.days}</Text>
-              </View>
-
-              {/* Steps/Hours */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons 
-                    name={game.types == "Steps" ? "shoe-print" : "clock-outline"} 
-                    size={16} 
-                    color="#9d4edd" 
-                  />
-                </View>
-                <Text style={styles.statLabel}>
-                  {game.types == "Steps" ? "Daily Steps" : "Hours"}
-                </Text>
-                <Text style={styles.statValue}>
-                  {game.types == "Steps" ? game.Dailystep : game.Hours}
-                </Text>
-              </View>
-
-              {/* Players */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="account-group" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Players</Text>
-                <Text style={styles.statValue}>{game.memberqty}</Text>
-              </View>
+              )}
             </View>
-
-            {/* Prize indicator */}
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              backgroundColor: '#FFD700',
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderBottomLeftRadius: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-              <MaterialCommunityIcons name="trophy" size={12} color="#000" />
-              <Text style={{
-                color: "#000",
-                fontSize: 10,
-                fontWeight: 'bold',
-                marginLeft: 2
-              }}>
-                {game.Totalamount}
-              </Text>
-            </View>
-          </Pressable>
-        </LinearGradient>
-      </Animated.View>
+          ))}
+        </ScrollView>
       </View>
-  
-    )}
-  </View>
-))}
-</ScrollView>
-</View>
     </BottomSheetModalProvider>
   );
 };
@@ -982,18 +1312,19 @@ const CommunityGames = ({ handleJoinClick }: any) => {
   const scrollViewRef = useRef(null);
   const [isAtEnd, setIsAtEnd] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
-  const[loading,setloading]=useState(false);
-  const handleScroll = (event:any) => {
-   const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-   const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
-   if (isEnd && !isAtEnd) {
-     setIsAtEnd(true);
-     // setScrollEnabled(false);
-   } else if (!isEnd && isAtEnd) {
-     setIsAtEnd(false);
-     setScrollEnabled(true);
-   }
- };
+  const [loading, setloading] = useState(false);
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isEnd =
+      layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+    if (isEnd && !isAtEnd) {
+      setIsAtEnd(true);
+      // setScrollEnabled(false);
+    } else if (!isEnd && isAtEnd) {
+      setIsAtEnd(false);
+      setScrollEnabled(true);
+    }
+  };
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
@@ -1007,8 +1338,8 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
-      }finally{
-           setloading(false);
+      } finally {
+        setloading(false);
       }
     };
 
@@ -1025,7 +1356,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -1068,268 +1399,345 @@ const CommunityGames = ({ handleJoinClick }: any) => {
       </View>
       <ScrollView
         ref={scrollViewRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          scrollEnabled={scrollEnabled}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          contentContainerStyle={styles.scrollContent}
-          // contentContainerStyle={[
-          //   styles.gamesScrollContent,
-          //   form.length <= 4 && {
-          //     alignSelf: "center",
-          //     width: 1400,
-          //     paddingRight: "40%",
-          //     paddingLeft: 0,
-          //   },
-          // ]}
-        >
-       {form.map((game) => (
-  <View key={game.id}>
-    {loading ? (
-      <Skeleton 
-      animation="pulse" 
-      style={styles.gameCard} 
-      height={170}
-      width={320}
-      LinearGradientComponent={LinearGradient}
-    />
-    ) : (
-      <Animated.View 
-        entering={FadeInDown.duration(400).delay(200)}
-        style={[
-          styles.gameCard,
-          {
-            shadowColor: "#9d4edd",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: 10,
-          }
-        ]}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        scrollEnabled={scrollEnabled}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
+        // contentContainerStyle={[
+        //   styles.gamesScrollContent,
+        //   form.length <= 4 && {
+        //     alignSelf: "center",
+        //     width: 1400,
+        //     paddingRight: "40%",
+        //     paddingLeft: 0,
+        //   },
+        // ]}
       >
-        <LinearGradient
-          colors={['#2b0f45', '#3b1a63', '#4b2387']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ 
-            borderRadius: 16,
-            overflow: 'hidden',
-            borderLeftWidth: 4,
-            borderLeftColor: game.status === 'Active' ? '#00ff00' : 
-                             game.status === 'Upcoming' ? '#ffaa00' : 
-                             game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-          }}
-        >
-          <Pressable
-            onPress={() => router.push(`/status/${game.id}`)}
-            style={({ pressed }) => [
-              { opacity: pressed ? 0.8 : 1 },
-              { flex: 1 },
-              { padding: 16 }
-            ]}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
-          >
-            {/* Header Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.gameHeader, { 
-                  fontSize: 18, 
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                  color: '#ffffff'
-                }]}>
-                  {game.name}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="calendar" size={12} color="#bfbfbf" />
-                  <Text style={{
-                    color: "#bfbfbf",
-                    fontSize: 12,
-                    marginLeft: 4
-                  }}>
-                    {game.startdate}
-                  </Text>
-                </View>
-              </View>
-              
-              <View>
-                {joined.some((join) => join.id == game.id) ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 12,
-                      flexDirection: 'row',
-                      alignItems: 'center'
-                    }}>
-                      <MaterialCommunityIcons name="check-circle" size={14} color="#00ff00" />
-                      <Text style={{ 
-                        color: "#ffffff", 
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        marginLeft: 4
-                      }}>
-                        Joined
-                      </Text>
-                    </View>
-                    <View style={{
-                      marginTop: 4,
-                      backgroundColor: game.status === 'Active' ? 'rgba(0, 255, 0, 0.2)' : 
-                                      game.status === 'Upcoming' ? 'rgba(255, 170, 0, 0.2)' : 
-                                      game.status === 'Completed' ? 'rgba(255, 85, 85, 0.2)' : 'rgba(157, 78, 221, 0.2)',
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 8
-                    }}>
-                      <Text style={{
-                        color: game.status === 'Active' ? '#00ff00' : 
-                               game.status === 'Upcoming' ? '#ffaa00' : 
-                               game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-                        fontSize: 11,
-                        fontWeight: 'bold'
-                      }}>
-                        {game.status}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#9d4edd',
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      shadowColor: "#9d4edd",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 6,
-                      elevation: 5,
-                    }}
-                    onPress={() => {
-                      // // Add haptic feedback if available
-                      // if (ReactNativeHapticFeedback) {
-                      //   ReactNativeHapticFeedback.trigger('impactMedium');
-                      // }
-                      handleJoinClick(game);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{
-                      color: "white",
-                      fontSize: 16,
-                      fontWeight: 'bold'
-                    }}>
-                      Join
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-
-            {/* Divider with glow effect */}
-            <View style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginVertical: 16,
-            }}>
-              <LinearGradient
-                colors={['rgba(229, 204, 255, 0.1)', 'rgba(229, 204, 255, 0.6)', 'rgba(229, 204, 255, 0.1)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  width: "100%",
-                  height: 1,
-                }}
+        {form.map((game) => (
+          <View key={game.id}>
+            {loading ? (
+              <Skeleton
+                animation="pulse"
+                style={styles.gameCard}
+                height={170}
+                width={320}
+                LinearGradientComponent={LinearGradient}
               />
-            </View>
+            ) : (
+              <Animated.View
+                entering={FadeInDown.duration(400).delay(200)}
+                style={[
+                  styles.gameCard,
+                  {
+                    shadowColor: "#9d4edd",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 12,
+                    elevation: 10,
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={["#2b0f45", "#3b1a63", "#4b2387"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    borderLeftWidth: 4,
+                    padding: 7,
+                    borderLeftColor:
+                      game.status === "Active"
+                        ? "#00ff00"
+                        : game.status === "Upcoming"
+                        ? "#ffaa00"
+                        : game.status === "Completed"
+                        ? "#ff5555"
+                        : "#9d4edd",
+                  }}
+                >
+                  <Pressable
+                    onPress={() => router.push(`/status/${game.id}`)}
+                    style={({ pressed }) => [
+                      { opacity: pressed ? 0.8 : 1 },
+                      { flex: 1 },
+                      { padding: 16 },
+                    ]}
+                    android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                  >
+                    {/* Header Section */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            styles.gameHeader,
+                            {
+                              fontSize: 18,
+                              fontWeight: "bold",
+                              marginBottom: 4,
+                              color: "#ffffff",
+                            },
+                          ]}
+                        >
+                          {game.name}
+                        </Text>
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <MaterialCommunityIcons
+                            name="calendar"
+                            size={12}
+                            color="#bfbfbf"
+                          />
+                          <Text
+                            style={{
+                              color: "#bfbfbf",
+                              fontSize: 12,
+                              marginLeft: 4,
+                            }}
+                          >
+                            {game.startdate}
+                          </Text>
+                        </View>
+                      </View>
 
-            {/* Game Stats Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingHorizontal: 5,
-            }}>
-              {/* Entry */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="cash" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Entry</Text>
-                <Text style={styles.statValue}>{game.Amount}</Text>
-              </View>
+                      <View>
+                        {joined.some((join) => join.id == game.id) ? (
+                          <View style={{ alignItems: "center" }}>
+                            <View
+                              style={{
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 12,
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <MaterialCommunityIcons
+                                name="check-circle"
+                                size={14}
+                                color="#00ff00"
+                              />
+                              <Text
+                                style={{
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontWeight: "bold",
+                                  marginLeft: 4,
+                                }}
+                              >
+                                Joined
+                              </Text>
+                            </View>
+                            <View
+                              style={{
+                                marginTop: 4,
+                                backgroundColor:
+                                  game.status === "Active"
+                                    ? "rgba(0, 255, 0, 0.2)"
+                                    : game.status === "Upcoming"
+                                    ? "rgba(255, 170, 0, 0.2)"
+                                    : game.status === "Completed"
+                                    ? "rgba(255, 85, 85, 0.2)"
+                                    : "rgba(157, 78, 221, 0.2)",
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                                borderRadius: 8,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color:
+                                    game.status === "Active"
+                                      ? "#00ff00"
+                                      : game.status === "Upcoming"
+                                      ? "#ffaa00"
+                                      : game.status === "Completed"
+                                      ? "#ff5555"
+                                      : "#9d4edd",
+                                  fontSize: 11,
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {game.status}
+                              </Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: "#9d4edd",
+                              paddingHorizontal: 20,
+                              paddingVertical: 10,
+                              borderRadius: 12,
+                              shadowColor: "#9d4edd",
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.3,
+                              shadowRadius: 6,
+                              elevation: 5,
+                            }}
+                            onPress={() => {
+                              // // Add haptic feedback if available
+                              // if (ReactNativeHapticFeedback) {
+                              //   ReactNativeHapticFeedback.trigger('impactMedium');
+                              // }
+                              handleJoinClick(game);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={{
+                                color: "white",
+                                fontSize: 16,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Join
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
 
-              {/* Days */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="calendar-range" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Days</Text>
-                <Text style={styles.statValue}>{game.days}</Text>
-              </View>
+                    {/* Divider with glow effect */}
+                    <View
+                      style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginVertical: 16,
+                      }}
+                    >
+                      <LinearGradient
+                        colors={[
+                          "rgba(229, 204, 255, 0.1)",
+                          "rgba(229, 204, 255, 0.6)",
+                          "rgba(229, 204, 255, 0.1)",
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                          width: "100%",
+                          height: 1,
+                        }}
+                      />
+                    </View>
 
-              {/* Steps/Hours */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons 
-                    name={game.types == "Steps" ? "shoe-print" : "clock-outline"} 
-                    size={16} 
-                    color="#9d4edd" 
-                  />
-                </View>
-                <Text style={styles.statLabel}>
-                  {game.types == "Steps" ? "Daily Steps" : "Hours"}
-                </Text>
-                <Text style={styles.statValue}>
-                  {game.types == "Steps" ? game.Dailystep : game.Hours}
-                </Text>
-              </View>
+                    {/* Game Stats Section */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 5,
+                      }}
+                    >
+                      {/* Entry */}
+                      <View style={styles.statContainer}>
+                        <View style={styles.statIconContainer}>
+                          <MaterialCommunityIcons
+                            name="cash"
+                            size={16}
+                            color="#9d4edd"
+                          />
+                        </View>
+                        <Text style={styles.statLabel}>Entry</Text>
+                        <Text style={styles.statValue}>{game.Amount}</Text>
+                      </View>
 
-              {/* Players */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="account-group" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Players</Text>
-                <Text style={styles.statValue}>{game.memberqty}</Text>
-              </View>
-            </View>
+                      {/* Days */}
+                      <View style={styles.statContainer}>
+                        <View style={styles.statIconContainer}>
+                          <MaterialCommunityIcons
+                            name="calendar-range"
+                            size={16}
+                            color="#9d4edd"
+                          />
+                        </View>
+                        <Text style={styles.statLabel}>Days</Text>
+                        <Text style={styles.statValue}>{game.days}</Text>
+                      </View>
 
-            {/* Prize indicator */}
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              backgroundColor: '#FFD700',
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderBottomLeftRadius: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-              <MaterialCommunityIcons name="trophy" size={12} color="#000" />
-              <Text style={{
-                color: "#000",
-                fontSize: 10,
-                fontWeight: 'bold',
-                marginLeft: 2
-              }}>
-                {game.Totalamount}
-              </Text>
-            </View>
-          </Pressable>
-        </LinearGradient>
-      </Animated.View>
-    )}
-  </View>
-))}
-</ScrollView>
-</View>
+                      {/* Steps/Hours */}
+                      <View style={styles.statContainer}>
+                        <View style={styles.statIconContainer}>
+                          <MaterialCommunityIcons
+                            name={
+                              game.types == "Steps"
+                                ? "shoe-print"
+                                : "clock-outline"
+                            }
+                            size={16}
+                            color="#9d4edd"
+                          />
+                        </View>
+                        <Text style={styles.statLabel}>
+                          {game.types == "Steps" ? "Daily Steps" : "Hours"}
+                        </Text>
+                        <Text style={styles.statValue}>
+                          {game.types == "Steps" ? game.Dailystep : game.Hours}
+                        </Text>
+                      </View>
+
+                      {/* Players */}
+                      <View style={styles.statContainer}>
+                        <View style={styles.statIconContainer}>
+                          <MaterialCommunityIcons
+                            name="account-group"
+                            size={16}
+                            color="#9d4edd"
+                          />
+                        </View>
+                        <Text style={styles.statLabel}>Players</Text>
+                        <Text style={styles.statValue}>{game.memberqty}</Text>
+                      </View>
+                    </View>
+
+                    {/* Prize indicator */}
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        backgroundColor: "#FFD700",
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderBottomLeftRadius: 12,
+                        flexDirection: "row",
+                        alignItems: "center",
+                      }}
+                    >
+                      {/* <MaterialCommunityIcons
+                        name="trophy"
+                        size={12}
+                        color="#000"
+                      /> */}
+                      <Text
+                        style={{
+                          color: "#000",
+                          fontSize: 10,
+                          fontWeight: "bold",
+                          marginLeft: 2,
+                        }}
+                      >
+                        {game.Totalamount}
+                      </Text>
+                    </View>
+                  </Pressable>
+                </LinearGradient>
+              </Animated.View>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -1420,45 +1828,45 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 10,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   sleepTargetText: {
     fontSize: 16,
-    color: '#9e9a99',
+    color: "#9e9a99",
     marginLeft: 5,
   },
   sleepVisual: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 10,
   },
   sleepHourBlock: {
     width: 20,
     height: 20,
     borderRadius: 4,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     marginRight: 5,
   },
   sleepHourFilled: {
-    backgroundColor: '#5C6BC0',
+    backgroundColor: "#5C6BC0",
   },
   syncContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   proggressContainer: {
     marginBottom: 25,
   },
   proggressTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9e9a99',
+    fontWeight: "bold",
+    color: "#9e9a99",
     marginBottom: 10,
   },
   header: {
@@ -1466,94 +1874,94 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   statsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
- 
+
   badgeContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 15,
   },
   badge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: "#e3f2fd",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
     marginRight: 10,
   },
   successBadge: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: "#e8f5e9",
   },
   sleepProgress: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     marginBottom: 10,
   },
-  
+
   badgeText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#2196f3',
+    fontWeight: "bold",
+    color: "#2196f3",
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 10,
     marginBottom: 10,
   },
   setpsdiv: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 5,
   },
   steptext: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontWeight: "bold",
+    color: "#4CAF50",
   },
   stepsSeparator: {
-    color: '#9e9a99', 
+    color: "#9e9a99",
     fontSize: 20,
     marginHorizontal: 5,
   },
   texttarget: {
     fontSize: 20,
-    color: '#9e9a99',
+    color: "#9e9a99",
   },
   stepsLabel: {
     marginLeft: 5,
-    color: '#9e9a99',
+    color: "#9e9a99",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   sleepContainer: {
     marginBottom: 25,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   sleepTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9e9a99',
+    fontWeight: "bold",
+    color: "#9e9a99",
     marginBottom: 10,
   },
   gameHeader: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statContainer: {
-    justifyContent: "center", 
+    justifyContent: "center",
     alignItems: "center",
     minWidth: 70,
   },
@@ -1561,23 +1969,23 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(157, 78, 221, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(157, 78, 221, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 4,
   },
   statLabel: {
-    color: "#bfbfbf", 
+    color: "#bfbfbf",
     fontSize: 12,
     marginBottom: 2,
   },
   statValue: {
-    color: "white", 
+    color: "white",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   joinbutton: {
-    backgroundColor: '#9d4edd',
+    backgroundColor: "#9d4edd",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 12,
@@ -1653,8 +2061,8 @@ const styles = StyleSheet.create({
   // },
   sleepText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#5C6BC0',
+    fontWeight: "bold",
+    color: "#5C6BC0",
   },
   gamebttn: {
     backgroundColor: "#7E38B7",
@@ -1698,7 +2106,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scrollContent: {
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   gameDetailLabel: {
     color: "#bfbfbf",
@@ -1797,16 +2205,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  stepbox:{
-    flex:1,
-    borderRadius:10,
-    padding:10,
-    paddingRight:94,
-    height:132,
-    paddingBottom:24,
-    paddingLeft:94,
-    paddingTop:24,
-    width:342
+  stepbox: {
+    flex: 1,
+    borderRadius: 10,
+    padding: 10,
+    paddingRight: 94,
+    height: 132,
+    paddingBottom: 24,
+    paddingLeft: 94,
+    paddingTop: 24,
+    width: 342,
   },
   gameDetailsContainer: {
     backgroundColor: "#1a0033",
@@ -1817,17 +2225,17 @@ const styles = StyleSheet.create({
   syncText: {
     fontSize: 15,
     marginBottom: 5,
-    color: '#9e9a99',
+    color: "#9e9a99",
   },
   syncHint: {
-    color: '#9e9a99',
+    color: "#9e9a99",
     fontSize: 12,
     marginBottom: 15,
   },
   sleepImage: {
     width: 170,
     height: 200,
-    resizeMode: 'contain',
+    resizeMode: "contain",
     marginTop: 20,
   },
   // steptext: {
