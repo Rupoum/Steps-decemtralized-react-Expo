@@ -12,9 +12,7 @@ export default function RootLayout() {
         headerTitleStyle: {
           fontWeight: "bold",
         },
-      
       }}
-     
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
@@ -30,10 +28,7 @@ export default function RootLayout() {
         name="(nonav)/newSleepGame"
         options={{ title: "Create Game" }}
       />
-      <Stack.Screen
-        name="(nonav)/historyGames"
-        options={{ title: " " }}
-      />
+      <Stack.Screen name="(nonav)/historyGames" options={{ title: " " }} />
       <Stack.Screen
         name="(nonav)/notification"
         options={{ title: "Notification" }}
@@ -55,6 +50,8 @@ export default function RootLayout() {
         name="(nonav)/achievments"
         options={{ title: "Achievments" }}
       />
+      <Stack.Screen name="(auth)/login" options={{ title: "Login" }} />
+      <Stack.Screen name="(auth)/register" options={{ title: "Register" }} />
     </Stack>
   );
 }
