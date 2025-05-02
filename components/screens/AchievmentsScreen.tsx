@@ -19,7 +19,6 @@ import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 
-// Badge data with days, descriptions, and themed designs
 const BADGES = [
   {
     id: 1,
@@ -137,10 +136,7 @@ const generateMockSleepData = () => {
     const date = new Date();
     date.setDate(today.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-
-    // Create some patterns - more successful days recently, some missed days
     if (i <= 21) {
-      // Last 21 days (current streak) - all successful
       data[dateStr] = {
         success: true,
         hours: 7 + Math.random() * 1.5,
@@ -162,17 +158,15 @@ const generateMockSleepData = () => {
 
   return data;
 };
-
-// Calendar helper functions
-const getDaysInMonth = (year, month) => {
+const getDaysInMonth = (year:any, month:any) => {
   return new Date(year, month + 1, 0).getDate();
 };
 
-const getFirstDayOfMonth = (year, month) => {
+const getFirstDayOfMonth = (year:any, month:any) => {
   return new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday, etc.
 };
 
-const getMonthName = (month) => {
+const getMonthName = (month:any) => {
   const months = [
     "January",
     "February",
@@ -238,7 +232,7 @@ const SleepCalendar = ({
   selectedDay,
   onSelectDay,
   currentStreak,
-}) => {
+}:any) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const today = new Date();
@@ -561,7 +555,7 @@ const SleepCalendar = ({
 };
 
 // Day Info Component
-const DayInfoPanel = ({ day, onClose }) => {
+const DayInfoPanel = ({ day, onClose }:any) => {
   if (!day) return null;
 
   return (
@@ -620,7 +614,7 @@ const BadgeCard = ({
   isSelected,
   currentStreak,
   isNewlyUnlocked,
-}) => {
+}:any) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -758,13 +752,13 @@ const BadgeCard = ({
 };
 
 // Milestone Timeline Component
-const MilestoneTimeline = ({ currentStreak, badges }) => {
+const MilestoneTimeline = ({ currentStreak, badges }:any) => {
   // Find the next milestone
-  const nextMilestone = badges.find((badge) => badge.days > currentStreak);
+  const nextMilestone = badges.find((badge:any) => badge.days > currentStreak);
 
   // Get all achieved milestones
   const achievedMilestones = badges.filter(
-    (badge) => badge.days <= currentStreak
+    (badge:any) => badge.days <= currentStreak
   );
   const lastAchievedMilestone =
     achievedMilestones.length > 0
@@ -798,7 +792,7 @@ const MilestoneTimeline = ({ currentStreak, badges }) => {
 
         <View style={styles.milestoneMarkers}>
           {/* Show only achieved milestones and the next one */}
-          {achievedMilestones.map((badge) => (
+          {achievedMilestones.map((badge:any) => (
             <View
               key={badge.id}
               style={[
@@ -1015,7 +1009,7 @@ export default function AchievementsScreen() {
     }
   }, [selectedDay, dayInfoAnim]);
 
-  const handleBadgePress = (badgeId) => {
+  const handleBadgePress = (badgeId:any) => {
     setSelectedBadge(selectedBadge === badgeId ? null : badgeId);
   };
 

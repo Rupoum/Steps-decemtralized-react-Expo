@@ -1,120 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
-import {
-  GoogleSignin,
-  statusCodes,
-  NativeModuleError,
-} from '@react-native-google-signin/google-signin';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { VictoryBar, VictoryChart, VictoryTheme } from "victory-native";
 
-interface UserData {
-  idToken: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    photo?: string;
-  };
-}
-interface GoogleSignInButtonProps {
-  onSignInSuccess: (data: UserData) => void;
-}
-const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSignInSuccess }) => {
-  const [isSigningIn, setIsSigningIn] = useState(false);
+const data = [
+  { quarter: 1, earnings: 13000 },
+  { quarter: 2, earnings: 16500 },
+  { quarter: 3, earnings: 14250 },
+  { quarter: 4, earnings: 19000 }
+];
 
-  const configureGoogleSignIn = async () => {
-    GoogleSignin.configure({
-      webClientId: '297646595436-5mkc7f3js1s945jcqd5d2gvibkc9a67r.apps.googleusercontent.com', 
-      offlineAccess: true, 
-      forceCodeForRefreshToken: true, 
-    });
-  };
-
-  const handleSignIn = async () => {
-    if (Platform.OS !== 'android') {
-      Alert.alert('Warning', 'This sign-in method is optimized for Android');
-      return;
-    }
-
-    setIsSigningIn(true);
-    try {
-      await configureGoogleSignIn();
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      
-      const userInfo = await GoogleSignin.signIn();
-      handleSignInSuccess(userInfo);
-    } catch (error) {
-      handleSignInError(error as NativeModuleError);
-    } finally {
-      setIsSigningIn(false);
-    }
-  };
-
-  const handleSignInSuccess = (data: any) => {
-    // Safely extract user data (new response format)
-    const userData = {
-      idToken: data.idToken || '',
-      user: {
-        id: data.user?.id || data.id || '', // Fallback for different formats
-        name: [data.user?.givenName, data.user?.familyName].filter(Boolean).join(' ') || 'No name',
-        email: data.user?.email || '',
-        photo: data.user?.photo || null,
-      },
-    };
-    onSignInSuccess(userData);
-  };;
-
-  const handleSignInError = (error: NativeModuleError) => {
-    switch (error.code) {
-      case statusCodes.SIGN_IN_CANCELLED:
-        Alert.alert('Sign in cancelled');
-        break;
-      case statusCodes.IN_PROGRESS:
-        Alert.alert('Sign in already in progress');
-        break;
-      case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-        Alert.alert(
-          'Google Play Services Required',
-          'Please update Google Play Services'
-        );
-        break;
-      default:
-        Alert.alert('Error', error.message || 'Unknown error occurred');
-        console.error('Google SignIn Error:', error);
-    }
-  };
-
+export default function App() {
   return (
-    <TouchableOpacity
-      style={[styles.button, isSigningIn && styles.buttonDisabled]}
-      onPress={handleSignIn}
-      disabled={isSigningIn}
-      activeOpacity={0.7}
-    >
-      <Text style={styles.buttonText}>
-        {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
-      </Text>
-    </TouchableOpacity>
+    <View style={styles.container}>
+      <VictoryChart width={350} theme={VictoryTheme.clean}>
+        <VictoryBar data={data} x="quarter" y="earnings" />
+      </VictoryChart>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 4,
-    elevation: 3,
-    minWidth: 200,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5fcff"
+  }
 });
-
-export default GoogleSignInButton;

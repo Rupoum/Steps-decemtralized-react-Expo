@@ -172,6 +172,7 @@ const ProfileScreen = () => {
         style={styles.gradient}
       >
         <View>
+          <View>
           <TouchableOpacity
             onPress={() => router.push("/(nonav)/notification")}
             style={{
@@ -182,7 +183,7 @@ const ProfileScreen = () => {
             <Ionicons
               name="notifications"
               size={24}
-              color="#FFD700" // Gold color for the icon
+              color="#FFD700" 
               style={{ position: "absolute", right: 20, top: 7 }}
             />
             {notificationCount > 0 && (
@@ -201,7 +202,7 @@ const ProfileScreen = () => {
               >
                 <Text
                   style={{
-                    color: "#FFFFFF", // White color for the badge text
+                    color: "#FFFFFF", 
                     fontSize: 12,
                     fontWeight: "bold",
                   }}
@@ -211,6 +212,7 @@ const ProfileScreen = () => {
               </View>
             )}
           </TouchableOpacity>
+          </View>
           <View style={styles.profileCard}>
             <Image
               source={require("../../assets/images/profile.png")}
@@ -508,6 +510,9 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     padding: 10,
+  },
+  notification:{
+   height:20,
   },
   searchResultItem: {
     flexDirection: "row",
