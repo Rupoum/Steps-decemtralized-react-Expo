@@ -83,6 +83,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "^15.11.2",
+    "react-native-svg-charts": "^5.4.0",
     "react-native-web": "~0.19.13",
     "react-native-web3-wallet": "github:heroims/react-native-web3-wallet#ether6.x",
     "react-native-websocket": "^1.0.2",

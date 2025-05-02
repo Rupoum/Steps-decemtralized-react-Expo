@@ -1,1 +1,1 @@
-export const BACKEND_URL = "http://192.168.29.157:3000/api/v1";
+export const BACKEND_URL = "https://c75d-49-36-220-159.ngrok-free.app/api/v1";
