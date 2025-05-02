@@ -39,7 +39,6 @@ const CreateSleepSccreen = () => {
     startdate: format(new Date(), "yyyy-MM-dd").toString(),
     enddate: format(new Date(), "yyyy-MM-dd").toString(),
   });
-
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
   const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
@@ -130,6 +129,10 @@ const CreateSleepSccreen = () => {
       console.log("forma", form);
       const userid = await AsyncStorage.getItem("userid");
       console.log(userid);
+      const startDate = new Date(form.startdate);
+      const endDate = new Date(form.enddate);
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
       try {
         const response = await axios.post(
           `${BACKEND_URL}/create/challenge/sleep`,
@@ -140,7 +143,7 @@ const CreateSleepSccreen = () => {
             Amount: form.Amount,
             Digital_Currency: "sol",
             Hours: form.Hours.toString(),
-            days: form.days,
+            days: daysDiff,
             startdate: form.startdate,
             enddate: form.enddate,
             userid: userid,
@@ -148,7 +151,8 @@ const CreateSleepSccreen = () => {
           }
         );
         console.log("Signup response:", response.data);
-        Alert.alert("Success", "Game Created Successfully");
+        // Alert.alert("Success", "Game Created Successfully");
+        ToastAndroid.show("Game created sucessfully", ToastAndroid.LONG);
         router.push("/(tabs)");
       } catch (e) {
         console.log(e);
@@ -183,6 +187,10 @@ const CreateSleepSccreen = () => {
     console.log("chee");
     setLoading(true);
     seterror(null);
+    const startDate = new Date(form.startdate);
+    const endDate = new Date(form.enddate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     try {
       const response = await axios.post(
         `${BACKEND_URL}/challenge/sleep/private`,
@@ -192,7 +200,7 @@ const CreateSleepSccreen = () => {
           Hours: form.Hours.toString(),
           Amount: form.Amount,
           Digital_Currency: "sol",
-          days: form.days,
+          days: daysDiff,
           types: "Sleep",
           startdate: form.startdate,
           enddate: form.enddate,
@@ -461,7 +469,7 @@ const GameForm = ({
           placeholder="Hours"
           placeholderTextColor="#999"
           onChangeText={(e) => setform({ ...form, Hours: parseInt(e) })}
-          keyboardType="name-phone-pad"
+          keyboardType="number-pad"
           autoCapitalize="none"
         />
       </View>
@@ -477,7 +485,7 @@ const GameForm = ({
           autoCapitalize="none"
         />
       </View>
-      <View style={styles.inputContainer}>
+      {/* <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Days"
@@ -488,7 +496,7 @@ const GameForm = ({
           keyboardType="number-pad"
           autoCapitalize="none"
         />
-      </View>
+      </View> */}
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={showStartDatePicker}>
           <Text style={styles.dateButtonText}>

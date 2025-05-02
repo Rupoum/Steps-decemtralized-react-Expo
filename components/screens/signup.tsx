@@ -8,15 +8,16 @@ import {
   SafeAreaView,
   Alert,
   KeyboardAvoidingView,
-  Button,
   ActivityIndicator,
   ToastAndroid,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import axios from "axios";
 import { BACKEND_URL } from "@/Backendurl";
+import { BottomSheet } from "@rneui/themed";
 
 const Signup = () => {
   console.log(BACKEND_URL);
@@ -27,6 +28,9 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
@@ -38,6 +42,9 @@ const Signup = () => {
       return;
     }
     setLoading(true);
+    setOtpLoading(false);
+
+    setOtp("");
     seterror(null);
     try {
       const response = await axios.post(`${BACKEND_URL}/register`, {
@@ -46,16 +53,9 @@ const Signup = () => {
         email,
         password,
       });
-      await AsyncStorage.setItem("username", response.data.user.username);
-      await AsyncStorage.setItem("token", response.data.token);
-      await AsyncStorage.setItem("PublicKey", response.data.user.publickey);
-      await AsyncStorage.setItem("userid", response.data.user.id);
-      router.push("/nativeheatlth");
-      if (!AsyncStorage.getItem("PublicKey")) {
-        console.log("No public found");
-        Alert.alert("No public found");
-      }
-      console.log("Signup response:", response.data);
+      await AsyncStorage.setItem("username",username);
+      // console.log("Signup response:", response.data);
+      setShowOtpModal(true);
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         console.log(err);
@@ -75,8 +75,50 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  const verifyOtp = async () => {
+    if (!otp || otp.length < 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP");
+      return;
+    }    
+    setOtpLoading(true);
+    try {
+      console.log("chc");
+      console.log(otp);
+      const response = await axios.post(`${BACKEND_URL}/verify`, {
+        email,
+        code:otp,
+        username,
+        name,
+        password
+      });
+      console.log(response);
+      await AsyncStorage.setItem("token", response.data.token);
+      ToastAndroid.show("Account verified successfully!", ToastAndroid.SHORT);
+      router.replace("/(nonav)/nativeheatlth");
+    } catch (err: any) {
+      if (err instanceof Error && "response" in err) {
+        const axiosError = err as { response: { data: { message: string } } };
+        ToastAndroid.show(
+          axiosError.response.data.message || "Invalid OTP. Please try again.",
+          ToastAndroid.LONG
+        );
+      } else {
+        ToastAndroid.show(
+          "An unexpected error occurred. Please try again.",
+          ToastAndroid.LONG
+        );
+      }
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <LinearGradient
         colors={["#1a0033", "#4b0082", "#8a2be2"]}
         style={styles.container}
@@ -96,7 +138,7 @@ const Signup = () => {
                   value={name}
                   onChangeText={setName}
                   keyboardType="name-phone-pad"
-                  autoCapitalize="none"
+                  autoCapitalize="words"
                 />
               </View>
               <View style={styles.inputContainer}>
@@ -136,7 +178,9 @@ const Signup = () => {
                   onPress={toggleShowPassword}
                   style={styles.showButton}
                 >
-                  <Text style={styles.showButtonText}>Show</Text>
+                  <Text style={styles.showButtonText}>
+                    {showPassword ? "Hide" : "Show"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -151,9 +195,10 @@ const Signup = () => {
                   <Text style={styles.signUpButtonText}>Sign Up</Text>
                 )}
               </TouchableOpacity>
+              
               {error && (
-                <View style={styles.container}>
-                  <Text style={styles.signUpButtonText}>{error}</Text>
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{error}</Text>
                 </View>
               )}
 
@@ -166,6 +211,56 @@ const Signup = () => {
             </View>
           </View>
         </SafeAreaView>
+
+        <BottomSheet
+          isVisible={showOtpModal}
+          onBackdropPress={() => setShowOtpModal(false)}
+          modalProps={{
+            animationType: "slide",
+            transparent: true,
+          }}
+        >
+          <View style={styles.bottomSheetContainer}>
+            <Text style={styles.bottomSheetTitle}>Verify Your Email</Text>
+            <Text style={styles.bottomSheetSubtitle}>
+              We've sent a 6-digit OTP to {email}
+            </Text>
+            
+            <View style={styles.otpInputContainer}>
+              <TextInput
+                style={styles.otpInput}
+                placeholder="Enter OTP"
+                placeholderTextColor="#999"
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus={true}
+              />
+            </View>
+            
+            <View style={styles.otpButtonContainer}>
+              <TouchableOpacity
+                style={styles.otpSecondaryButton}
+                onPress={() => setShowOtpModal(false)}
+              >
+                <Text style={styles.otpSecondaryButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.otpPrimaryButton}
+                onPress={verifyOtp}
+                disabled={otpLoading}
+              >
+                {otpLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.otpPrimaryButtonText}>Verify</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BottomSheet>
       </LinearGradient>
     </KeyboardAvoidingView>
   );
@@ -194,11 +289,6 @@ const styles = StyleSheet.create({
     color: "white",
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#cccccc",
-    marginBottom: 20,
-  },
   formContainer: {
     width: "100%",
   },
@@ -206,7 +296,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(30, 30, 30, 0.7)",
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 15,
     height: 50,
@@ -225,59 +315,33 @@ const styles = StyleSheet.create({
     color: "#cccccc",
     fontSize: 14,
   },
-  forgotPasswordContainer: {
-    alignSelf: "flex-start",
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: "#cccccc",
-    fontSize: 14,
-  },
   signUpButton: {
     backgroundColor: "#8a2be2",
-    borderRadius: 5,
+    borderRadius: 10,
     height: 50,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   signUpButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-  orContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  orLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  orText: {
-    color: "#cccccc",
-    paddingHorizontal: 10,
-    fontSize: 14,
-  },
-  appleButton: {
-    backgroundColor: "rgba(30, 30, 30, 0.7)",
+  errorContainer: {
+    backgroundColor: "rgba(255, 0, 0, 0.1)",
+    padding: 10,
     borderRadius: 5,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 15,
   },
-  appleButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  appleIcon: {
-    fontSize: 18,
+  errorText: {
+    color: "#ff3333",
+    textAlign: "center",
   },
   newUserContainer: {
     flexDirection: "row",
@@ -289,7 +353,90 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   joinNowText: {
-    color: "gray",
+    color: "#8a2be2",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  // Bottom Sheet Styles
+  bottomSheetContainer: {
+    backgroundColor: "white",
+    padding: 25,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  bottomSheetTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#1a0033",
+    marginBottom: 5,
+    textAlign: "center",
+  },
+  bottomSheetSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 25,
+    textAlign: "center",
+  },
+  otpInputContainer: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    height: 50,
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  otpInput: {
+    color: "#1a0033",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  otpButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  otpPrimaryButton: {
+    backgroundColor: "#8a2be2",
+    borderRadius: 10,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 10,
+  },
+  otpPrimaryButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  otpSecondaryButton: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  otpSecondaryButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  resendContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  resendText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  resendLink: {
+    color: "#8a2be2",
     fontSize: 14,
     fontWeight: "bold",
   },

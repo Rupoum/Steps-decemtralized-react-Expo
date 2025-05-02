@@ -137,6 +137,10 @@ const CreateGameScreen = () => {
   const handleCreategame = async () => {
     setLoading(true);
     seterror(null);
+    const startDate = new Date(form.startdate);
+    const endDate = new Date(form.enddate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     try {
       console.log("chek1");
       const response = await axios.post(`${BACKEND_URL}/create/challenge`, {
@@ -145,7 +149,7 @@ const CreateGameScreen = () => {
         Dailystep: form.Dailystep,
         Amount: form.Amount,
         Digital_Currency: "sol",
-        days: form.days,
+        days:daysDiff,
         startdate: form.startdate,
         enddate: form.enddate,
         userid: await AsyncStorage.getItem("userid"),
@@ -180,6 +184,10 @@ const CreateGameScreen = () => {
   const handlePrivateCreategame = async () => {
     setLoading(true);
     seterror(null);
+    const startDate = new Date(form.startdate);
+    const endDate = new Date(form.enddate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     try {
       const response = await axios.post(`${BACKEND_URL}/challenge/private`, {
         name: privateform.name,
@@ -187,7 +195,7 @@ const CreateGameScreen = () => {
         Dailystep: privateform.Dailystep,
         Amount:privateform.Amount,
         Digital_Currency: "sol",
-        days: privateform.days,
+        days:daysDiff,
         startdate:privateform.startdate,
         enddate: privateform.enddate,
         userid: await AsyncStorage.getItem("userid"),
@@ -479,18 +487,7 @@ const GameForm = ({
           autoCapitalize="none"
         />
       </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Days"
-          placeholderTextColor="#999"
-          onChangeText={(e) => {
-            setform({ ...form, days: parseInt(e) });
-          }}
-          keyboardType="number-pad"
-          autoCapitalize="none"
-        />
-      </View>
+    
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={showStartDatePicker}>
           <Text style={styles.dateButtonText}>

@@ -40,6 +40,7 @@ import {
 } from "@solana/web3.js";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SlideButton from "rn-slide-button";
+import StakeStatus from "./goals";
 
 const TransactionLoader = ({
   loading,
@@ -129,46 +130,14 @@ const TransactionLoader = ({
 const SetGoalsScreen = () => {
   const [sleepGoal, setSleepGoal] = useState(5);
   const [stakeAmount, setStakeAmount] = useState("");
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
-  const [endDateMode, setEndDateMode] = useState<"date" | "time">("date");
-  const [showStartDate, setShowStartDate] = useState(false);
-  const [showEndDate, setShowEndDate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const [form, setform] = useState({
-    startdate: format(new Date(), "yyyy-MM-dd").toString(),
-    enddate: format(new Date(), "yyyy-MM-dd").toString(),
-  });
+  const[stakeds,setstaked]=useState(false)
   const connection = new Connection("https://api.devnet.solana.com");
   const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
-  const handleStartDateChange = (event: any, selectedDate: any) => {
-    if (selectedDate) {
-      const currentDate = selectedDate;
-      setShowStartDate(false);
-      setStartDate(currentDate);
-      setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
-    } else {
-      setShowStartDate(false);
-    }
-  };
-  const handleEndDateChange = (event: any, selectedDate: any) => {
-    if (selectedDate) {
-      const currentDate = selectedDate;
-      setShowEndDate(false);
-      setEndDate(currentDate);
-      setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
-    } else {
-      setShowEndDate(false);
-    }
-  };
-  const showStartDatePicker = () => {
-    setStartDateMode("date");
-    setShowStartDate(true);
-  };
+ 
   const handleRetry = () => {
     setError(null);
     Onsend();
@@ -179,11 +148,25 @@ const SetGoalsScreen = () => {
     setError(null);
     setSuccess(false);
   };
+  useEffect(()=>{
+    const staked=async()=>{
+      try{
+        const userid=await AsyncStorage.getItem("userid")
+     const stake=await axios.get(`${BACKEND_URL}/getstake/${userid}`)
+     if(stake.data.stake[0].Status=="CurrentlyRunning"){
+       setstaked(true)
+     }else{
+       setstaked(false)
+     }
+     console.log(stakeds)
+      }catch(e){
+        console.log(e);
+      }
+    }
+   staked()
+  })
 
-  const showEndDatePicker = () => {
-    setEndDateMode("date");
-    setShowEndDate(true);
-  };
+  
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -230,13 +213,6 @@ const SetGoalsScreen = () => {
 
       const userid = await AsyncStorage.getItem("userid");
 
-      const daysDifference = Math.ceil(
-        (new Date(form.enddate).getTime() -
-          new Date(form.startdate).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-      console.log(daysDifference);
-      console.log(form);
       console.log(sleepGoal);
       console.log(serializedTransaction);
       const today = new Date().toISOString().split('T')[0];
@@ -262,6 +238,8 @@ const SetGoalsScreen = () => {
   };
 
   return (
+    
+        
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <SafeAreaView style={{ flex: 1 }}>
@@ -406,6 +384,7 @@ const SetGoalsScreen = () => {
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
+   
   );
 };
 

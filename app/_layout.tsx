@@ -1,6 +1,6 @@
 import React from "react";
 import { Stack } from "expo-router";
-import { linking } from "@/components/screens/linking";
+
 export default function RootLayout() {
   return (
     <Stack
@@ -14,8 +14,7 @@ export default function RootLayout() {
         },
       
       }}
-      
-      linking={linking} 
+     
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
