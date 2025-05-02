@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "514616731667",
+    "project_id": "solara-bd8d2",
+    "storage_bucket": "solara-bd8d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514616731667:android:a09c5d0b7cf95b49e3f7e6",
+        "android_client_info": {
+          "package_name": "com.youval21.stepsdecentralized"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8kcKCPpP-u7SVr8xg4jnfy3xLk9RpE2c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
