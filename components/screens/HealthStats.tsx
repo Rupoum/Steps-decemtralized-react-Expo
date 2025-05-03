@@ -10,9 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { PieChart } from "react-native-svg-charts";
-
 const screenWidth = Dimensions.get("window").width;
-
 const generateSleepData = (month) => {
   const daysInMonth = new Date(2025, month + 1, 0).getDate();
   const data = [];

@@ -22,7 +22,7 @@ const Layout = () => {
             iconName = focused ? "trophy" : "trophy-outline";
           } else if (route.name === "profile") {
             iconName = focused ? "person" : "person-outline";
-          } else if (route.name === "stats") {
+          } else if (route.name === "health") {
             iconName = focused ? "stats-chart-outline" : "stats-chart";
           }
 
