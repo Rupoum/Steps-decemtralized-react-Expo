@@ -96,7 +96,7 @@ stake();
     );
   }
 
-  const daysSinceStart = calculateDaysSinceStart(stake.startdate);
+
 
   return (
     <LinearGradient

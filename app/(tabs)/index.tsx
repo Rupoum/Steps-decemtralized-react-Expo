@@ -52,12 +52,10 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import Entypo from "@expo/vector-icons/Entypo";
-import * as SplashScreen from "expo-splash-screen";
-import * as Font from "expo-font";
 import { color, fonts, Icon, Slider } from "@rneui/base";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FadeInDown } from "react-native-reanimated";
+import AnimatedStarsBackground from "@/components/utils/background";
 interface GAme {
   Amount: number;
   id: string;
@@ -134,7 +132,6 @@ const TransactionLoader = ({
 const App = () => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [selectedGame, setSelectedGame] = useState<GAme>();
-  // const [appIsReady, setAppIsReady] = useState(false);
   const connection = new Connection("https://api.devnet.solana.com");
   const snapPoints = useMemo(() => ["50%", "75%"], []);
 
@@ -247,7 +244,6 @@ const App = () => {
     setError(null);
     setSuccess(false);
   };
-
   const bottomSheetModalRef2 = useRef<BottomSheetModal>(null);
   const snapPoints2 = useMemo(() => ["30%"], []);
   const handleSearchGame = useCallback(() => {
@@ -262,7 +258,6 @@ const App = () => {
     }, 2000);
   }, []);
   return (
-
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar
         animated={true}
@@ -272,10 +267,8 @@ const App = () => {
       />
       <SafeAreaView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <LinearGradient
-            colors={["#1a0033", "#4b0082", "#290d44"]}
-            style={styles.gradient}
-          >
+        <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+        <AnimatedStarsBackground />
             <ScrollView
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -313,51 +306,51 @@ const App = () => {
                 <JoinGame handleSearchGame={handleSearchGame} />
               </View>
             </ScrollView>
-            <BottomSheetModal
-              ref={bottomSheetModalRef}
-              snapPoints={snapPoints}
-              backgroundStyle={styles.BottomSheetBackground}
-              backdropComponent={(props) => (
-                <BottomSheetBackdrop
-                  {...props}
-                  disappearsOnIndex={-1}
-                  appearsOnIndex={0}
-                  opacity={0.9}
-                />
-              )}
-            >
-              <BottomSheetView>
+             <BottomSheetModal
+                          ref={bottomSheetModalRef}
+                          snapPoints={snapPoints}
+                          backgroundStyle={styles.bottomSheetBackground}
+                        >
+              <BottomSheetView style={{ flex: 1 }}>
                 {selectedGame ? (
-                  <View style={{ paddingHorizontal: 10 }}>
-                    <View style={styles.gameDetailsContainer}>
-                      <Text style={styles.bottomSheetTitle}>
-                        {selectedGame.name}
-                      </Text>
-                      <Text
-                        style={{
-                          color: "white",
-                        }}
-                      >
-                        You Pay: {selectedGame.Amount}
-                      </Text>
-                      <SlideButton
-                        title="Slide To Confirm"
-                        width="80%"
-                        padding="2"
-                        reverseSlideEnabled={false}
-                        animation={true}
-                        titleContainerStyle={{
-                          backgroundColor: "#4b0082",
-                        }}
-                        containerStyle={{
-                          backgroundColor: "#4b0082",
-                        }}
-                        underlayStyle={{
-                          backgroundColor: "#1a0033",
-                        }}
-                        // onSlideEnd={Onsend}
-                      />
-                    </View>
+                  <View style={styles.bottomSheetContent}>
+                                    <View style={styles.bottomSheetHandle} />
+                  
+                                    <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
+                  
+                                    <View style={styles.questDetailsCard}>
+                                      <View style={styles.questDetailRow}>
+                                        <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
+                                        <Text style={styles.questDetailValue}>{selectedGame.name} </Text>
+                                      </View>
+                  
+                                      <View style={styles.questDetailRow}>
+                                        <Text style={styles.questDetailLabel}>Your Stake:</Text>
+                                        <Text style={styles.questDetailValue}>{selectedGame.Amount} SOL</Text>
+                                      </View>
+                  
+                                 
+                  
+                                      <View style={styles.questRulesContainer}>
+                                        <Text style={styles.questRulesTitle}>Quest Rules:</Text>
+                                        <Text style={styles.questRulesText}>• Track your sleep daily for 10 days</Text>
+                                        <Text style={styles.questRulesText}>• Meet your goal at least 7 days to earn rewards</Text>
+                                        <Text style={styles.questRulesText}>• Earn badges for consistent sleep patterns</Text>
+                                      </View>
+                                    </View>
+                                    <SlideButton
+                                                        title="Slide To Begin Quest"
+                                                        width="90%"
+                                                        height={60}
+                                                        reverseSlideEnabled={false}
+                                                        animation={true}
+                                                        titleStyle={styles.slideButtonTitle}
+                                                        titleContainerStyle={styles.slideButtonTitleContainer}
+                                                        containerStyle={styles.slideButtonContainer}
+                                                        underlayStyle={styles.slideButtonUnderlay}
+                                                        thumbStyle={styles.slideButtonThumb}
+                                                        onSlideEnd={Onsend}
+                                                      />
                     {showLoader && (
                       <TransactionLoader
                         loading={loading}
@@ -1497,7 +1490,70 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginBottom: 10,
   },
-  
+  bottomSheetHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#783887",
+    borderRadius: 3,
+    marginBottom: 20,
+  },
+  confirmTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  questDetailsCard: {
+    width: "100%",
+    backgroundColor: "rgba(26, 0, 51, 0.7)",
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#783887",
+  },
+  bottomSheetBackground: {
+    backgroundColor: "#290d44",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderWidth: 1,
+    borderColor: "#783887",
+  },
+  questDetailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  questDetailLabel: {
+    color: "#D1D5DB",
+    fontSize: 16,
+  },
+  questDetailValue: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  rewardValue: {
+    color: "#FFD700",
+  },
+  questRulesContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "rgba(127, 212, 245, 0.1)",
+    borderRadius: 10,
+  },
+  questRulesTitle: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  questRulesText: {
+    color: "#D1D5DB",
+    fontSize: 14,
+    marginBottom: 5,
+  },
   badgeText: {
     fontSize: 12,
     fontWeight: 'bold',
@@ -1654,6 +1710,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#5C6BC0',
   },
+  slideButtonTitleContainer: {
+    backgroundColor: "transparent",
+  },
+  slideButtonTitle: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  slideButtonUnderlay: {
+    backgroundColor: "rgba(127, 212, 245, 0.2)",
+  },
+  slideButtonThumb: {
+    backgroundColor: "#783887",
+    borderWidth: 2,
+    borderColor: "#7FD4F5",
+  },
   gamebttn: {
     backgroundColor: "#7E38B7",
     flexDirection: "row",
@@ -1672,6 +1744,7 @@ const styles = StyleSheet.create({
   bottomSheetContent: {
     flex: 1,
     padding: 20,
+    alignItems: "center",
   },
   bottomSheetTitle: {
     color: "white",
