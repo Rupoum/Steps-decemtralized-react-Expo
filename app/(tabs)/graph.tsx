@@ -1,29 +1,57 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { VictoryBar, VictoryChart, VictoryTheme } from "victory-native";
+import React, { useState } from 'react';
+import { BottomSheet, Button, ListItem } from '@rneui/themed';
+import { StyleSheet,Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import SlideButton from 'rn-slide-button';
 
-const data = [
-  { quarter: 1, earnings: 13000 },
-  { quarter: 2, earnings: 16500 },
-  { quarter: 3, earnings: 14250 },
-  { quarter: 4, earnings: 19000 }
+type BottomSheetComponentProps = {};
+
+const BottomSheetComponent: React.FunctionComponent<BottomSheetComponentProps> = () => {
+const [isVisible, setIsVisible] = useState(false);
+const list = [
+  { title: 'List Item 1' },
+  { title: 'List Item 2' },
+  {
+    title: 'Cancel',
+    containerStyle: { backgroundColor: 'red' },
+    titleStyle: { color: 'white' },
+    onPress: () => setIsVisible(false),
+  },
 ];
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <VictoryChart width={350} theme={VictoryTheme.clean}>
-        <VictoryBar data={data} x="quarter" y="earnings" />
-      </VictoryChart>
-    </View>
-  );
-}
+return (
+  <SafeAreaProvider>
+    <Button
+      title="Open Bottom Sheet"
+      onPress={() => setIsVisible(true)}
+      buttonStyle={styles.button}
+    />
+    <BottomSheet modalProps={{}} isVisible={isVisible}>
+      {/* <SlideButton>
+        
+
+      </SlideButton> */}
+      <Text>dasd</Text>
+      {/* {list.map((l, i) => (
+        <ListItem
+          key={i}
+          containerStyle={l.containerStyle}
+          onPress={l.onPress}
+        >
+          <ListItem.Content>
+            <ListItem.Title style={l.titleStyle}>{l.title}</ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+      ))} */}
+    </BottomSheet>
+  </SafeAreaProvider>
+);
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5fcff"
-  }
+button: {
+  margin: 10,
+},
 });
+
+export default BottomSheetComponent;

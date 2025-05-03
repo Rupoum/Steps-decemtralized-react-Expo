@@ -16,9 +16,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-
+import axios from "axios";
+import { BACKEND_URL } from "@/Backendurl";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width } = Dimensions.get("window");
-
 const BADGES = [
   {
     id: 1,
@@ -46,21 +47,9 @@ const BADGES = [
       name: "Comfy Bed",
     },
   },
+ 
   {
     id: 3,
-    days: 21,
-    description: "Three weeks of quality rest",
-    icon: "star",
-    color: "#9370db",
-    tier: "Silver",
-    theme: {
-      background: ["#4b0082", "#8a2be2"],
-      icon: "star",
-      name: "Shooting Star",
-    },
-  },
-  {
-    id: 4,
     days: 30,
     description: "One month sleep master",
     icon: "trophy",
@@ -99,8 +88,8 @@ const BADGES = [
     },
   },
   {
-    id: 7,
-    days: 75,
+    id: 8,
+    days: 180,
     description: "Consistent sleep warrior",
     icon: "shield",
     color: "#3a0066",
@@ -112,7 +101,7 @@ const BADGES = [
     },
   },
   {
-    id: 8,
+    id: 7,
     days: 90,
     description: "Sleep transformation complete!",
     icon: "diamond",
@@ -130,8 +119,6 @@ const BADGES = [
 const generateMockSleepData = () => {
   const today = new Date();
   const data = {};
-
-  // Go back 60 days
   for (let i = 60; i >= 0; i--) {
     const date = new Date();
     date.setDate(today.getDate() - i);
@@ -182,6 +169,50 @@ const getMonthName = (month:any) => {
     "December",
   ];
   return months[month];
+};
+const processApiDataToCalendar = (apiData: any) => {
+  const sleepData: Record<string, any> = {};
+  const startDate = new Date(apiData.startdate);
+  const today = new Date();
+
+  // Initialize all days up to current day count
+  for (let i = 0; i < apiData.daycount; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    // Default to not achieved
+    sleepData[dateStr] = {
+      success: false,
+      hours: 0
+    };
+  }
+
+  // Mark achieved days from Target array
+  apiData.Target.forEach((dayIndex: number) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + dayIndex);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    sleepData[dateStr] = {
+      success: true,
+      hours: parseFloat(apiData.Hours.replace('h', '')) || 7 // Default to 7 if parsing fails
+    };
+  });
+
+  // Mark missed days from NotAchieved array
+  apiData.NotAchieved.forEach((dayIndex: number) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + dayIndex);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    sleepData[dateStr] = {
+      success: false,
+      hours: 0
+    };
+  });
+
+  return sleepData;
 };
 
 // Helper function for haptic feedback that works on both iOS and Android
@@ -716,12 +747,7 @@ const BadgeCard = ({
         <View style={styles.badgeDetailCard}>
           <View style={styles.badgeInfoHeader}>
             <Text style={styles.badgeTitle}>{badge.days} Day Streak</Text>
-            {isAchieved && (
-              <View style={styles.achievedTag}>
-                <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                <Text style={styles.achievedTagText}>Achieved</Text>
-              </View>
-            )}
+          
           </View>
           <Text style={styles.badgeDescription}>{badge.description}</Text>
           {!isAchieved && (
@@ -833,21 +859,6 @@ const MilestoneTimeline = ({ currentStreak, badges }:any) => {
           )}
         </View>
       </View>
-
-      <View style={styles.userFeedbackCard}>
-        <LinearGradient
-          colors={["rgba(138, 43, 226, 0.3)", "rgba(106, 90, 205, 0.3)"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.userFeedbackGradient}
-        >
-          <Ionicons name="star" size={24} color="#ffd700" />
-          <Text style={styles.userFeedbackText}>
-            You've slept well for {currentStreak} days! That's better than 95%
-            of users!
-          </Text>
-        </LinearGradient>
-      </View>
     </View>
   );
 };
@@ -874,13 +885,62 @@ export default function AchievementsScreen() {
   const calendarAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const dayInfoAnim = useRef(new Animated.Value(0)).current;
-
-  // Separate unlocked and locked badges
-  const unlockedBadges = BADGES.filter((badge) => currentStreak >= badge.days);
-  const lockedBadges = BADGES.filter((badge) => currentStreak < badge.days);
-
-  // Pulse animation for newly unlocked badges
+    
+  // const unlockedBadges = BADGES.filter((badge) => currentStreak >= badge.days);
+  // const lockedBadges = BADGES.filter((badge) => currentStreak < badge.days);
+  const [badges, setbadges] = useState<string[]>([]); // Assuming badges is an array of strings
+  let unlockedBadges: typeof BADGES[0][] = []; // Explicitly define the type of unlockedBadges as an array of badge objects
+  let lockedBadges: typeof BADGES[0][] = [];
+  badges.map((badge) => {
+    if (badge === "seven_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 1)); 
+    }
+    if (badge === "fourteen_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 2));
+    }
+    if (badge === "thirty_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 3));
+    }
+    if (badge === "forty_five_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 4));
+    }
+    if (badge === "sixty_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 5));
+    }
+    if (badge === "ninty_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 6));
+    }
+    if (badge ==="one_eighty_days") {
+      unlockedBadges.push(...BADGES.filter((badge) => badge.id === 7));
+    }
+  });
+  lockedBadges = BADGES.filter(
+    (badge) => !unlockedBadges.some((unlockedBadge) => unlockedBadge.id === badge.id)
+  );
+  
+//  seven_days
+//  fourteen_days
+//  thirty_days
+//  forty_five_days
+//  sixty_days
+//  ninty_days
+//  one_eighty_days
   useEffect(() => {
+    const fetchbadges=async()=>{
+      try{
+      const userid=await AsyncStorage.getItem("userid");
+       const response=await axios.get(`${BACKEND_URL}/getstake/${userid}`);
+       const stakeData=response.data.stake[0]
+       console.log(response.data.stake[0].Badges)
+        setbadges(response.data.stake[0].Badges);
+        setCurrentStreak(response.data.stake[0].currentday)
+        const processedSleepData = processApiDataToCalendar(stakeData);
+        setSleepData(processedSleepData);
+      }catch(e){
+          console.log(e)
+      }   
+    }
+    fetchbadges();
     if (recentlyUnlocked) {
       // Start pulse animation
       Animated.loop(
@@ -896,9 +956,10 @@ export default function AchievementsScreen() {
             useNativeDriver: true,
           }),
         ])
+        
       ).start();
-
-      // Just set a timeout to clear the celebration
+       
+      
       setTimeout(() => {
         setRecentlyUnlocked(null);
       }, 3000);
@@ -924,7 +985,7 @@ export default function AchievementsScreen() {
   }, []);
 
   useEffect(() => {
-    // Check if a new badge was unlocked
+    // Check if a new badge was unlockedBadges
     if (currentStreak > previousStreak) {
       const newlyUnlocked = BADGES.find(
         (badge) => badge.days <= currentStreak && badge.days > previousStreak
@@ -1021,7 +1082,7 @@ export default function AchievementsScreen() {
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        {/* Custom celebration */}
+  
         {recentlyUnlocked && (
           <View style={styles.celebrationOverlay}>
             <View style={styles.celebrationContent}>
@@ -1170,10 +1231,7 @@ export default function AchievementsScreen() {
             contentContainerStyle={styles.badgesContainer}
             showsVerticalScrollIndicator={false}
           >
-            {/* Milestone tracker */}
             <MilestoneTimeline currentStreak={currentStreak} badges={BADGES} />
-
-            {/* Unlocked badges section */}
             <View style={styles.badgeSection}>
               <Text style={styles.badgeSectionTitle}>Unlocked Badges</Text>
               <View style={styles.badgesGrid}>
@@ -1212,7 +1270,7 @@ export default function AchievementsScreen() {
         )}
 
         {/* Demo controls */}
-        <View style={styles.demoControls}>
+        {/* <View style={styles.demoControls}>
           <TouchableOpacity
             style={[styles.demoButton, styles.decrementButton]}
             onPress={() => {
@@ -1233,7 +1291,7 @@ export default function AchievementsScreen() {
             <Ionicons name="add" size={20} color="#fff" />
             <Text style={styles.demoButtonText}>7 Days</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
     </LinearGradient>
   );

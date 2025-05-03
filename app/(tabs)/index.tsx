@@ -355,7 +355,7 @@ const App = () => {
                         underlayStyle={{
                           backgroundColor: "#1a0033",
                         }}
-                        onSlideEnd={Onsend}
+                        // onSlideEnd={Onsend}
                       />
                     </View>
                     {showLoader && (
@@ -1130,7 +1130,6 @@ const CommunityGames = ({ handleJoinClick }: any) => {
             ]}
             android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
           >
-            {/* Header Section */}
             <View style={{
               flexDirection: "row",
               justifyContent: "space-between",
@@ -1255,7 +1254,6 @@ const CommunityGames = ({ handleJoinClick }: any) => {
               justifyContent: "space-between",
               paddingHorizontal: 5,
             }}>
-              {/* Entry */}
               <View style={styles.statContainer}>
                 <View style={styles.statIconContainer}>
                   <MaterialCommunityIcons name="cash" size={16} color="#9d4edd" />
