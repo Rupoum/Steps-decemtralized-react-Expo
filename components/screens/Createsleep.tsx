@@ -191,7 +191,8 @@ const CreateSleepSccreen = () => {
     const startDate = new Date(form.startdate);
     const endDate = new Date(form.enddate);
     const timeDiff = endDate.getTime() - startDate.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 2;
+    console.log(selectedFriends)
     try {
       const response = await axios.post(
         `${BACKEND_URL}/challenge/sleep/private`,
@@ -209,7 +210,7 @@ const CreateSleepSccreen = () => {
           request: selectedFriends,
         }
       );
-      Alert.alert("Success", "Game Created Successfully");
+      // Alert.alert("Success", "Game Created Successfully");
       router.push("/(tabs)");
       console.log("Signup response:", response.data);
     } catch (err: any) {
@@ -424,7 +425,6 @@ const GameForm = ({
   form,
   setform,
   loading,
-  error,
   startDate,
   endDate,
   showStartDate,
@@ -532,11 +532,7 @@ const GameForm = ({
         )}
       </View>
 
-      {error && (
-        <View style={styles.container}>
-          <Text style={styles.signUpButtonText}>{error}</Text>
-        </View>
-      )}
+     
       <TouchableOpacity
         style={styles.signUpButton}
         onPress={handleCreategame}

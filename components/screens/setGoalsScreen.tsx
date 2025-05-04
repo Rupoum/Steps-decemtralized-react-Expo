@@ -504,8 +504,6 @@ const SetGoalsScreen = () => {
       setLoading(false);
     }
   };
-
-  // Get reward estimate based on sleep goal and stake amount
   const getRewardEstimate = () => {
     if (!stakeAmount) return "0"
     const baseMultiplier = 1.2
@@ -513,15 +511,19 @@ const SetGoalsScreen = () => {
     const estimatedReward = Number(stakeAmount) * (baseMultiplier + goalBonus)
     return estimatedReward.toFixed(2)
   }
+  const interpolatedWidth = sliderScale.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"], // Adjust the range as needed
+  });
 
   // Get difficulty level based on sleep goal
-  const getDifficultyLevel = () => {
-    if (sleepGoal < 6) return { text: "Easy", color: "#4ADE80" }
-    if (sleepGoal > 10) return { text: "Hard", color: "#EF4444" }
-    return { text: "Medium", color: "#F59E0B" }
-  }
+  // const getDifficultyLevel = () => {
+  //   if (sleepGoal < 6) return { text: "Easy", color: "#4ADE80" }
+  //   if (sleepGoal > 10) return { text: "Hard", color: "#EF4444" }
+  //   return { text: "Medium", color: "#F59E0B" }
+  // }
 
-  const difficulty = getDifficultyLevel()
+  // const difficulty = getDifficultyLevel()
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -542,15 +544,15 @@ const SetGoalsScreen = () => {
                     {sleepGoal} <Text style={styles.goalUnit}>hours</Text>
                   </Animated.Text>
 
-                  <View style={styles.difficultyBadge}>
+                  {/* <View style={styles.difficultyBadge}>
                     <Text style={[styles.difficultyText, { color: difficulty.color }]}>{difficulty.text}</Text>
-                  </View>
+                  </View> */}
                 </View>
 
                 <Animated.View
                   style={{
-                    width: "100%",
-                    transform: [{ scale: sliderScale }],
+                    width: interpolatedWidth,
+                    // transform: [{ scaleX: sliderScale }],
                   }}
                 >
                   <Slider
@@ -558,7 +560,7 @@ const SetGoalsScreen = () => {
                     minimumValue={5}
                     maximumValue={12}
                     step={1}
-                    value={sleepGoal}
+                      // value={sleepGoal}
                     onValueChange={(value) => setSleepGoal(value)}
                     minimumTrackTintColor="#7FD4F5"
                     maximumTrackTintColor="rgba(138, 154, 171, 0.4)"
