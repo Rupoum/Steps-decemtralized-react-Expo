@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { BACKEND_URL } from "@/Backendurl";
 import * as Haptics from 'expo-haptics';
+import AnimatedStarsBackground from "../utils/background";
 
 interface FORM {
   steps: string | number;
@@ -372,10 +373,8 @@ export default function GamifiedLeaderboardScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#1a0033", "#4b0082", "#290d44"]}
-        style={styles.gradient}
-      >
+       <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+       <AnimatedStarsBackground />
         <Animated.View 
           style={[
             styles.backgroundContent,

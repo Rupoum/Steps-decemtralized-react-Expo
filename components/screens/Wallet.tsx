@@ -379,7 +379,6 @@ const Wallet = () => {
         <BottomSheetModalProvider>
         <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
       <AnimatedStarsBackground />
-
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Wallet</Text>
               {/* <TouchableOpacity style={styles.settingsButton}>

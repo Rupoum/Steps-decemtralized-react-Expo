@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
+import AnimatedStarsBackground from "@/components/utils/background";
 
 const { width, height } = Dimensions.get("window");
 
@@ -78,6 +79,7 @@ const Slide = ({ item, scrollX, index }) => {
   });
 
   return (
+    
     <View style={styles.slideContainer}>
       <Animated.Image
         source={item.image}
@@ -186,10 +188,8 @@ const Welcome = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#1a0033", "#4b0082", "#290d44"]}
-      style={styles.gradient}
-    >
+    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+            <AnimatedStarsBackground />
       <View style={styles.container}>
         <View style={styles.slidesContainer}>
           <FlatList
@@ -235,6 +235,7 @@ const Welcome = () => {
         </TouchableOpacity>
       </View>
     </LinearGradient>
+    
   );
 };
 

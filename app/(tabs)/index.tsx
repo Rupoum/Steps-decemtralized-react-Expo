@@ -387,172 +387,189 @@ const App = () => {
 };
 
 const StepsCount = () => {
-  const [error, seterror] = useState("");
-  const [step, setstep] = useState(0);
-  const [sleep, setsleep] = useState("");
+  const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
+  const [sleepMinutes, setSleepMinutes] = useState(0);
+  const [todayDate, setTodayDate] = useState("");
+  
+  // Targets
+  const stepTarget = 5000;
+  const sleepTarget = 8 * 60; // 8 hours in minutes
+
   useEffect(() => {
-    const fetchSteps = async () => {
+    // Set today's date
+    const date = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    setTodayDate(date.toLocaleDateString(undefined, options));
+
+    const fetchHealthData = async () => {
       try {
         const now = new Date();
         const midnightToday = new Date(now);
         midnightToday.setHours(0, 0, 0, 0);
-        const startTime = midnightToday.toISOString();
-        const endTime = now.toISOString();
+        
         await initialize();
-        const { records } = await readRecords("Steps", {
+        
+        // Get steps data
+        const { records: stepRecords } = await readRecords("Steps", {
           timeRangeFilter: {
             operator: "between",
-            startTime: startTime,
-            endTime: endTime,
+            startTime: midnightToday.toISOString(),
+            endTime: now.toISOString(),
           },
         });
 
-        const [sleepData] = await Promise.all([
-          readRecords("SleepSession", {
-            timeRangeFilter: {
-              operator: "between",
-              startTime: new Date(
-                now.getTime() - 24 * 60 * 60 * 1000
-              ).toISOString(),
-              endTime: now.toISOString(),
-            },
-          }),
-        ]);
-        console.log(
-          "sleeee",
-          sleepData.records.map((stage) => stage.stages)
-        );
-        let totalSleepTime = 0;
-        sleepData.records.map((cle) =>
-          cle.stages?.map((entry) => {
-            const startTime = new Date(entry.startTime).getTime();
-            const endTime = new Date(entry.endTime).getTime();
-            totalSleepTime += endTime - startTime;
-          })
-        );
-        console.log("totalsleep", totalSleepTime);
+        // Get sleep data
+        const { records: sleepRecords } = await readRecords("SleepSession", {
+          timeRangeFilter: {
+            operator: "between",
+            startTime: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+            endTime: now.toISOString(),
+          },
+        });
 
-        const totalSeconds = Math.floor(totalSleepTime / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        console.log(hours);
-        console.log(minutes);
-        setsleep(hours.toString()+ "h" +" "+ minutes.toString() + "m");
-      
-        let count = 0;
-        records.forEach((record) => {
-          if (
-            record.metadata?.dataOrigin === "com.google.android.apps.fitness"
-          ) {
-            count += record.count || 0;
+        // Calculate steps
+        let stepCount = 0;
+        stepRecords.forEach((record) => {
+          if (record.metadata?.dataOrigin === "com.google.android.apps.fitness") {
+            stepCount += record.count || 0;
           }
         });
-        setstep(count);
-        const userid=await AsyncStorage.getItem("userid");
-        console.log("usri",userid);
-        console.log(sleep);
-        console.log("step",step)
-        try{
-          const steps=step.toString();
-          console.log(steps);
-          const response =await axios.post(`${BACKEND_URL}/regular/update`,{steps,userid});
-          const sleepresponse=await axios.post(`${BACKEND_URL}/regular/update/sleep`,{hours:sleep,userid})
+        setStep(stepCount);
 
-          console.log("heety");
-        console.log(response);
-        }
-        catch(e){
-          console.log("dasd");
-          console.log(e);
-        }
+        // Calculate sleep time in minutes
+        let totalSleepMs = 0;
+        sleepRecords.forEach((session) => {
+          session.stages?.forEach((stage) => {
+            totalSleepMs += new Date(stage.endTime).getTime() - new Date(stage.startTime).getTime();
+          });
+        });
+        const sleepMinutes = Math.floor(totalSleepMs / (1000 * 60));
+        setSleepMinutes(sleepMinutes);
+
+        // Send data to backend
+        const userid = await AsyncStorage.getItem("userid");
+        await axios.post(`${BACKEND_URL}/regular/update`, { 
+          steps: stepCount.toString(), 
+          userid 
+        });
+        await axios.post(`${BACKEND_URL}/regular/update/sleep`, { 
+          hours: `${Math.floor(sleepMinutes / 60)}h ${sleepMinutes % 60}m`, 
+          userid 
+        });
+
       } catch (err) {
-        console.error("Error fetching steps:", err);
-        seterror("Failed to fetch steps. Please try again.");
+        console.error("Error fetching health data:", err);
+        setError("Failed to fetch health data. Please try again.");
       }
     };
-    fetchSteps();
-  });
-  const usertarget = 5000;
-  return (
-    <View>
-    <View>
-      <View style={styles.stepsCard}>
-        <Text
-          style={[
-            styles.text,
-            {
-              fontSize: 15,
-              marginBottom: 5,
-              color: "#9e9a99",
-            },
-          ]}
-        >
-          Open Health Connect to sync
-        </Text>
-        <Text
-          style={[
-            styles.text,
-            {
-              color: "#9e9a99",
-              fontSize: 12,
-            },
-          ]}
-        >
-          (wait for few minutes)
-        </Text>
-        <Image
-          source={require("../../assets/images/sleep2.png")}
-          style={{
-            width: 170,
-            height: 200,
-            resizeMode: "contain",
-            marginTop: 20,
-          }}
-        />
-             <Slider
-        value={step}
-        minimumValue={0}
-        maximumValue={usertarget}
-        disabled={true}
-        // thumbTintColor="#4CAF50"
-        // minimumTrackTintColor="#4CAF50"
-        // maximumTrackTintColor="#e0e0e0"
-        // trackStyle={{ height: 5, backgroundColor: 'transparent' }}
-        // thumbStyle={{ height: 20, width: 20, backgroundColor: 'transparent' }}
-        thumbProps={{
-          children: (
-            <Icon
-              name="heartbeat"
-              type="font-awesome"
-              size={20}
-              reverse
-              containerStyle={{ bottom: 20, right: 20 }}
-              color={color()}
-            />
-          ),
-        }}
-        style={styles.slider}
-      />
 
-        <View style={styles.setpsdiv}>
-          <Text style={styles.steptext}>{step}</Text>
-          <Text style={{ color: "white", fontSize: 20 }}>/</Text>
-          <Text style={styles.texttarget}>{usertarget}</Text>
-          <Text
-            style={{
-              marginLeft: 5,
-              color: "#9e9a99",
-              fontSize: 15,
-              fontWeight: "bold",
-            }}
-          >
-            steps
-          </Text>
+    fetchHealthData();
+  }, []);
+
+  // Calculate progress percentages
+  const stepProgress = Math.min(100, (step / stepTarget) * 100);
+  const sleepProgress = Math.min(100, (sleepMinutes / sleepTarget) * 100);
+
+  // Get color based on progress
+  const getProgressColor = (percentage: number) => {
+    if (percentage < 30) return '#FF3D00'; // Red
+    if (percentage < 70) return '#FFC400'; // Yellow
+    return '#00C853'; // Green
+  };
+
+  // Format sleep time
+  const formatSleepTime = () => {
+    const hours = Math.floor(sleepMinutes / 60);
+    const minutes = sleepMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
+  // Get sleep quality assessment
+  const getSleepQuality = () => {
+    const hours = sleepMinutes / 60;
+    if (hours < 5) return { text: 'Poor 😴', color: '#FF3D00' };
+    if (hours < 7) return { text: 'Fair 😐', color: '#FFC400' };
+    if (hours < 9) return { text: 'Good 😊', color: '#4CAF50' };
+    return { text: 'Excellent 😍', color: '#2196F3' };
+  };
+
+  return (
+    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+       <AnimatedStarsBackground />
+      {/* Header with date */}
+      <View style={styles.header}>
+        <Text style={styles.dateText}>{todayDate}</Text>
+      </View>
+
+      {/* Steps Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="walk" size={24} color="#4CAF50" />
+          <Text style={styles.cardTitle}>Step Progress</Text>
         </View>
 
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { 
+              width: `${stepProgress}%`,
+              backgroundColor: getProgressColor(stepProgress)
+            }]} />
+          </View>
+          <Text style={styles.progressText}>{Math.round(stepProgress)}%</Text>
+        </View>
+
+        <View style={styles.dataRow}>
+          <Text style={styles.dataValue}>{step.toLocaleString()}</Text>
+          <Text style={styles.dataLabel}>/ {stepTarget.toLocaleString()} steps</Text>
+        </View>
+
+        <View style={[styles.achievementBadge, { 
+          backgroundColor: stepProgress >= 100 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 193, 7, 0.2)',
+          borderColor: stepProgress >= 100 ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 193, 7, 0.5)'
+        }]}>
+          <Text style={styles.badgeText}>
+            {stepProgress >= 100 ? 'Daily Goal Achieved! 🎉' : `${stepTarget - step} steps to go! 💪`}
+          </Text>
+        </View>
       </View>
-    </View>
-  </View>
+
+      {/* Sleep Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="sleep" size={24} color="#2196F3" />
+          <Text style={styles.cardTitle}>Sleep Progress</Text>
+        </View>
+
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { 
+              width: `${sleepProgress}%`,
+              backgroundColor: getProgressColor(sleepProgress)
+            }]} />
+          </View>
+          <Text style={styles.progressText}>{Math.round(sleepProgress)}%</Text>
+        </View>
+
+        <View style={styles.sleepContent}>
+          <Image
+            source={require("../../assets/images/sleep2.png")}
+            style={styles.sleepImage}
+          />
+          <View style={styles.sleepInfo}>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataValue}>{formatSleepTime()}</Text>
+              <Text style={styles.dataLabel}>/ 8h 0m</Text>
+            </View>
+            <Text style={[styles.sleepQuality, { color: getSleepQuality().color }]}>
+              {getSleepQuality().text}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    </LinearGradient>
   );
 };
 interface Game {
@@ -721,6 +738,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             shadowOpacity: 0.5,
             shadowRadius: 12,
             elevation: 10,
+
           }
         ]}
       >
@@ -812,7 +830,27 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                       }}>
                         {game.status}
                       </Text>
+                     
                     </View>
+                  
+                    <View style={{
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10
+  }}>
+    
+    <Text style={{
+      color: '#ffffff',
+      fontSize: 13,
+      fontWeight: 'bold'
+    }}>
+      Current Prize pool    {game.Totalamount} sol
+    </Text>
+  </View>
                   </View>
                 ) : (
                   <TouchableOpacity
@@ -1292,7 +1330,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
             </View>
 
             {/* Prize indicator */}
-            <View style={{
+            {/* <View style={{
               position: 'absolute',
               top: 0,
               right: 0,
@@ -1302,17 +1340,17 @@ const CommunityGames = ({ handleJoinClick }: any) => {
               borderBottomLeftRadius: 12,
               flexDirection: 'row',
               alignItems: 'center',
-            }}>
-              <MaterialCommunityIcons name="trophy" size={12} color="#000" />
-              <Text style={{
+            }}> */}
+              {/* <MaterialCommunityIcons name="trophy" size={12} color="#000" /> */}
+              {/* <Text style={{
                 color: "#000",
                 fontSize: 10,
                 fontWeight: 'bold',
                 marginLeft: 2
               }}>
                 {game.Totalamount}
-              </Text>
-            </View>
+              </Text> */}
+            {/* </View> */}
           </Pressable>
         </LinearGradient>
       </Animated.View>
@@ -1410,8 +1448,10 @@ const styles = StyleSheet.create({
   gameCard: {
     marginHorizontal: 16,
     marginVertical: 10,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
+    paddingLeft:1,
+    paddingHorizontal:7,
   },
   sleepTargetText: {
     fontSize: 16,
@@ -1458,7 +1498,8 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFFFFF',
+    
   },
   statsCard: {
     backgroundColor: '#fff',
@@ -1512,6 +1553,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "#783887",
+  },
+  dataValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  dataLabel: {
+    color: '#9e9a99',
+    fontSize: 16,
+    marginLeft: 5,
   },
   bottomSheetBackground: {
     backgroundColor: "#290d44",
@@ -1753,6 +1804,26 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 15,
   },
+    sleepImage: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
+  },
+  sleepInfo: {
+    alignItems: 'center',
+  },
+  sleepTime: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  sleepQuality: {
+    color: '#2196F3',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
   divider: {
     width: "100%",
     height: 1,
@@ -1764,6 +1835,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
+  
   gameDetailItem: {
     flex: 1,
     alignItems: "center",
@@ -1775,6 +1847,71 @@ const styles = StyleSheet.create({
     color: "#bfbfbf",
     fontSize: 14,
     marginBottom: 5,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  progressBarBackground: {
+    flex: 1,
+    height: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  progressText: {
+    color: '#FFFFFF',
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  stepsCount: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    marginTop: 5,
+  },
+  stepsText: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  // stepsLabel: {
+  //   color: '#9e9a99',
+  //   fontSize: 18,
+  //   marginLeft: 5,
+  // },
+  achievementBadge: {
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.5)',
   },
   gameDetailValue: {
     color: "white",
@@ -1895,11 +2032,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 15,
   },
-  sleepImage: {
-    width: 170,
-    height: 200,
-    resizeMode: 'contain',
-    marginTop: 20,
+  dataRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 5,
+  },
+  sleepContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
   // steptext: {
   //   fontSize: 24,2

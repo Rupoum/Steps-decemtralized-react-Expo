@@ -39,6 +39,7 @@ import {
 import { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SlideButton from "rn-slide-button";
+import AnimatedStarsBackground from "../utils/background";
 interface GAME {
   id: string;
   name: string;
@@ -70,6 +71,7 @@ const OfficialGamesScreen = () => {
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
+        setLoading(true);
         const userid = await AsyncStorage.getItem("userid");
         console.log("userdid");
         const response = await axios.get(
@@ -79,6 +81,8 @@ const OfficialGamesScreen = () => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
+      }finally{
+        setLoading(false);
       }
     };
     fetchuserdata();
@@ -144,6 +148,8 @@ const OfficialGamesScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+        <AnimatedStarsBackground />
       <BottomSheetModalProvider>
         <LinearGradient
           colors={["#1a0033", "#4b0082", "#290d44"]}
@@ -159,6 +165,11 @@ const OfficialGamesScreen = () => {
               },
             ]}
           >
+            {loading?<ActivityIndicator size={"large"}>
+           
+            </ActivityIndicator>
+            :
+            <View>
             {game.map((game) => (
   <View key={game.id}>
     {loading ? (
@@ -407,6 +418,8 @@ const OfficialGamesScreen = () => {
     )}
   </View>
 ))}
+</View>
+}
           </ScrollView>
           <BottomSheetModal
             ref={bottomSheetModalRef}
@@ -473,6 +486,7 @@ const OfficialGamesScreen = () => {
           </BottomSheetModal>
         </LinearGradient>
       </BottomSheetModalProvider>
+      </LinearGradient>
     </SafeAreaView>
   );
 };

@@ -1,8 +1,10 @@
 import { BACKEND_URL } from "@/Backendurl";
 import StakeStatus from "@/components/screens/goals";
 import SetGoalsScreen from "@/components/screens/setGoalsScreen";
+import AnimatedStarsBackground from "@/components/utils/background";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -10,7 +12,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 const SetGoalsScree = () => {
   const [stakeds, setstaked] = useState(false);
   const [loading, setloading] = useState(false);
-
   useEffect(() => {
     const staked = async () => {
       try {
@@ -34,16 +35,20 @@ const SetGoalsScree = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+    
+         <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+         <AnimatedStarsBackground />
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#9d85e0" />
-          <Text style={styles.loadingText}>Loading tournaments...</Text>
+          <Text style={styles.loadingText}>Loading Stake info ....</Text>
         </View>
       ) : stakeds ? (
         <StakeStatus />
       ) : (
         <SetGoalsScreen />
       )}
+      </LinearGradient>
     </GestureHandlerRootView>
   );
 };
@@ -58,6 +63,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: "white",
     fontSize: 16,
+  },
+  gradient: {
+    flex: 1,
   },
 });
 
