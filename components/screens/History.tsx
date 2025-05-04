@@ -14,8 +14,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BACKEND_URL } from "@/Backendurl";
-import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Haptics from 'expo-haptics';
+import {
+  Ionicons,
+  FontAwesome5,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 
@@ -25,7 +29,7 @@ const History = () => {
   const [selectedTab, setSelectedTab] = useState("participated");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   const animatedValue = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -39,17 +43,17 @@ const History = () => {
           setIsLoading(false);
           return;
         }
-        
+
         // Fetch created tournaments
         const createdResponse = await axios.get(
           `${BACKEND_URL}/history/prevgame/${userid}`
         );
-        
+
         // Fetch participated tournaments
         const participatedResponse = await axios.get(
           `${BACKEND_URL}/history/prev/${userid}`
         );
-        
+
         setCreated(createdResponse.data.Tournament || []);
         setParticipated(participatedResponse.data.Tournament || []);
       } catch (e) {
@@ -86,11 +90,15 @@ const History = () => {
 
   const getStatusColor = (status) => {
     if (!status) return "#FFD700"; // Default gold for no status
-    switch(status.toLowerCase()) {
-      case "completed": return "#4CAF50"; // Green
-      case "ongoing": return "#2196F3"; // Blue
-      case "upcoming": return "#FF9800"; // Orange
-      default: return "#FFD700"; // Gold
+    switch (status.toLowerCase()) {
+      case "completed":
+        return "#4CAF50"; // Green
+      case "ongoing":
+        return "#2196F3"; // Blue
+      case "upcoming":
+        return "#FF9800"; // Orange
+      default:
+        return "#FFD700"; // Gold
     }
   };
 
@@ -98,24 +106,24 @@ const History = () => {
     const scale = scrollY.interpolate({
       inputRange: [-1, 0, index * 200, (index + 1) * 200],
       outputRange: [1, 1, 1, 0.95],
-      extrapolate: 'clamp',
+      extrapolate: "clamp",
     });
-    
+
     const opacity = scrollY.interpolate({
       inputRange: [-1, 0, index * 200, (index + 1) * 200],
       outputRange: [1, 1, 1, 0.7],
-      extrapolate: 'clamp',
+      extrapolate: "clamp",
     });
 
     return (
-      <Animated.View 
+      <Animated.View
         style={[
-          styles.cardContainer, 
-          { 
+          styles.cardContainer,
+          {
             transform: [{ scale }],
             opacity,
             borderLeftColor: getStatusColor(item.status),
-          }
+          },
         ]}
       >
         <LinearGradient
@@ -127,15 +135,23 @@ const History = () => {
           <View style={styles.cardHeader}>
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{item.name}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                <Text style={styles.statusText}>{item.status || "Completed"}</Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(item.status) },
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {item.status || "Completed"}
+                </Text>
               </View>
             </View>
             <Text style={styles.dateRange}>
-              {new Date(item.startdate).toLocaleDateString()} - {new Date(item.enddate).toLocaleDateString()}
+              {new Date(item.startdate).toLocaleDateString()} -{" "}
+              {new Date(item.enddate).toLocaleDateString()}
             </Text>
           </View>
-          
+
           <View style={styles.cardContent}>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -143,22 +159,26 @@ const History = () => {
                 <Text style={styles.statValue}>{item.memberqty}</Text>
                 <Text style={styles.statLabel}>Members</Text>
               </View>
-              
+
               <View style={styles.statItem}>
                 <FontAwesome5 name="walking" size={18} color="#9d85e0" />
                 <Text style={styles.statValue}>{item.Dailystep}</Text>
                 <Text style={styles.statLabel}>Daily Steps</Text>
               </View>
-              
+
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="calendar-clock" size={18} color="#9d85e0" />
+                <MaterialCommunityIcons
+                  name="calendar-clock"
+                  size={18}
+                  color="#9d85e0"
+                />
                 <Text style={styles.statValue}>{item.days}</Text>
                 <Text style={styles.statLabel}>Days</Text>
               </View>
             </View>
-            
+
             <View style={styles.divider} />
-            
+
             <View style={styles.prizeContainer}>
               <View style={styles.prizeIcon}>
                 <FontAwesome5 name="trophy" size={24} color="#FFD700" />
@@ -169,12 +189,14 @@ const History = () => {
                   <Text style={styles.amount}>{item.Totalamount}</Text>
                   <Text style={styles.currency}>{item.Digital_Currency}</Text>
                 </View>
-                <Text style={styles.entryFee}>Entry: {item.Amount} {item.Digital_Currency}</Text>
+                <Text style={styles.entryFee}>
+                  Entry: {item.Amount} {item.Digital_Currency}
+                </Text>
               </View>
             </View>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.detailsButton}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -194,11 +216,11 @@ const History = () => {
       <MaterialCommunityIcons name="trophy-outline" size={80} color="#6b46c1" />
       <Text style={styles.emptyTitle}>No Tournaments Found</Text>
       <Text style={styles.emptyText}>
-        {selectedTab === "participated" 
-          ? "You haven't participated in any tournaments yet." 
+        {selectedTab === "participated"
+          ? "You haven't participated in any tournaments yet."
           : "You haven't created any tournaments yet."}
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.emptyButton}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -206,7 +228,9 @@ const History = () => {
         }}
       >
         <Text style={styles.emptyButtonText}>
-          {selectedTab === "participated" ? "Join Tournament" : "Create Tournament"}
+          {selectedTab === "participated"
+            ? "Join Tournament"
+            : "Create Tournament"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -222,33 +246,37 @@ const History = () => {
       </View>
 
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={styles.tabButton} 
+        <TouchableOpacity
+          style={styles.tabButton}
           onPress={() => handleTabPress("participated")}
           activeOpacity={0.7}
         >
-          <Text style={[
-            styles.tabText, 
-            selectedTab === "participated" && styles.activeTabText
-          ]}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "participated" && styles.activeTabText,
+            ]}
+          >
             Participated
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabButton} 
+
+        <TouchableOpacity
+          style={styles.tabButton}
           onPress={() => handleTabPress("created")}
           activeOpacity={0.7}
         >
-          <Text style={[
-            styles.tabText, 
-            selectedTab === "created" && styles.activeTabText
-          ]}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "created" && styles.activeTabText,
+            ]}
+          >
             Created
           </Text>
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.tabIndicatorContainer}>
         <Animated.View style={[styles.tabIndicator, animatedBarStyle]} />
       </View>
@@ -260,9 +288,13 @@ const History = () => {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={50} color="#ff6b6b" />
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={50}
+            color="#ff6b6b"
+          />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.retryButton}
             onPress={() => {
               setIsLoading(true);
@@ -296,7 +328,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 50,
+    // paddingTop: 50,
     paddingBottom: 15,
     alignItems: "center",
   },
