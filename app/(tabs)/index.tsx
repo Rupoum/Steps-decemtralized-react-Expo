@@ -518,9 +518,10 @@ const StepsCount = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#1a0033", "#4b0082", "#290d44"]}
-      style={styles.gradient}
+    <View
+      style={{
+        paddingHorizontal: 10,
+      }}
     >
       <AnimatedStarsBackground />
       {/* Header with date */}
@@ -549,12 +550,23 @@ const StepsCount = () => {
           </View>
           <Text style={styles.progressText}>{Math.round(stepProgress)}%</Text>
         </View>
-
-        <View style={styles.dataRow}>
-          <Text style={styles.dataValue}>{step.toLocaleString()}</Text>
-          <Text style={styles.dataLabel}>
-            / {stepTarget.toLocaleString()} steps
-          </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <Image
+            source={require("../../assets/images/walk.png")}
+            style={styles.sleepImage}
+          />
+          <View style={styles.dataRow}>
+            <Text style={styles.dataValue}>{step.toLocaleString()}</Text>
+            <Text style={styles.dataLabel}>
+              / {stepTarget.toLocaleString()} steps
+            </Text>
+          </View>
         </View>
 
         <View
@@ -604,7 +616,7 @@ const StepsCount = () => {
 
         <View style={styles.sleepContent}>
           <Image
-            source={require("../../assets/images/sleep2.png")}
+            source={require("../../assets/images/sleepAstro.png")}
             style={styles.sleepImage}
           />
           <View style={styles.sleepInfo}>
@@ -622,7 +634,7 @@ const StepsCount = () => {
       </View>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </LinearGradient>
+    </View>
   );
 };
 interface Game {
@@ -1718,7 +1730,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   header: {
-    marginBottom: 15,
+    marginBottom: 20,
+    alignSelf: "center",
   },
   dateText: {
     fontSize: 18,
@@ -2259,7 +2272,7 @@ const styles = StyleSheet.create({
   dataRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    marginBottom: 5,
+    // marginBottom: 5,
   },
   sleepContent: {
     flexDirection: "row",
