@@ -5,8 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-// import { Avatar } from "react-native-ui-lib";
-import { Skeleton } from '@rneui/themed';
+
+import { LinearProgress, Skeleton } from "@rneui/themed";
 import {
   View,
   Text,
@@ -21,9 +21,11 @@ import {
   Animated,
   Pressable,
   Linking,
+  PanResponder,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card } from '@rneui/themed';
+import { Card } from "@rneui/themed";
 
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -140,21 +142,21 @@ const App = () => {
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
-  useEffect(()=>{
-    const handleRedirect = async (url:string) => {
-      const parse=new URL(url);
-      console.log("pars",parse);
-      const code = parse.searchParams.get('code');
+  useEffect(() => {
+    const handleRedirect = async (url: string) => {
+      const parse = new URL(url);
+      console.log("pars", parse);
+      const code = parse.searchParams.get("code");
       console.log("code", code);
       const codeverifier = await AsyncStorage.getItem("code");
-      console.log("codeverifier", codeverifier);   
+      console.log("codeverifier", codeverifier);
       try {
         const clientId = "23Q8LW";
         const clientSecret = "b7ad7ce14620face8ab633f237c071bb";
 
         const tokenResponse = await axios.post(
           "https://api.fitbit.com/oauth2/token",
-           `client_id=${clientId}&code=${code}&code_verifier="6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p"&grant_type=authorization_code`,
+          `client_id=${clientId}&code=${code}&code_verifier="6r3i000b0o5n006w1o6t1d454y183y0i3w4h5i1u5o3l0s213e4s5h0w6k5t5v5253703r4a2j1q0d0z4l730t733r5i1t6n2e0j6k2n0v3q6k495g5j536r5t4n602p"&grant_type=authorization_code`,
           {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
@@ -164,16 +166,15 @@ const App = () => {
         );
         console.log(tokenResponse);
         console.log("Token Response:", tokenResponse.data);
-      } catch (error:any) {
+      } catch (error: any) {
         console.error("Error exchanging code for tokens:", error);
       }
-      
     };
 
     // Linking.getInitialURL().then(handleRedirect);
-    Linking.addEventListener('url', ({ url }) => handleRedirect(url));
+    Linking.addEventListener("url", ({ url }) => handleRedirect(url));
     // handleRedirect();
-  })
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -267,8 +268,11 @@ const App = () => {
       />
       <SafeAreaView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-        <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
-        <AnimatedStarsBackground />
+          <LinearGradient
+            colors={["#1a0033", "#4b0082", "#290d44"]}
+            style={styles.gradient}
+          >
+            <AnimatedStarsBackground />
             <ScrollView
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -294,6 +298,7 @@ const App = () => {
               </TouchableOpacity>
               <View style={{ padding: 5 }}>
                 <StepsCount />
+                {/* <SwipeableCards /> */}
               </View>
               <View></View>
               <View>
@@ -306,51 +311,59 @@ const App = () => {
                 <JoinGame handleSearchGame={handleSearchGame} />
               </View>
             </ScrollView>
-             <BottomSheetModal
-                          ref={bottomSheetModalRef}
-                          snapPoints={snapPoints}
-                          backgroundStyle={styles.bottomSheetBackground}
-                        >
+            <BottomSheetModal
+              ref={bottomSheetModalRef}
+              snapPoints={snapPoints}
+              backgroundStyle={styles.bottomSheetBackground}
+            >
               <BottomSheetView style={{ flex: 1 }}>
                 {selectedGame ? (
                   <View style={styles.bottomSheetContent}>
-                                    <View style={styles.bottomSheetHandle} />
-                  
-                                    <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
-                  
-                                    <View style={styles.questDetailsCard}>
-                                      <View style={styles.questDetailRow}>
-                                        <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
-                                        <Text style={styles.questDetailValue}>{selectedGame.name} </Text>
-                                      </View>
-                  
-                                      <View style={styles.questDetailRow}>
-                                        <Text style={styles.questDetailLabel}>Your Stake:</Text>
-                                        <Text style={styles.questDetailValue}>{selectedGame.Amount} SOL</Text>
-                                      </View>
-                  
-                                 
-                  
-                                      <View style={styles.questRulesContainer}>
-                                        <Text style={styles.questRulesTitle}>Quest Rules:</Text>
-                                        <Text style={styles.questRulesText}>• Track your sleep daily for 10 days</Text>
-                                        <Text style={styles.questRulesText}>• Meet your goal at least 7 days to earn rewards</Text>
-                                        <Text style={styles.questRulesText}>• Earn badges for consistent sleep patterns</Text>
-                                      </View>
-                                    </View>
-                                    <SlideButton
-                                                        title="Slide To Begin Quest"
-                                                        width="90%"
-                                                        height={60}
-                                                        reverseSlideEnabled={false}
-                                                        animation={true}
-                                                        titleStyle={styles.slideButtonTitle}
-                                                        titleContainerStyle={styles.slideButtonTitleContainer}
-                                                        containerStyle={styles.slideButtonContainer}
-                                                        underlayStyle={styles.slideButtonUnderlay}
-                                                        thumbStyle={styles.slideButtonThumb}
-                                                        onSlideEnd={Onsend}
-                                                      />
+                    <View style={styles.bottomSheetHandle} />
+
+                    <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
+
+                    <View style={styles.questDetailsCard}>
+                      <View style={styles.questDetailRow}>
+                        <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
+                        <Text style={styles.questDetailValue}>
+                          {selectedGame.name}{" "}
+                        </Text>
+                      </View>
+
+                      <View style={styles.questDetailRow}>
+                        <Text style={styles.questDetailLabel}>Your Stake:</Text>
+                        <Text style={styles.questDetailValue}>
+                          {selectedGame.Amount} SOL
+                        </Text>
+                      </View>
+
+                      <View style={styles.questRulesContainer}>
+                        <Text style={styles.questRulesTitle}>Quest Rules:</Text>
+                        <Text style={styles.questRulesText}>
+                          • Track your sleep daily for 10 days
+                        </Text>
+                        <Text style={styles.questRulesText}>
+                          • Meet your goal at least 7 days to earn rewards
+                        </Text>
+                        <Text style={styles.questRulesText}>
+                          • Earn badges for consistent sleep patterns
+                        </Text>
+                      </View>
+                    </View>
+                    <SlideButton
+                      title="Slide To Begin Quest"
+                      width="90%"
+                      height={60}
+                      reverseSlideEnabled={false}
+                      animation={true}
+                      titleStyle={styles.slideButtonTitle}
+                      titleContainerStyle={styles.slideButtonTitleContainer}
+                      containerStyle={styles.slideButtonContainer}
+                      underlayStyle={styles.slideButtonUnderlay}
+                      thumbStyle={styles.slideButtonThumb}
+                      onSlideEnd={Onsend}
+                    />
                     {showLoader && (
                       <TransactionLoader
                         loading={loading}
@@ -391,7 +404,7 @@ const StepsCount = () => {
   const [step, setStep] = useState(0);
   const [sleepMinutes, setSleepMinutes] = useState(0);
   const [todayDate, setTodayDate] = useState("");
-  
+
   // Targets
   const stepTarget = 5000;
   const sleepTarget = 8 * 60; // 8 hours in minutes
@@ -399,7 +412,12 @@ const StepsCount = () => {
   useEffect(() => {
     // Set today's date
     const date = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
     setTodayDate(date.toLocaleDateString(undefined, options));
 
     const fetchHealthData = async () => {
@@ -407,9 +425,9 @@ const StepsCount = () => {
         const now = new Date();
         const midnightToday = new Date(now);
         midnightToday.setHours(0, 0, 0, 0);
-        
+
         await initialize();
-        
+
         // Get steps data
         const { records: stepRecords } = await readRecords("Steps", {
           timeRangeFilter: {
@@ -423,7 +441,9 @@ const StepsCount = () => {
         const { records: sleepRecords } = await readRecords("SleepSession", {
           timeRangeFilter: {
             operator: "between",
-            startTime: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+            startTime: new Date(
+              now.getTime() - 24 * 60 * 60 * 1000
+            ).toISOString(),
             endTime: now.toISOString(),
           },
         });
@@ -431,7 +451,9 @@ const StepsCount = () => {
         // Calculate steps
         let stepCount = 0;
         stepRecords.forEach((record) => {
-          if (record.metadata?.dataOrigin === "com.google.android.apps.fitness") {
+          if (
+            record.metadata?.dataOrigin === "com.google.android.apps.fitness"
+          ) {
             stepCount += record.count || 0;
           }
         });
@@ -441,7 +463,9 @@ const StepsCount = () => {
         let totalSleepMs = 0;
         sleepRecords.forEach((session) => {
           session.stages?.forEach((stage) => {
-            totalSleepMs += new Date(stage.endTime).getTime() - new Date(stage.startTime).getTime();
+            totalSleepMs +=
+              new Date(stage.endTime).getTime() -
+              new Date(stage.startTime).getTime();
           });
         });
         const sleepMinutes = Math.floor(totalSleepMs / (1000 * 60));
@@ -449,15 +473,14 @@ const StepsCount = () => {
 
         // Send data to backend
         const userid = await AsyncStorage.getItem("userid");
-        await axios.post(`${BACKEND_URL}/regular/update`, { 
-          steps: stepCount.toString(), 
-          userid 
+        await axios.post(`${BACKEND_URL}/regular/update`, {
+          steps: stepCount.toString(),
+          userid,
         });
-        await axios.post(`${BACKEND_URL}/regular/update/sleep`, { 
-          hours: `${Math.floor(sleepMinutes / 60)}h ${sleepMinutes % 60}m`, 
-          userid 
+        await axios.post(`${BACKEND_URL}/regular/update/sleep`, {
+          hours: `${Math.floor(sleepMinutes / 60)}h ${sleepMinutes % 60}m`,
+          userid,
         });
-
       } catch (err) {
         console.error("Error fetching health data:", err);
         setError("Failed to fetch health data. Please try again.");
@@ -473,9 +496,9 @@ const StepsCount = () => {
 
   // Get color based on progress
   const getProgressColor = (percentage: number) => {
-    if (percentage < 30) return '#FF3D00'; // Red
-    if (percentage < 70) return '#FFC400'; // Yellow
-    return '#00C853'; // Green
+    if (percentage < 30) return "#FF3D00"; // Red
+    if (percentage < 70) return "#FFC400"; // Yellow
+    return "#00C853"; // Green
   };
 
   // Format sleep time
@@ -488,15 +511,19 @@ const StepsCount = () => {
   // Get sleep quality assessment
   const getSleepQuality = () => {
     const hours = sleepMinutes / 60;
-    if (hours < 5) return { text: 'Poor 😴', color: '#FF3D00' };
-    if (hours < 7) return { text: 'Fair 😐', color: '#FFC400' };
-    if (hours < 9) return { text: 'Good 😊', color: '#4CAF50' };
-    return { text: 'Excellent 😍', color: '#2196F3' };
+    if (hours < 5) return { text: "Poor 😴", color: "#FF3D00" };
+    if (hours < 7) return { text: "Fair 😐", color: "#FFC400" };
+    if (hours < 9) return { text: "Good 😊", color: "#4CAF50" };
+    return { text: "Excellent 😍", color: "#2196F3" };
   };
 
   return (
-    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
-       <AnimatedStarsBackground />
+    <View
+      style={{
+        paddingHorizontal: 10,
+      }}
+    >
+      <AnimatedStarsBackground />
       {/* Header with date */}
       <View style={styles.header}>
         <Text style={styles.dateText}>{todayDate}</Text>
@@ -511,25 +538,56 @@ const StepsCount = () => {
 
         <View style={styles.progressContainer}>
           <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { 
-              width: `${stepProgress}%`,
-              backgroundColor: getProgressColor(stepProgress)
-            }]} />
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${stepProgress}%`,
+                  backgroundColor: getProgressColor(stepProgress),
+                },
+              ]}
+            />
           </View>
           <Text style={styles.progressText}>{Math.round(stepProgress)}%</Text>
         </View>
-
-        <View style={styles.dataRow}>
-          <Text style={styles.dataValue}>{step.toLocaleString()}</Text>
-          <Text style={styles.dataLabel}>/ {stepTarget.toLocaleString()} steps</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <Image
+            source={require("../../assets/images/walk.png")}
+            style={styles.sleepImage}
+          />
+          <View style={styles.dataRow}>
+            <Text style={styles.dataValue}>{step.toLocaleString()}</Text>
+            <Text style={styles.dataLabel}>
+              / {stepTarget.toLocaleString()} steps
+            </Text>
+          </View>
         </View>
 
-        <View style={[styles.achievementBadge, { 
-          backgroundColor: stepProgress >= 100 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 193, 7, 0.2)',
-          borderColor: stepProgress >= 100 ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 193, 7, 0.5)'
-        }]}>
+        <View
+          style={[
+            styles.achievementBadge,
+            {
+              backgroundColor:
+                stepProgress >= 100
+                  ? "rgba(76, 175, 80, 0.2)"
+                  : "rgba(255, 193, 7, 0.2)",
+              borderColor:
+                stepProgress >= 100
+                  ? "rgba(76, 175, 80, 0.5)"
+                  : "rgba(255, 193, 7, 0.5)",
+            },
+          ]}
+        >
           <Text style={styles.badgeText}>
-            {stepProgress >= 100 ? 'Daily Goal Achieved! 🎉' : `${stepTarget - step} steps to go! 💪`}
+            {stepProgress >= 100
+              ? "Daily Goal Achieved! 🎉"
+              : `${stepTarget - step} steps to go! 💪`}
           </Text>
         </View>
       </View>
@@ -543,17 +601,22 @@ const StepsCount = () => {
 
         <View style={styles.progressContainer}>
           <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { 
-              width: `${sleepProgress}%`,
-              backgroundColor: getProgressColor(sleepProgress)
-            }]} />
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${sleepProgress}%`,
+                  backgroundColor: getProgressColor(sleepProgress),
+                },
+              ]}
+            />
           </View>
           <Text style={styles.progressText}>{Math.round(sleepProgress)}%</Text>
         </View>
 
         <View style={styles.sleepContent}>
           <Image
-            source={require("../../assets/images/sleep2.png")}
+            source={require("../../assets/images/sleepAstro.png")}
             style={styles.sleepImage}
           />
           <View style={styles.sleepInfo}>
@@ -561,7 +624,9 @@ const StepsCount = () => {
               <Text style={styles.dataValue}>{formatSleepTime()}</Text>
               <Text style={styles.dataLabel}>/ 8h 0m</Text>
             </View>
-            <Text style={[styles.sleepQuality, { color: getSleepQuality().color }]}>
+            <Text
+              style={[styles.sleepQuality, { color: getSleepQuality().color }]}
+            >
               {getSleepQuality().text}
             </Text>
           </View>
@@ -569,7 +634,7 @@ const StepsCount = () => {
       </View>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </LinearGradient>
+    </View>
   );
 };
 interface Game {
@@ -584,7 +649,7 @@ interface Game {
 const OfficialGames = ({ handleJoinClick }: any) => {
   const [error, seterror] = useState("");
   const [joined, setjoined] = useState([]);
-  const[loading,setloading]=useState(false);
+  const [loading, setloading] = useState(false);
   const [form, setform] = useState([
     {
       name: "",
@@ -603,12 +668,13 @@ const OfficialGames = ({ handleJoinClick }: any) => {
       Hours: "",
     },
   ]);
-   const scrollViewRef = useRef(null);
-   const [isAtEnd, setIsAtEnd] = useState(false);
-   const [scrollEnabled, setScrollEnabled] = useState(true);
-   const handleScroll = (event:any) => {
+  const scrollViewRef = useRef(null);
+  const [isAtEnd, setIsAtEnd] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const handleScroll = (event: any) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+    const isEnd =
+      layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
     if (isEnd && !isAtEnd) {
       setIsAtEnd(true);
       // setScrollEnabled(false);
@@ -630,7 +696,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -643,7 +709,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
         // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -672,8 +738,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           }}
         >
           <Text style={styles.gamesTitle}>Official Games</Text>
-          
-          
+
           <TouchableOpacity
             style={{
               paddingHorizontal: 10,
@@ -696,9 +761,9 @@ const OfficialGames = ({ handleJoinClick }: any) => {
             </View>
           </TouchableOpacity>
         </View>
-    
+
         <ScrollView
-        ref={scrollViewRef}
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={scrollEnabled}
@@ -716,276 +781,364 @@ const OfficialGames = ({ handleJoinClick }: any) => {
           // ]}
         >
           {form.map((game) => (
-  <View key={game.id}>
-    {loading ? (
-      <Skeleton 
-        animation="pulse" 
-        style={styles.gameCard} 
-        height={170}
-        width={320}
-        LinearGradientComponent={LinearGradient}
-      />
-    ) : (
-      <View>
-       
-      <Animated.View 
-        entering={FadeInDown.duration(400).delay(200)}
-        style={[
-          styles.gameCard,
-          {
-            shadowColor: "#9d4edd",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: 10,
-
-          }
-        ]}
-      >
-        <LinearGradient
-          colors={['#2b0f45', '#3b1a63', '#4b2387']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ 
-            borderRadius: 16,
-            overflow: 'hidden',
-            borderLeftWidth: 4,
-            borderLeftColor: game.status === 'Active' ? '#00ff00' : 
-                             game.status === 'Upcoming' ? '#ffaa00' : 
-                             game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-          }}
-        >
-          <Pressable
-            onPress={() => router.push(`/status/${game.id}`)}
-            style={({ pressed }) => [
-              { opacity: pressed ? 0.8 : 1 },
-              { flex: 1 },
-              { padding: 16 }
-            ]}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
-          >
-            {/* Header Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.gameHeader, { 
-                  fontSize: 18, 
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                  color: '#ffffff'
-                }]}>
-                  {game.name}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="calendar" size={12} color="#bfbfbf" />
-                  <Text style={{
-                    color: "#bfbfbf",
-                    fontSize: 12,
-                    marginLeft: 4
-                  }}>
-                    {game.startdate}
-                  </Text>
-                </View>
-              </View>
-              
-              <View>
-                {joined.some((join) => join.id == game.id) ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 12,
-                      flexDirection: 'row',
-                      alignItems: 'center'
-                    }}>
-                      <MaterialCommunityIcons name="check-circle" size={14} color="#00ff00" />
-                      <Text style={{ 
-                        color: "#ffffff", 
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        marginLeft: 4
-                      }}>
-                        Joined
-                      </Text>
-                    </View>
-                    <View style={{
-                      marginTop: 4,
-                      backgroundColor: game.status === 'Active' ? 'rgba(0, 255, 0, 0.2)' : 
-                                      game.status === 'Upcoming' ? 'rgba(255, 170, 0, 0.2)' : 
-                                      game.status === 'Completed' ? 'rgba(255, 85, 85, 0.2)' : 'rgba(157, 78, 221, 0.2)',
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 8
-                    }}>
-                      <Text style={{
-                        color: game.status === 'Active' ? '#00ff00' : 
-                               game.status === 'Upcoming' ? '#ffaa00' : 
-                               game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-                        fontSize: 11,
-                        fontWeight: 'bold'
-                      }}>
-                        {game.status}
-                      </Text>
-                     
-                    </View>
-                  
-                    <View style={{
-    marginTop: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10
-  }}>
-    
-    <Text style={{
-      color: '#ffffff',
-      fontSize: 13,
-      fontWeight: 'bold'
-    }}>
-      Current Prize pool    {game.Totalamount} sol
-    </Text>
-  </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#9d4edd',
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      shadowColor: "#9d4edd",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 6,
-                      elevation: 5,
-                    }}
-                    onPress={() => {
-                      // // Add haptic feedback if available
-                      // if (ReactNativeHapticFeedback) {
-                      //   ReactNativeHapticFeedback.trigger('impactMedium');
-                      // }
-                      handleJoinClick(game);
-                    }}
-                    activeOpacity={0.7}
+            <View key={game.id}>
+              {loading ? (
+                <Skeleton
+                  animation="pulse"
+                  style={styles.gameCard}
+                  height={170}
+                  width={320}
+                  LinearGradientComponent={LinearGradient}
+                />
+              ) : (
+                <View>
+                  <Animated.View
+                    entering={FadeInDown.duration(400).delay(200)}
+                    style={[
+                      styles.gameCard,
+                      {
+                        shadowColor: "#9d4edd",
+                        shadowOffset: { width: 0, height: 8 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 12,
+                        elevation: 10,
+                      },
+                    ]}
                   >
-                    <Text style={{
-                      color: "white",
-                      fontSize: 16,
-                      fontWeight: 'bold'
-                    }}>
-                      Join
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
+                    <LinearGradient
+                      colors={["#2b0f45", "#3b1a63", "#4b2387"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        borderLeftWidth: 4,
+                        borderLeftColor:
+                          game.status === "Active"
+                            ? "#00ff00"
+                            : game.status === "Upcoming"
+                            ? "#ffaa00"
+                            : game.status === "Completed"
+                            ? "#ff5555"
+                            : "#9d4edd",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => router.push(`/status/${game.id}`)}
+                        style={({ pressed }) => [
+                          { opacity: pressed ? 0.8 : 1 },
+                          { flex: 1 },
+                          // { padding: 16 },
+                        ]}
+                        android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                      >
+                        {/* Header Section */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <View
+                            style={{
+                              flex: 1,
+                              paddingHorizontal: 10,
+                              paddingVertical: 20,
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.gameHeader,
+                                {
+                                  fontSize: 18,
+                                  fontWeight: "bold",
+                                  marginBottom: 4,
+                                  color: "#ffffff",
+                                },
+                              ]}
+                            >
+                              {game.name}
+                            </Text>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <MaterialCommunityIcons
+                                name="calendar"
+                                size={12}
+                                color="#bfbfbf"
+                              />
+                              <Text
+                                style={{
+                                  color: "#bfbfbf",
+                                  fontSize: 12,
+                                  marginLeft: 4,
+                                }}
+                              >
+                                {game.startdate}
+                              </Text>
+                            </View>
+                          </View>
 
-            {/* Divider with glow effect */}
-            <View style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginVertical: 16,
-            }}>
-              <LinearGradient
-                colors={['rgba(229, 204, 255, 0.1)', 'rgba(229, 204, 255, 0.6)', 'rgba(229, 204, 255, 0.1)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  width: "100%",
-                  height: 1,
-                }}
-              />
-            </View>
+                          <View>
+                            {joined.some((join) => join.id == game.id) ? (
+                              <View style={{ alignItems: "center" }}>
+                                <View
+                                  style={{
+                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 6,
+                                    borderRadius: 12,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <MaterialCommunityIcons
+                                    name="check-circle"
+                                    size={14}
+                                    color="#00ff00"
+                                  />
+                                  <Text
+                                    style={{
+                                      color: "#ffffff",
+                                      fontSize: 12,
+                                      fontWeight: "bold",
+                                      marginLeft: 4,
+                                    }}
+                                  >
+                                    Joined
+                                  </Text>
+                                </View>
+                                <View
+                                  style={{
+                                    marginTop: 4,
+                                    backgroundColor:
+                                      game.status === "Active"
+                                        ? "rgba(0, 255, 0, 0.2)"
+                                        : game.status === "Upcoming"
+                                        ? "rgba(255, 170, 0, 0.2)"
+                                        : game.status === "Completed"
+                                        ? "rgba(255, 85, 85, 0.2)"
+                                        : "rgba(157, 78, 221, 0.2)",
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 8,
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      color:
+                                        game.status === "Active"
+                                          ? "#00ff00"
+                                          : game.status === "Upcoming"
+                                          ? "#ffaa00"
+                                          : game.status === "Completed"
+                                          ? "#ff5555"
+                                          : "#9d4edd",
+                                      fontSize: 11,
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {game.status}
+                                  </Text>
+                                </View>
 
-            {/* Game Stats Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingHorizontal: 5,
-            }}>
-              {/* Entry */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="cash" size={16} color="#9d4edd" />
+                                <View
+                                  style={{
+                                    marginTop: 6,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    backgroundColor: "rgba(255,255,255,0.05)",
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 4,
+                                    borderRadius: 10,
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      color: "#ffffff",
+                                      fontSize: 13,
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Current Prize pool {game.Totalamount} sol
+                                  </Text>
+                                </View>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: "#9d4edd",
+                                  paddingHorizontal: 20,
+                                  paddingVertical: 10,
+                                  borderRadius: 12,
+                                  shadowColor: "#9d4edd",
+                                  shadowOffset: { width: 0, height: 4 },
+                                  shadowOpacity: 0.3,
+                                  shadowRadius: 6,
+                                  elevation: 5,
+                                }}
+                                onPress={() => {
+                                  // // Add haptic feedback if available
+                                  // if (ReactNativeHapticFeedback) {
+                                  //   ReactNativeHapticFeedback.trigger('impactMedium');
+                                  // }
+                                  handleJoinClick(game);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text
+                                  style={{
+                                    color: "white",
+                                    fontSize: 16,
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  Join
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+
+                        {/* Divider with glow effect */}
+                        <View
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            marginVertical: 16,
+                          }}
+                        >
+                          <LinearGradient
+                            colors={[
+                              "rgba(229, 204, 255, 0.1)",
+                              "rgba(229, 204, 255, 0.6)",
+                              "rgba(229, 204, 255, 0.1)",
+                            ]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{
+                              width: "100%",
+                              height: 1,
+                            }}
+                          />
+                        </View>
+
+                        {/* Game Stats Section */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            paddingHorizontal: 5,
+                          }}
+                        >
+                          {/* Entry */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="cash"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Entry</Text>
+                            <Text style={styles.statValue}>{game.Amount}</Text>
+                          </View>
+
+                          {/* Days */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="calendar-range"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Days</Text>
+                            <Text style={styles.statValue}>{game.days}</Text>
+                          </View>
+
+                          {/* Steps/Hours */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name={
+                                  game.types == "Steps"
+                                    ? "shoe-print"
+                                    : "clock-outline"
+                                }
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>
+                              {game.types == "Steps" ? "Daily Steps" : "Hours"}
+                            </Text>
+                            <Text style={styles.statValue}>
+                              {game.types == "Steps"
+                                ? game.Dailystep
+                                : game.Hours}
+                            </Text>
+                          </View>
+
+                          {/* Players */}
+                          <View style={styles.statContainer}>
+                            <View style={styles.statIconContainer}>
+                              <MaterialCommunityIcons
+                                name="account-group"
+                                size={16}
+                                color="#9d4edd"
+                              />
+                            </View>
+                            <Text style={styles.statLabel}>Players</Text>
+                            <Text style={styles.statValue}>
+                              {game.memberqty}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Prize indicator */}
+                        <View
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            backgroundColor: "#FFD700",
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderBottomLeftRadius: 12,
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          {/* <MaterialCommunityIcons
+                            name="trophy"
+                            size={12}
+                            color="#000"
+                          /> */}
+                          <Text
+                            style={{
+                              color: "#000",
+                              fontSize: 10,
+                              fontWeight: "bold",
+                              marginLeft: 2,
+                            }}
+                          >
+                            {game.Totalamount}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </LinearGradient>
+                  </Animated.View>
                 </View>
-                <Text style={styles.statLabel}>Entry</Text>
-                <Text style={styles.statValue}>{game.Amount}</Text>
-              </View>
-
-              {/* Days */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="calendar-range" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Days</Text>
-                <Text style={styles.statValue}>{game.days}</Text>
-              </View>
-
-              {/* Steps/Hours */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons 
-                    name={game.types == "Steps" ? "shoe-print" : "clock-outline"} 
-                    size={16} 
-                    color="#9d4edd" 
-                  />
-                </View>
-                <Text style={styles.statLabel}>
-                  {game.types == "Steps" ? "Daily Steps" : "Hours"}
-                </Text>
-                <Text style={styles.statValue}>
-                  {game.types == "Steps" ? game.Dailystep : game.Hours}
-                </Text>
-              </View>
-
-              {/* Players */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="account-group" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Players</Text>
-                <Text style={styles.statValue}>{game.memberqty}</Text>
-              </View>
+              )}
             </View>
-
-            {/* Prize indicator */}
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              backgroundColor: '#FFD700',
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderBottomLeftRadius: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-              <MaterialCommunityIcons name="trophy" size={12} color="#000" />
-              <Text style={{
-                color: "#000",
-                fontSize: 10,
-                fontWeight: 'bold',
-                marginLeft: 2
-              }}>
-                {game.Totalamount}
-              </Text>
-            </View>
-          </Pressable>
-        </LinearGradient>
-      </Animated.View>
+          ))}
+        </ScrollView>
       </View>
-  
-    )}
-  </View>
-))}
-</ScrollView>
-</View>
     </BottomSheetModalProvider>
   );
 };
@@ -1013,18 +1166,19 @@ const CommunityGames = ({ handleJoinClick }: any) => {
   const scrollViewRef = useRef(null);
   const [isAtEnd, setIsAtEnd] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
-  const[loading,setloading]=useState(false);
-  const handleScroll = (event:any) => {
-   const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-   const isEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
-   if (isEnd && !isAtEnd) {
-     setIsAtEnd(true);
-     // setScrollEnabled(false);
-   } else if (!isEnd && isAtEnd) {
-     setIsAtEnd(false);
-     setScrollEnabled(true);
-   }
- };
+  const [loading, setloading] = useState(false);
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isEnd =
+      layoutMeasurement.width + contentOffset.x >= contentSize.width - 20;
+    if (isEnd && !isAtEnd) {
+      setIsAtEnd(true);
+      // setScrollEnabled(false);
+    } else if (!isEnd && isAtEnd) {
+      setIsAtEnd(false);
+      setScrollEnabled(true);
+    }
+  };
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
@@ -1038,8 +1192,8 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
-      }finally{
-           setloading(false);
+      } finally {
+        setloading(false);
       }
     };
 
@@ -1056,7 +1210,7 @@ const CommunityGames = ({ handleJoinClick }: any) => {
         // console.log("response", response.data.allchalange);
       } catch (Error) {
         console.log(Error);
-      }finally{
+      } finally {
         setloading(false);
       }
     };
@@ -1097,240 +1251,322 @@ const CommunityGames = ({ handleJoinClick }: any) => {
           </View>
         </TouchableOpacity>
       </View>
-      <ScrollView
-        ref={scrollViewRef}
+      {form.length === 0 ? (
+        <Text
+          style={{
+            color: "white",
+            textAlign: "center",
+            marginVertical: 20,
+            fontSize: 13,
+          }}
+        >
+          No community games are currently running.
+        </Text>
+      ) : (
+        <ScrollView
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={scrollEnabled}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
-          // contentContainerStyle={[
-          //   styles.gamesScrollContent,
-          //   form.length <= 4 && {
-          //     alignSelf: "center",
-          //     width: 1400,
-          //     paddingRight: "40%",
-          //     paddingLeft: 0,
-          //   },
-          // ]}
         >
-       {form.map((game) => (
-  <View key={game.id}>
-    {loading ? (
-      <Skeleton 
-      animation="pulse" 
-      style={styles.gameCard} 
-      height={170}
-      width={320}
-      LinearGradientComponent={LinearGradient}
-    />
-    ) : (
-      <Animated.View 
-        entering={FadeInDown.duration(400).delay(200)}
-        style={[
-          styles.gameCard,
-          {
-            shadowColor: "#9d4edd",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: 10,
-          }
-        ]}
-      >
-        <LinearGradient
-          colors={['#2b0f45', '#3b1a63', '#4b2387']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ 
-            borderRadius: 16,
-            overflow: 'hidden',
-            borderLeftWidth: 4,
-            borderLeftColor: game.status === 'Active' ? '#00ff00' : 
-                             game.status === 'Upcoming' ? '#ffaa00' : 
-                             game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-          }}
-        >
-          <Pressable
-            onPress={() => router.push(`/status/${game.id}`)}
-            style={({ pressed }) => [
-              { opacity: pressed ? 0.8 : 1 },
-              { flex: 1 },
-              { padding: 16 }
-            ]}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
-          >
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.gameHeader, { 
-                  fontSize: 18, 
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                  color: '#ffffff'
-                }]}>
-                  {game.name}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="calendar" size={12} color="#bfbfbf" />
-                  <Text style={{
-                    color: "#bfbfbf",
-                    fontSize: 12,
-                    marginLeft: 4
-                  }}>
-                    {game.startdate}
-                  </Text>
-                </View>
-              </View>
-              
-              <View>
-                {joined.some((join) => join.id == game.id) ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 12,
-                      flexDirection: 'row',
-                      alignItems: 'center'
-                    }}>
-                      <MaterialCommunityIcons name="check-circle" size={14} color="#00ff00" />
-                      <Text style={{ 
-                        color: "#ffffff", 
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        marginLeft: 4
-                      }}>
-                        Joined
-                      </Text>
-                    </View>
-                    <View style={{
-                      marginTop: 4,
-                      backgroundColor: game.status === 'Active' ? 'rgba(0, 255, 0, 0.2)' : 
-                                      game.status === 'Upcoming' ? 'rgba(255, 170, 0, 0.2)' : 
-                                      game.status === 'Completed' ? 'rgba(255, 85, 85, 0.2)' : 'rgba(157, 78, 221, 0.2)',
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 8
-                    }}>
-                      <Text style={{
-                        color: game.status === 'Active' ? '#00ff00' : 
-                               game.status === 'Upcoming' ? '#ffaa00' : 
-                               game.status === 'Completed' ? '#ff5555' : '#9d4edd',
-                        fontSize: 11,
-                        fontWeight: 'bold'
-                      }}>
-                        {game.status}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#9d4edd',
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      borderRadius: 12,
+          {form.map((game) => (
+            <View key={game.id}>
+              {loading ? (
+                <Skeleton
+                  animation="pulse"
+                  style={styles.gameCard}
+                  height={170}
+                  width={320}
+                  LinearGradientComponent={LinearGradient}
+                />
+              ) : (
+                <Animated.View
+                  entering={FadeInDown.duration(400).delay(200)}
+                  style={[
+                    styles.gameCard,
+                    {
                       shadowColor: "#9d4edd",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 6,
-                      elevation: 5,
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.5,
+                      shadowRadius: 12,
+                      elevation: 10,
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={["#2b0f45", "#3b1a63", "#4b2387"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      borderLeftWidth: 4,
+                      borderLeftColor:
+                        game.status === "Active"
+                          ? "#00ff00"
+                          : game.status === "Upcoming"
+                          ? "#ffaa00"
+                          : game.status === "Completed"
+                          ? "#ff5555"
+                          : "#9d4edd",
                     }}
-                    onPress={() => {
-                      // // Add haptic feedback if available
-                      // if (ReactNativeHapticFeedback) {
-                      //   ReactNativeHapticFeedback.trigger('impactMedium');
-                      // }
-                      handleJoinClick(game);
-                    }}
-                    activeOpacity={0.7}
                   >
-                    <Text style={{
-                      color: "white",
-                      fontSize: 16,
-                      fontWeight: 'bold'
-                    }}>
-                      Join
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
+                    <Pressable
+                      onPress={() => router.push(`/status/${game.id}`)}
+                      style={({ pressed }) => [
+                        { opacity: pressed ? 0.8 : 1 },
+                        { flex: 1 },
+                        { padding: 16 },
+                      ]}
+                      android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingHorizontal: 10,
+                            paddingVertical: 20,
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.gameHeader,
+                              {
+                                fontSize: 18,
+                                fontWeight: "bold",
+                                marginBottom: 4,
+                                color: "#ffffff",
+                              },
+                            ]}
+                          >
+                            {game.name}
+                          </Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                          >
+                            <MaterialCommunityIcons
+                              name="calendar"
+                              size={12}
+                              color="#bfbfbf"
+                            />
+                            <Text
+                              style={{
+                                color: "#bfbfbf",
+                                fontSize: 12,
+                                marginLeft: 4,
+                              }}
+                            >
+                              {game.startdate}
+                            </Text>
+                          </View>
+                        </View>
 
-            {/* Divider with glow effect */}
-            <View style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginVertical: 16,
-            }}>
-              <LinearGradient
-                colors={['rgba(229, 204, 255, 0.1)', 'rgba(229, 204, 255, 0.6)', 'rgba(229, 204, 255, 0.1)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  width: "100%",
-                  height: 1,
-                }}
-              />
-            </View>
+                        <View>
+                          {joined.some((join) => join.id == game.id) ? (
+                            <View style={{ alignItems: "center" }}>
+                              <View
+                                style={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 6,
+                                  borderRadius: 12,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <MaterialCommunityIcons
+                                  name="check-circle"
+                                  size={14}
+                                  color="#00ff00"
+                                />
+                                <Text
+                                  style={{
+                                    color: "#ffffff",
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    marginLeft: 4,
+                                  }}
+                                >
+                                  Joined
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  marginTop: 4,
+                                  backgroundColor:
+                                    game.status === "Active"
+                                      ? "rgba(0, 255, 0, 0.2)"
+                                      : game.status === "Upcoming"
+                                      ? "rgba(255, 170, 0, 0.2)"
+                                      : game.status === "Completed"
+                                      ? "rgba(255, 85, 85, 0.2)"
+                                      : "rgba(157, 78, 221, 0.2)",
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                  borderRadius: 8,
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    color:
+                                      game.status === "Active"
+                                        ? "#00ff00"
+                                        : game.status === "Upcoming"
+                                        ? "#ffaa00"
+                                        : game.status === "Completed"
+                                        ? "#ff5555"
+                                        : "#9d4edd",
+                                    fontSize: 11,
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {game.status}
+                                </Text>
+                              </View>
+                            </View>
+                          ) : (
+                            <TouchableOpacity
+                              style={{
+                                backgroundColor: "#9d4edd",
+                                paddingHorizontal: 20,
+                                paddingVertical: 10,
+                                borderRadius: 12,
+                                shadowColor: "#9d4edd",
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 6,
+                                elevation: 5,
+                              }}
+                              onPress={() => {
+                                // // Add haptic feedback if available
+                                // if (ReactNativeHapticFeedback) {
+                                //   ReactNativeHapticFeedback.trigger('impactMedium');
+                                // }
+                                handleJoinClick(game);
+                              }}
+                              activeOpacity={0.7}
+                            >
+                              <Text
+                                style={{
+                                  color: "white",
+                                  fontSize: 16,
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                Join
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
 
-            {/* Game Stats Section */}
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingHorizontal: 5,
-            }}>
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="cash" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Entry</Text>
-                <Text style={styles.statValue}>{game.Amount}</Text>
-              </View>
+                      {/* Divider with glow effect */}
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginVertical: 16,
+                        }}
+                      >
+                        <LinearGradient
+                          colors={[
+                            "rgba(229, 204, 255, 0.1)",
+                            "rgba(229, 204, 255, 0.6)",
+                            "rgba(229, 204, 255, 0.1)",
+                          ]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={{
+                            width: "100%",
+                            height: 1,
+                          }}
+                        />
+                      </View>
 
-              {/* Days */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="calendar-range" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Days</Text>
-                <Text style={styles.statValue}>{game.days}</Text>
-              </View>
+                      {/* Game Stats Section */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          paddingHorizontal: 5,
+                        }}
+                      >
+                        <View style={styles.statContainer}>
+                          <View style={styles.statIconContainer}>
+                            <MaterialCommunityIcons
+                              name="cash"
+                              size={16}
+                              color="#9d4edd"
+                            />
+                          </View>
+                          <Text style={styles.statLabel}>Entry</Text>
+                          <Text style={styles.statValue}>{game.Amount}</Text>
+                        </View>
 
-              {/* Steps/Hours */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons 
-                    name={game.types == "Steps" ? "shoe-print" : "clock-outline"} 
-                    size={16} 
-                    color="#9d4edd" 
-                  />
-                </View>
-                <Text style={styles.statLabel}>
-                  {game.types == "Steps" ? "Daily Steps" : "Hours"}
-                </Text>
-                <Text style={styles.statValue}>
-                  {game.types == "Steps" ? game.Dailystep : game.Hours}
-                </Text>
-              </View>
+                        {/* Days */}
+                        <View style={styles.statContainer}>
+                          <View style={styles.statIconContainer}>
+                            <MaterialCommunityIcons
+                              name="calendar-range"
+                              size={16}
+                              color="#9d4edd"
+                            />
+                          </View>
+                          <Text style={styles.statLabel}>Days</Text>
+                          <Text style={styles.statValue}>{game.days}</Text>
+                        </View>
 
-              {/* Players */}
-              <View style={styles.statContainer}>
-                <View style={styles.statIconContainer}>
-                  <MaterialCommunityIcons name="account-group" size={16} color="#9d4edd" />
-                </View>
-                <Text style={styles.statLabel}>Players</Text>
-                <Text style={styles.statValue}>{game.memberqty}</Text>
-              </View>
-            </View>
+                        {/* Steps/Hours */}
+                        <View style={styles.statContainer}>
+                          <View style={styles.statIconContainer}>
+                            <MaterialCommunityIcons
+                              name={
+                                game.types == "Steps"
+                                  ? "shoe-print"
+                                  : "clock-outline"
+                              }
+                              size={16}
+                              color="#9d4edd"
+                            />
+                          </View>
+                          <Text style={styles.statLabel}>
+                            {game.types == "Steps" ? "Daily Steps" : "Hours"}
+                          </Text>
+                          <Text style={styles.statValue}>
+                            {game.types == "Steps"
+                              ? game.Dailystep
+                              : game.Hours}
+                          </Text>
+                        </View>
 
-            {/* Prize indicator */}
-            {/* <View style={{
+                        {/* Players */}
+                        <View style={styles.statContainer}>
+                          <View style={styles.statIconContainer}>
+                            <MaterialCommunityIcons
+                              name="account-group"
+                              size={16}
+                              color="#9d4edd"
+                            />
+                          </View>
+                          <Text style={styles.statLabel}>Players</Text>
+                          <Text style={styles.statValue}>{game.memberqty}</Text>
+                        </View>
+                      </View>
+
+                      {/* Prize indicator */}
+                      {/* <View style={{
               position: 'absolute',
               top: 0,
               right: 0,
@@ -1341,8 +1577,8 @@ const CommunityGames = ({ handleJoinClick }: any) => {
               flexDirection: 'row',
               alignItems: 'center',
             }}> */}
-              {/* <MaterialCommunityIcons name="trophy" size={12} color="#000" /> */}
-              {/* <Text style={{
+                      {/* <MaterialCommunityIcons name="trophy" size={12} color="#000" /> */}
+                      {/* <Text style={{
                 color: "#000",
                 fontSize: 10,
                 fontWeight: 'bold',
@@ -1350,15 +1586,16 @@ const CommunityGames = ({ handleJoinClick }: any) => {
               }}>
                 {game.Totalamount}
               </Text> */}
-            {/* </View> */}
-          </Pressable>
-        </LinearGradient>
-      </Animated.View>
-    )}
-  </View>
-))}
-</ScrollView>
-</View>
+                      {/* </View> */}
+                    </Pressable>
+                  </LinearGradient>
+                </Animated.View>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      )}
+    </View>
   );
 };
 
@@ -1449,86 +1686,86 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 10,
     borderRadius: 18,
-    overflow: 'hidden',
-    paddingLeft:1,
-    paddingHorizontal:7,
+    overflow: "hidden",
+    paddingLeft: 1,
+    paddingHorizontal: 7,
   },
   sleepTargetText: {
     fontSize: 16,
-    color: '#9e9a99',
+    color: "#9e9a99",
     marginLeft: 5,
   },
   sleepVisual: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 10,
   },
   sleepHourBlock: {
     width: 20,
     height: 20,
     borderRadius: 4,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     marginRight: 5,
   },
   sleepHourFilled: {
-    backgroundColor: '#5C6BC0',
+    backgroundColor: "#5C6BC0",
   },
   syncContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   proggressContainer: {
     marginBottom: 25,
   },
   proggressTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9e9a99',
+    fontWeight: "bold",
+    color: "#9e9a99",
     marginBottom: 10,
   },
   header: {
-    marginBottom: 15,
+    marginBottom: 20,
+    alignSelf: "center",
   },
   dateText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   statsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
- 
+
   badgeContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 15,
   },
   badge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: "#e3f2fd",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
     marginRight: 10,
   },
   successBadge: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: "#e8f5e9",
   },
   sleepProgress: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     marginBottom: 10,
   },
   bottomSheetHandle: {
@@ -1555,12 +1792,12 @@ const styles = StyleSheet.create({
     borderColor: "#783887",
   },
   dataValue: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   dataLabel: {
-    color: '#9e9a99',
+    color: "#9e9a99",
     fontSize: 16,
     marginLeft: 5,
   },
@@ -1607,58 +1844,58 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#2196f3',
+    fontWeight: "bold",
+    color: "#2196f3",
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 10,
     marginBottom: 10,
   },
   setpsdiv: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 5,
   },
   steptext: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontWeight: "bold",
+    color: "#4CAF50",
   },
   stepsSeparator: {
-    color: '#9e9a99', 
+    color: "#9e9a99",
     fontSize: 20,
     marginHorizontal: 5,
   },
   texttarget: {
     fontSize: 20,
-    color: '#9e9a99',
+    color: "#9e9a99",
   },
   stepsLabel: {
     marginLeft: 5,
-    color: '#9e9a99',
+    color: "#9e9a99",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   sleepContainer: {
     marginBottom: 25,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   sleepTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9e9a99',
+    fontWeight: "bold",
+    color: "#9e9a99",
     marginBottom: 10,
   },
   gameHeader: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statContainer: {
-    justifyContent: "center", 
+    justifyContent: "center",
     alignItems: "center",
     minWidth: 70,
   },
@@ -1666,23 +1903,23 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(157, 78, 221, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(157, 78, 221, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 4,
   },
   statLabel: {
-    color: "#bfbfbf", 
+    color: "#bfbfbf",
     fontSize: 12,
     marginBottom: 2,
   },
   statValue: {
-    color: "white", 
+    color: "white",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   joinbutton: {
-    backgroundColor: '#9d4edd',
+    backgroundColor: "#9d4edd",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 12,
@@ -1758,8 +1995,8 @@ const styles = StyleSheet.create({
   // },
   sleepText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#5C6BC0',
+    fontWeight: "bold",
+    color: "#5C6BC0",
   },
   slideButtonTitleContainer: {
     backgroundColor: "transparent",
@@ -1804,24 +2041,24 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 15,
   },
-    sleepImage: {
+  sleepImage: {
     width: 120,
     height: 120,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   sleepInfo: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   sleepTime: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
   },
   sleepQuality: {
-    color: '#2196F3',
+    color: "#2196F3",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 
   divider: {
@@ -1835,13 +2072,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
-  
+
   gameDetailItem: {
     flex: 1,
     alignItems: "center",
   },
   scrollContent: {
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   gameDetailLabel: {
     color: "#bfbfbf",
@@ -1849,55 +2086,55 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   cardTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 10,
   },
   progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   progressBarBackground: {
     flex: 1,
     height: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBarFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 5,
   },
   progressText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginLeft: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   stepsCount: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
     marginTop: 5,
   },
   stepsText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   // stepsLabel: {
   //   color: '#9e9a99',
@@ -1905,13 +2142,13 @@ const styles = StyleSheet.create({
   //   marginLeft: 5,
   // },
   achievementBadge: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    backgroundColor: "rgba(76, 175, 80, 0.2)",
     borderRadius: 20,
     padding: 10,
     marginTop: 15,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.5)',
+    borderColor: "rgba(76, 175, 80, 0.5)",
   },
   gameDetailValue: {
     color: "white",
@@ -2005,16 +2242,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  stepbox:{
-    flex:1,
-    borderRadius:10,
-    padding:10,
-    paddingRight:94,
-    height:132,
-    paddingBottom:24,
-    paddingLeft:94,
-    paddingTop:24,
-    width:342
+  stepbox: {
+    flex: 1,
+    borderRadius: 10,
+    padding: 10,
+    paddingRight: 94,
+    height: 132,
+    paddingBottom: 24,
+    paddingLeft: 94,
+    paddingTop: 24,
+    width: 342,
   },
   gameDetailsContainer: {
     backgroundColor: "#1a0033",
@@ -2025,21 +2262,21 @@ const styles = StyleSheet.create({
   syncText: {
     fontSize: 15,
     marginBottom: 5,
-    color: '#9e9a99',
+    color: "#9e9a99",
   },
   syncHint: {
-    color: '#9e9a99',
+    color: "#9e9a99",
     fontSize: 12,
     marginBottom: 15,
   },
   dataRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "baseline",
+    // marginBottom: 5,
   },
   sleepContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
   },
   // steptext: {
