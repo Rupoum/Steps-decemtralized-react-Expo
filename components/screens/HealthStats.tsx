@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -9,84 +9,151 @@ import {
   SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { PieChart } from "react-native-svg-charts";
+import axios from "axios";
+import { BACKEND_URL } from "@/Backendurl";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const screenWidth = Dimensions.get("window").width;
 
-const generateSleepData = (month) => {
+const getSleepDataFromApi = (sleepData: any[], month: number) => {
   const daysInMonth = new Date(2025, month + 1, 0).getDate();
   const data = [];
+  
   for (let i = 1; i <= daysInMonth; i++) {
-    const hours = 5 + Math.random() * 4; // 5-9 hours
-    const quality =
-      Math.random() > 0.7 ? "Deep" : Math.random() > 0.4 ? "Normal" : "Light";
-
-    // Generate realistic sleep stage distribution
-    let deepHours, lightHours, normalHours;
-
-    if (quality === "Deep") {
-      deepHours = hours * 0.6; // 60% deep sleep
-      normalHours = hours * 0.3; // 30% normal
-      lightHours = hours * 0.1; // 10% light
-    } else if (quality === "Normal") {
-      deepHours = hours * 0.3;
-      normalHours = hours * 0.5;
-      lightHours = hours * 0.2;
-    } else {
-      deepHours = hours * 0.1;
-      normalHours = hours * 0.3;
-      lightHours = hours * 0.6;
-    }
+    const record = sleepData.find((entry: any) => {
+      const date = new Date(entry.day);
+      return date.getDate() === i && date.getMonth() === month;
+    });
 
     data.push({
       day: i,
-      hours: parseFloat(hours.toFixed(1)),
-      quality,
-      deepHours: parseFloat(deepHours.toFixed(1)),
-      lightHours: parseFloat(lightHours.toFixed(1)),
-      normalHours: parseFloat(normalHours.toFixed(1)),
+      Hours: record ? parseFloat(record.Hours) : 0,
+      hasData: !!record,
     });
   }
   return data;
 };
 
-const generateStepsData = (month) => {
+const getStepsDataFromJson = (realUserSteps: any[], month: number) => {
   const daysInMonth = new Date(2025, month + 1, 0).getDate();
   const data = [];
+  
   for (let i = 1; i <= daysInMonth; i++) {
+    const record = realUserSteps.find((entry: any) => {
+      const date = new Date(entry.day);
+      return date.getDate() === i && date.getMonth() === month;
+    });
+
     data.push({
       day: i,
-      steps: Math.floor(Math.random() * 8000) + 2000, // 2000-10000 steps
+      steps: record ? parseInt(record.steps) : 0,
     });
   }
+
   return data;
 };
 
 const HealthStats = () => {
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
+  
+  const [realUserSteps, setStepData] = useState<any[]>([]);
+  const [sleepData, setSleepData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        
+        const userid = await AsyncStorage.getItem("userid");
+        
+        // Fetch both step and sleep data in parallel
+        const [stepsResponse, sleepResponse] = await Promise.all([
+          axios.get(`${BACKEND_URL}/step/daily/${userid}`),
+          axios.get(`${BACKEND_URL}/sleep/daily/${userid}`)
+        ]);
+        
+        setStepData(stepsResponse.data.user);
+        setSleepData(sleepResponse.data.user);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  // Get all months that have either step or sleep data
+  const monthsWithData = [...new Set([
+    ...realUserSteps.map(entry => new Date(entry.day).getMonth()),
+    ...sleepData.map(entry => new Date(entry.day).getMonth())
+  ])].sort((a, b) => a - b);
+  
   const currentMonth = new Date().getMonth();
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(
+    monthsWithData.includes(currentMonth) ? currentMonth : monthsWithData[0] || 0
+  );
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
-  const sleepData = generateSleepData(selectedMonth);
-  const stepsData = generateStepsData(selectedMonth);
+  const stepsData = getStepsDataFromJson(realUserSteps, selectedMonth);
+  const processedSleepData = getSleepDataFromApi(sleepData, selectedMonth);
 
-  const handleBarPress = (day) => {
-    setSelectedDay((prev) => (prev === day ? null : day));
+  const handleBarPress = (day: number) => {
+    if (stepsData[day - 1].steps > 0) {
+      setSelectedDay((prev) => (prev === day ? null : day));
+    }
   };
+  const handleBarSleepPress = (day: number) => {
+    if (processedSleepData[day - 1].Hours > 0) {
+      setSelectedDay((prev) => (prev === day ? null : day));
+    }
+  };
+  if (isLoading) {
+    return (
+      <LinearGradient
+        colors={["#1a0033", "#4b0082", "#8a2be2"]}
+        style={styles.container}
+      >
+        <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: 'white' }}>Loading data...</Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <LinearGradient
+        colors={["#1a0033", "#4b0082", "#8a2be2"]}
+        style={styles.container}
+      >
+        <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: 'white' }}>Error loading data. Please try again.</Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
+  if (realUserSteps.length === 0 && sleepData.length === 0) {
+    return (
+      <LinearGradient
+        colors={["#1a0033", "#4b0082", "#8a2be2"]}
+        style={styles.container}
+      >
+        <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: 'white' }}>No health data available</Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -102,26 +169,28 @@ const HealthStats = () => {
             style={styles.monthSelector}
           >
             {months.map((month, index) => (
-              <TouchableOpacity
-                key={month}
-                style={[
-                  styles.monthButton,
-                  selectedMonth === index && styles.selectedMonth,
-                ]}
-                onPress={() => {
-                  setSelectedMonth(index);
-                  setSelectedDay(null);
-                }}
-              >
-                <Text
+              monthsWithData.includes(index) && (
+                <TouchableOpacity
+                  key={month}
                   style={[
-                    styles.monthText,
-                    selectedMonth === index && styles.selectedMonthText,
+                    styles.monthButton,
+                    selectedMonth === index && styles.selectedMonth,
                   ]}
+                  onPress={() => {
+                    setSelectedMonth(index);
+                    setSelectedDay(null);
+                  }}
                 >
-                  {month}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.monthText,
+                      selectedMonth === index && styles.selectedMonthText,
+                    ]}
+                  >
+                    {month}
+                  </Text>
+                </TouchableOpacity>
+              )
             ))}
           </ScrollView>
 
@@ -129,69 +198,6 @@ const HealthStats = () => {
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Health Statistics for</Text>
             <Text style={styles.monthTitle}>{months[selectedMonth]} 2025</Text>
-          </View>
-
-          {/* Sleep Chart */}
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Sleep Hours</Text>
-            <View style={styles.chartLegend}>
-              <View style={styles.yAxis}>
-                {[10, 8, 6, 4, 2, 0].map((val) => (
-                  <Text key={val} style={styles.yAxisLabel}>
-                    {val}h
-                  </Text>
-                ))}
-              </View>
-              <View style={styles.chartContent}>
-                <View style={styles.gridLines}>
-                  {[0, 2, 4, 6, 8, 10].map((val) => (
-                    <View key={val} style={styles.gridLine} />
-                  ))}
-                </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.barContainer}>
-                    {sleepData.map((item) => {
-                      const barHeight = (item.hours / 10) * 180;
-                      const isSelected = selectedDay === item.day;
-                      return (
-                        <TouchableOpacity
-                          key={item.day}
-                          style={styles.barWrapper}
-                          onPress={() => handleBarPress(item.day)}
-                        >
-                          <View
-                            style={[
-                              styles.sleepBar,
-                              {
-                                height: barHeight,
-                                backgroundColor:
-                                  item.quality === "Deep"
-                                    ? "#4CAF50"
-                                    : item.quality === "Normal"
-                                    ? "#FFC107"
-                                    : "#F44336",
-                              },
-                              isSelected && styles.selectedBar,
-                            ]}
-                          />
-                          <Text style={styles.xAxisLabel}>{item.day}</Text>
-                          {isSelected && (
-                            <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>
-                                Day {item.day}: {item.hours}h
-                              </Text>
-                              <Text style={styles.tooltipText}>
-                                Quality: {item.quality}
-                              </Text>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </ScrollView>
-              </View>
-            </View>
           </View>
 
           {/* Steps Chart */}
@@ -214,31 +220,44 @@ const HealthStats = () => {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.barContainer}>
                     {stepsData.map((item) => {
-                      const barHeight = (item.steps / 10000) * 180;
+                      const hasData = item.steps > 0;
+                      const barHeight = hasData ? (item.steps / 10000) * 180 : 5;
                       const isSelected = selectedDay === item.day;
-                      let barColor = "#F44336";
-                      if (item.steps > 8000) barColor = "#4CAF50";
-                      else if (item.steps > 5000) barColor = "#FFC107";
+                      let barColor = hasData ? "#F44336" : "rgba(255, 255, 255, 0.1)";
+                      
+                      if (hasData) {
+                        if (item.steps > 8000) barColor = "#4CAF50";
+                        else if (item.steps > 5000) barColor = "#FFC107";
+                      }
 
                       return (
                         <TouchableOpacity
                           key={item.day}
                           style={styles.barWrapper}
                           onPress={() => handleBarPress(item.day)}
+                          disabled={!hasData}
                         >
                           <View
                             style={[
                               styles.stepsBar,
-                              { height: barHeight, backgroundColor: barColor },
+                              { 
+                                height: barHeight, 
+                                backgroundColor: barColor,
+                                opacity: hasData ? 1 : 0.5,
+                              },
                               isSelected && styles.selectedBar,
                             ]}
                           />
-                          <Text style={styles.xAxisLabel}>{item.day}</Text>
-                          {isSelected && (
+                          <Text style={[
+                            styles.xAxisLabel,
+                            !hasData && { color: "rgba(255, 255, 255, 0.3)" }
+                          ]}>
+                            {item.day}
+                          </Text>
+                          {isSelected && hasData && (
                             <View style={styles.tooltip}>
                               <Text style={styles.tooltipText}>
-                                Day {item.day}: {item.steps.toLocaleString()}{" "}
-                                steps
+                                Day {item.day}: {item.steps.toLocaleString()} steps
                               </Text>
                             </View>
                           )}
@@ -251,90 +270,83 @@ const HealthStats = () => {
             </View>
           </View>
 
-          {/* Sleep Stage Pie Chart for Selected Day */}
-          {selectedDay && (
+          {/* Sleep Hours Chart */}
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Sleep Hours</Text>
+            <View style={styles.chartLegend}>
+              <View style={styles.yAxis}>
+                {[10, 8, 6, 4, 2, 0].map((val) => (
+                  <Text key={val} style={styles.yAxisLabel}>
+                    {val}h
+                  </Text>
+                ))}
+              </View>
+              <View style={styles.chartContent}>
+                <View style={styles.gridLines}>
+                  {[0, 2, 4, 6, 8, 10].map((val) => (
+                    <View key={val} style={styles.gridLine} />
+                  ))}
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.barContainer}>
+                    {processedSleepData.map((item) => {
+                      const hasData = item.hasData;
+                      const barHeight = hasData ? (item.Hours / 10) * 180 : 5;
+                      const isSelected = selectedDay === item.day;
+                      const barColor = hasData ? "#9C89FF" : "rgba(255, 255, 255, 0.1)";
+
+                      return (
+                        <TouchableOpacity
+                          key={item.day}
+                          style={styles.barWrapper}
+                          onPress={() => handleBarSleepPress(item.day)}
+                          disabled={!hasData}
+                        >
+                          <View
+                            style={[
+                              styles.sleepBar,
+                              { 
+                                height: barHeight, 
+                                backgroundColor: barColor,
+                                opacity: hasData ? 1 : 0.5,
+                              },
+                              isSelected && styles.selectedBar,
+                            ]}
+                          />
+                          <Text style={[
+                            styles.xAxisLabel,
+                            !hasData && { color: "rgba(255, 255, 255, 0.3)" }
+                          ]}>
+                            {item.day}
+                          </Text>
+                          {isSelected && hasData && (
+                            <View style={styles.tooltip}>
+                              <Text style={styles.tooltipText}>
+                                Day {item.day}: {item.Hours}h sleep
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              </View>
+            </View>
+          </View>
+
+          {/* Selected Day Summary */}
+          {selectedDay && stepsData[selectedDay - 1]?.steps > 0 && (
             <View style={styles.chartContainer}>
               <Text style={styles.chartTitle}>
-                Sleep Stages - Day {selectedDay}
+                Summary - Day {selectedDay}
               </Text>
-              <View style={{ height: 250, alignItems: "center" }}>
-                <PieChart
-                  style={{ height: 200, width: 200 }}
-                  data={[
-                    {
-                      key: "Deep",
-                      value: sleepData[selectedDay - 1].deepHours,
-                      svg: { fill: "#4CAF50" },
-                      arc: { outerRadius: "100%", padAngle: 0.02 },
-                    },
-                    {
-                      key: "Normal",
-                      value: sleepData[selectedDay - 1].normalHours,
-                      svg: { fill: "#FFC107" },
-                      arc: { outerRadius: "100%", padAngle: 0.02 },
-                    },
-                    {
-                      key: "Light",
-                      value: sleepData[selectedDay - 1].lightHours,
-                      svg: { fill: "#F44336" },
-                      arc: { outerRadius: "100%", padAngle: 0.02 },
-                    },
-                  ]}
-                  innerRadius={40}
-                  outerRadius={80}
-                  padAngle={0.02}
-                />
-                <View style={styles.legendContainer}>
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendColor,
-                        { backgroundColor: "#4CAF50" },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>
-                      Deep: {sleepData[selectedDay - 1].deepHours}h
-                    </Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendColor,
-                        { backgroundColor: "#FFC107" },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>
-                      Normal: {sleepData[selectedDay - 1].normalHours}h
-                    </Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendColor,
-                        { backgroundColor: "#F44336" },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>
-                      Light: {sleepData[selectedDay - 1].lightHours}h
-                    </Text>
-                  </View>
-                </View>
-              </View>
               <View style={{ marginTop: 10, alignItems: "center" }}>
                 <Text style={styles.totalSleepText}>
-                  Total Sleep: {sleepData[selectedDay - 1].hours} hours
+                  Steps: {stepsData[selectedDay - 1].steps.toLocaleString()}
                 </Text>
-                <Text
-                  style={[
-                    styles.qualityText,
-                    sleepData[selectedDay - 1].quality === "Deep"
-                      ? { color: "#4CAF50" }
-                      : sleepData[selectedDay - 1].quality === "Normal"
-                      ? { color: "#FFC107" }
-                      : { color: "#F44336" },
-                  ]}
-                >
-                  Overall Quality: {sleepData[selectedDay - 1].quality}
+                <Text style={styles.totalSleepText}>
+                  Sleep: {processedSleepData[selectedDay - 1]?.Hours || 0} Hours
                 </Text>
               </View>
             </View>
@@ -343,7 +355,9 @@ const HealthStats = () => {
       </SafeAreaView>
     </LinearGradient>
   );
-};
+}
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

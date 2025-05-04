@@ -27,6 +27,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { BACKEND_URL } from "@/Backendurl";
+import AnimatedStarsBackground from "../utils/background";
 
 const CreateSleepSccreen = () => {
   const [form, setform] = useState({
@@ -266,10 +267,9 @@ const CreateSleepSccreen = () => {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <LinearGradient
-        colors={["#1a0033", "#4b0082", "#8a2be2"]}
-        style={styles.container}
-      >
+     <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+      <AnimatedStarsBackground />
+
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.safeArea}>
             <View>
@@ -628,6 +628,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#4CAF50",
     marginTop: 4,
+  },
+  gradient: {
+    flex: 1,
   },
   separator: {
     height: 1,

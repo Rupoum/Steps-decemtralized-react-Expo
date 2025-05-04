@@ -39,6 +39,7 @@ import SlideButton from "rn-slide-button";
 import axios from "axios";
 import { BACKEND_URL } from "@/Backendurl";
 import { router } from "expo-router";
+import AnimatedStarsBackground from "../utils/background";
 
 const TransactionLoader = ({
   loading,
@@ -376,10 +377,8 @@ const Wallet = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <LinearGradient
-            colors={["#1a0033", "#4b0082", "#290d44"]}
-            style={styles.gradient}
-          >
+        <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+      <AnimatedStarsBackground />
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Wallet</Text>
               {/* <TouchableOpacity style={styles.settingsButton}>

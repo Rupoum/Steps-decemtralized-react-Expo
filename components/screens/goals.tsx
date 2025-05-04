@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Animated, Vibration, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 import { BACKEND_URL } from '@/Backendurl';
 import { AsyncLocalStorage } from 'async_hooks';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { BottomSheet } from '@rneui/base';
+import SlideButton from "rn-slide-button";
+import { router } from 'expo-router';
 interface Stake {
   id: string;
   amount: number;
@@ -19,7 +21,6 @@ interface Stake {
   misseday: number;
   Status: string;
 }
-
 export default function StakeStatus() {
   const [stake, setStake] = useState<Stake | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,10 +36,29 @@ stake();
     setLoading(false);
   }, []); 
    const destake=async()=>{
+    try{
+      setLoading(true);
       const response=await axios.post(`${BACKEND_URL}/destake`,{id:stake?.id})
+     console.log(response);
+     router.push("/(nonav)/profile")
+    }
+      catch(e){
+        console.log(e);
+      }finally{
+        setLoading(false)
+      }
 
    }
+  
+   const [isVisible, setIsVisible] = useState(false);
 
+   const openBottomSheet = () => {
+     setIsVisible(true);
+   };
+ 
+   const closeBottomSheet = () => {
+     setIsVisible(false);
+   };  
   const calculateDaysSinceStart = (startDate: string) => {
     const start = new Date(startDate);
     const today = new Date();
@@ -60,7 +80,6 @@ stake();
       </LinearGradient>
     );
   }
-
   if (!stake) {
     return (
       <LinearGradient
@@ -77,7 +96,7 @@ stake();
     );
   }
 
-  const daysSinceStart = calculateDaysSinceStart(stake.startdate);
+
 
   return (
     <LinearGradient
@@ -85,7 +104,7 @@ stake();
       style={styles.container}
     >
       <Text style={styles.title}>Your Sleep Challenge</Text>
-
+       
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.statusIndicator}>
@@ -159,7 +178,6 @@ stake();
             </View>
           )}
         </View>
-
         <View style={styles.cardFooter}>
           <Text style={styles.footerText}>
             Last updated: {new Date(stake.Updateddate).toLocaleDateString()}
@@ -167,15 +185,44 @@ stake();
           <Text style={styles.footerText}>
             Potential withdrawal: {stake.WithdrawAmount} SOL
           </Text>
+          {loading?<ActivityIndicator  size="large"></ActivityIndicator>:<View><SlideButton title="Slide To Destake" onSlideEnd={destake}/></View>}
+          
         </View>
-        <TouchableOpacity onPress={destake}>
-            <Text>Destake</Text>
-         
-        </TouchableOpacity>
+        <View style={styles.container}>
+      
+
+      {isVisible && (
+          // <BottomSheetView>
+          <BottomSheet>
+          <View>
+            <View style={{ paddingHorizontal: 10 }}>
+              <View style={styles.gameDetailsContainer}>
+                <Text style={styles.bottomSheetTitle}>You confi</Text>
+                <Text style={{ color: "white" }}>You Pay:</Text> 
+                <SlideButton
+            title="Slide To Confirm"
+            onSlideEnd={() => console.log("Confirmed!")}
+            height={50} // Optional but recommended
+          />
+              </View>
+            </View>
+            <TouchableOpacity onPress={closeBottomSheet}>
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Close
+              </Text>
+              
+            </TouchableOpacity>
+          </View>
+          </BottomSheet>
+            // </BottomSheetView>
+            //         </BottomSheetModal>
+      )}
+    </View>
       </View>
     </LinearGradient>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -215,6 +262,19 @@ const styles = StyleSheet.create({
     padding: 16,
     position: 'relative',
   },
+  gameDetailsContainer: {
+    backgroundColor: "#1a0033",
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  bottomSheetTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginLeft: 20,
+    marginBottom: 15,
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -234,6 +294,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(120, 56, 135, 0.5)',
   },
+  BottomSheetBackground: {
+    flex: 1,
+    backgroundColor: "#7E3887",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -242,6 +308,19 @@ const styles = StyleSheet.create({
   label: {
     color: '#D1D5DB',
     fontSize: 14,
+  },
+  signUpButton: {
+    backgroundColor: "#8a2be2",
+    borderRadius: 5,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  signUpButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   value: {
     color: 'white',

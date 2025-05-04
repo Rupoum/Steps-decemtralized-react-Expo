@@ -51,7 +51,7 @@ export default function RootLayout() {
         options={{ title: "Achievments" }}
       />
       <Stack.Screen name="(auth)/login" options={{ title: "Login" }} />
-      <Stack.Screen name="(auth)/register" options={{ title: "Register" }} />
+      <Stack.Screen name="(auth)/singup" options={{ title: "Register" }} />
     </Stack>
   );
 }
