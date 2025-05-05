@@ -88,19 +88,6 @@ const BADGES = [
     },
   },
   {
-    id: 8,
-    days: 180,
-    description: "Consistent sleep warrior",
-    icon: "shield",
-    color: "#3a0066",
-    tier: "Platinum",
-    theme: {
-      background: ["#3a0066", "#1a0033"],
-      icon: "shield",
-      name: "Shield",
-    },
-  },
-  {
     id: 7,
     days: 90,
     description: "Sleep transformation complete!",
@@ -113,38 +100,52 @@ const BADGES = [
       name: "Crown",
     },
   },
+  {
+    id: 8,
+    days: 180,
+    description: "Consistent sleep warrior",
+    icon: "shield",
+    color: "#3a0066",
+    tier: "Platinum",
+    theme: {
+      background: ["#3a0066", "#1a0033"],
+      icon: "shield",
+      name: "Shield",
+    },
+  },
+  
 ];
 
 // Generate mock sleep data for the calendar
-const generateMockSleepData = () => {
-  const today = new Date();
-  const data = {};
-  for (let i = 60; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(today.getDate() - i);
-    const dateStr = date.toISOString().split("T")[0];
-    if (i <= 21) {
-      data[dateStr] = {
-        success: true,
-        hours: 7 + Math.random() * 1.5,
-      };
-    } else if (i % 5 === 0 || i % 7 === 0) {
-      // Some missed days
-      data[dateStr] = {
-        success: false,
-        hours: 4 + Math.random() * 2,
-      };
-    } else {
-      // Other days successful
-      data[dateStr] = {
-        success: true,
-        hours: 7 + Math.random() * 1.5,
-      };
-    }
-  }
+// const generateMockSleepData = () => {
+//   const today = new Date();
+//   const data = {};
+//   for (let i = 60; i >= 0; i--) {
+//     const date = new Date();
+//     date.setDate(today.getDate() - i);
+//     const dateStr = date.toISOString().split("T")[0];
+//     if (i <= 21) {
+//       data[dateStr] = {
+//         success: true,
+//         hours: 7 + Math.random() * 1.5,
+//       };
+//     } else if (i % 5 === 0 || i % 7 === 0) {
+//       // Some missed days
+//       data[dateStr] = {
+//         success: false,
+//         hours: 4 + Math.random() * 2,
+//       };
+//     } else {
+//       // Other days successful
+//       data[dateStr] = {
+//         success: true,
+//         hours: 7 + Math.random() * 1.5,
+//       };
+//     }
+//   }
 
-  return data;
-};
+//   return data;
+// };
 const getDaysInMonth = (year:any, month:any) => {
   return new Date(year, month + 1, 0).getDate();
 };
@@ -181,7 +182,6 @@ const processApiDataToCalendar = (apiData: any) => {
     date.setDate(startDate.getDate() + i);
     const dateStr = date.toISOString().split('T')[0];
 
-    // Default to not achieved
     sleepData[dateStr] = {
       success: false,
       hours: 0
@@ -193,25 +193,24 @@ const processApiDataToCalendar = (apiData: any) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + dayIndex);
     const dateStr = date.toISOString().split('T')[0];
-    
     sleepData[dateStr] = {
       success: true,
       hours: parseFloat(apiData.Hours.replace('h', '')) || 7 // Default to 7 if parsing fails
     };
   });
-
-  // Mark missed days from NotAchieved array
   apiData.NotAchieved.forEach((dayIndex: number) => {
+    console.log(dayIndex);
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + dayIndex);
+    console.log(date);
     const dateStr = date.toISOString().split('T')[0];
-    
+    console.log(dateStr);
     sleepData[dateStr] = {
       success: false,
       hours: 0
     };
   });
-
+   console.log(sleepData);
   return sleepData;
 };
 
@@ -274,8 +273,6 @@ const SleepCalendar = ({
 
   // Calculate days from previous month to show
   const daysFromPrevMonth = firstDayOfMonth;
-
-  // Calculate total rows needed (including days from prev/next month)
   const totalDays = daysFromPrevMonth + daysInMonth;
   const rows = Math.ceil(totalDays / 7);
 
@@ -292,7 +289,6 @@ const SleepCalendar = ({
       const day = daysInPrevMonth - daysFromPrevMonth + i + 1;
       const date = new Date(prevMonthYear, prevMonth, day);
       const dateStr = date.toISOString().split("T")[0];
-
       days.push({
         day,
         month: prevMonth,
@@ -302,6 +298,7 @@ const SleepCalendar = ({
         data: sleepData[dateStr],
       });
     }
+    console.log("days",days);
 
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
@@ -322,7 +319,7 @@ const SleepCalendar = ({
         isToday,
         data: sleepData[dateStr],
       });
-    }
+    }console.log("dayssss",days);
 
     // Next month days to fill the last row
     const nextMonth = month === 11 ? 0 : month + 1;
@@ -342,7 +339,7 @@ const SleepCalendar = ({
         data: sleepData[dateStr],
       });
     }
-
+     console.log(days);
     return days;
   };
 
@@ -363,16 +360,15 @@ const SleepCalendar = ({
     );
   };
 
-  // Render calendar grid
   const renderCalendarGrid = () => {
     const rows = [];
     const days = [...calendarDays];
-
+  
     // Create rows of 7 days
     while (days.length) {
       rows.push(days.splice(0, 7));
     }
-
+  
     return rows.map((row, rowIndex) => (
       <View key={`row-${rowIndex}`} style={styles.calendarRow}>
         {row.map((day, dayIndex) => {
@@ -381,10 +377,15 @@ const SleepCalendar = ({
             selectedDay.day === day.day &&
             selectedDay.month === day.month &&
             selectedDay.year === day.year;
-
-          const isSuccess = day.data && day.data.success;
-          const isMissed = day.data && !day.data.success;
-
+  
+          // Get the next day's data to show on current day
+          const nextDay = new Date(day.year, day.month, day.day + 1);
+          const nextDayStr = nextDay.toISOString().split('T')[0];
+          const nextDayData = sleepData[nextDayStr];
+          
+          const isSuccess = nextDayData ? nextDayData.success : false;
+          const isMissed = nextDayData ? !nextDayData.success : false;
+  
           return (
             <TouchableOpacity
               key={`day-${rowIndex}-${dayIndex}`}
@@ -422,22 +423,16 @@ const SleepCalendar = ({
                 <Text
                   style={[
                     styles.calendarDayText,
-                    !day.isCurrentMonth &&
-                      styles.calendarDayTextNotCurrentMonth,
-                    (isSuccess || day.isToday || isMissed) &&
-                      styles.calendarDayTextHighlight,
+                    !day.isCurrentMonth && styles.calendarDayTextNotCurrentMonth,
+                    (isSuccess || day.isToday || isMissed) && styles.calendarDayTextHighlight,
                   ]}
                 >
                   {day.day}
                 </Text>
-                {day.data && day.isCurrentMonth && (
+                {nextDayData && day.isCurrentMonth && (
                   <View style={styles.calendarDayIndicator}>
                     {isSuccess ? (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={12}
-                        color="#fff"
-                      />
+                      <Ionicons name="checkmark-circle" size={12} color="#fff" />
                     ) : (
                       <Ionicons name="close-circle" size={12} color="#fff" />
                     )}
@@ -971,7 +966,7 @@ export default function AchievementsScreen() {
 
   useEffect(() => {
     // Generate mock sleep data
-    setSleepData(generateMockSleepData());
+    // setSleepData(generateMockSleepData());
 
     // Simple fade-in for badges
     badgeAnimations.forEach((anim, index) => {

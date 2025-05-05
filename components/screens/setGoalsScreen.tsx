@@ -227,13 +227,12 @@ const AnimatedCoin = ({ value }) => {
   )
 }
 
-// Transaction loader with animations
-const TransactionLoader = ({ loading, error, success, amount, onRetry, onClose }) => {
+
+const TransactionLoader = ({ loading, error, success, amount, onRetry, onClose }:any) => {
   const spinValue = useRef(new Animated.Value(0)).current
   const scaleValue = useRef(new Animated.Value(0)).current
   const successOpacity = useRef(new Animated.Value(0)).current
   const successScale = useRef(new Animated.Value(0.5)).current
-
   useEffect(() => {
     if (loading) {
       Animated.loop(
@@ -271,10 +270,9 @@ const TransactionLoader = ({ loading, error, success, amount, onRetry, onClose }
           useNativeDriver: true,
         }),
       ]).start()
-
-      // Navigate after delay
       setTimeout(() => {
         router.push("/(nonav)/profile")
+
       }, 2000)
     }
   }, [loading, success])
@@ -379,7 +377,7 @@ const SetGoalsScreen = () => {
         const userid = await AsyncStorage.getItem("userid")
         const stake = await axios.get(`${BACKEND_URL}/getstake/${userid}`)
         if (stake.data.stake[0]?.Status === "CurrentlyRunning") {
-          router.replace("/(nonav)/goal")
+          router.push("/(nonav)/goal")
           setStaked(true)
         } else {
           setStaked(false)
@@ -495,6 +493,7 @@ const SetGoalsScreen = () => {
         setSuccess(true);
         ToastAndroid.show("Added to the contest", ToastAndroid.SHORT);
         router.push("/(nonav)/profile")
+
       }
     } catch (e: any) {
       setError(e);

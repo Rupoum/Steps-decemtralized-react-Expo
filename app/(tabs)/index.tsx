@@ -134,9 +134,10 @@ const TransactionLoader = ({
 
 const App = () => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["50%", "75%"], []);
   const [selectedGame, setSelectedGame] = useState<GAme>();
   const connection = new Connection("https://api.devnet.solana.com");
-  const snapPoints = useMemo(() => ["50%", "75%"], []);
+
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const handleJoinClick = useCallback((game: any) => {
     console.log("Join clicked for game:", game.title);
@@ -178,8 +179,6 @@ const App = () => {
         console.error("Error exchanging code for tokens:", error);
       }
     };
-
-    // Linking.getInitialURL().then(handleRedirect);
     Linking.addEventListener("url", ({ url }) => handleRedirect(url));
     // handleRedirect();
   },[loading]);
@@ -830,7 +829,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             : "#9d4edd",
                       }}
                     >
-                      <Pressable
+                      {/* <Pressable
                         onPress={() => router.push(`/status/${game.id}`)}
                         style={({ pressed }) => [
                           { opacity: pressed ? 0.8 : 1 },
@@ -838,7 +837,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                           // { padding: 16 },
                         ]}
                         android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-                      >
+                      > */}
                         {/* Header Section */}
                         <View
                           style={{
@@ -1010,8 +1009,6 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             )}
                           </View>
                         </View>
-
-                        {/* Divider with glow effect */}
                         <View
                           style={{
                             justifyContent: "center",
@@ -1033,8 +1030,6 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             }}
                           />
                         </View>
-
-                        {/* Game Stats Section */}
                         <View
                           style={{
                             flexDirection: "row",
@@ -1137,7 +1132,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             {game.Totalamount}
                           </Text>
                         </View>
-                      </Pressable>
+                      {/* </Pressable> */}
                     </LinearGradient>
                   </Animated.View>
                 </View>
