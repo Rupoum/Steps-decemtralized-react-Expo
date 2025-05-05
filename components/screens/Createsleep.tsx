@@ -203,7 +203,7 @@ const CreateSleepSccreen = () => {
           Amount: form.Amount,
           Digital_Currency: "sol",
           days: daysDiff,
-          types: "Sleep",
+          // types: "Sleep",
           startdate: form.startdate,
           enddate: form.enddate,
           userid: await AsyncStorage.getItem("userid"),
@@ -211,8 +211,9 @@ const CreateSleepSccreen = () => {
         }
       );
       // Alert.alert("Success", "Game Created Successfully");
-      router.push("/(tabs)");
       console.log("Signup response:", response.data);
+      router.push("/(tabs)");
+      ToastAndroid.show("Game created sucessfully", ToastAndroid.LONG);
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err);

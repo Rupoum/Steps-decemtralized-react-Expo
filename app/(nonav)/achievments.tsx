@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, View, Text } from "react-native";
+import { Alert, StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const Achievments = () => {
@@ -48,7 +48,9 @@ const Achievments = () => {
     return (
       <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
          <AnimatedStarsBackground />
+        
       <View style={styles.container}>
+      <ActivityIndicator size={"large"}></ActivityIndicator>
         <Text>Loading...</Text>
       </View>
       </LinearGradient>

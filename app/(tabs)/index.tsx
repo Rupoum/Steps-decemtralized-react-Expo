@@ -58,6 +58,7 @@ import { color, fonts, Icon, Slider } from "@rneui/base";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FadeInDown } from "react-native-reanimated";
 import AnimatedStarsBackground from "@/components/utils/background";
+import { url } from "inspector";
 interface GAme {
   Amount: number;
   id: string;
@@ -136,13 +137,20 @@ const App = () => {
   const [selectedGame, setSelectedGame] = useState<GAme>();
   const connection = new Connection("https://api.devnet.solana.com");
   const snapPoints = useMemo(() => ["50%", "75%"], []);
-
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const handleJoinClick = useCallback((game: any) => {
     console.log("Join clicked for game:", game.title);
     setSelectedGame(game);
     bottomSheetModalRef.current?.present();
   }, []);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
+    const fetchAvatar = async () => {
+      const uri = await AsyncStorage.getItem("Avatar");
+      setAvatarUri(uri);
+    };
+
+    fetchAvatar();
     const handleRedirect = async (url: string) => {
       const parse = new URL(url);
       console.log("pars", parse);
@@ -174,8 +182,8 @@ const App = () => {
     // Linking.getInitialURL().then(handleRedirect);
     Linking.addEventListener("url", ({ url }) => handleRedirect(url));
     // handleRedirect();
-  });
-  const [loading, setLoading] = useState(false);
+  },[loading]);
+  // const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -227,6 +235,8 @@ const App = () => {
         setSuccess(true);
         ToastAndroid.show("Added to the contest", ToastAndroid.SHORT);
       }
+      router.push("/(tabs)")
+      ToastAndroid.show("Added to the contest", ToastAndroid.SHORT);
     } catch (e: any) {
       setError(e);
       ToastAndroid.show(e.message || "Transaction Failed!", ToastAndroid.SHORT);
@@ -288,13 +298,13 @@ const App = () => {
                 }}
               >
                 <Image
-                  source={require("../../assets/images/profile.png")}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 25,
-                  }}
-                />
+      source={{uri:avatarUri}} // Fallback to a default image if no URI is found
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 25,
+      }}
+    />
               </TouchableOpacity>
               <View style={{ padding: 5 }}>
                 <StepsCount />
@@ -321,33 +331,33 @@ const App = () => {
                   <View style={styles.bottomSheetContent}>
                     <View style={styles.bottomSheetHandle} />
 
-                    <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
+                    <Text style={styles.confirmTitle}>Confirm Your Challenge</Text>
 
                     <View style={styles.questDetailsCard}>
-                      <View style={styles.questDetailRow}>
-                        <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
+                      {/* <View style={styles.questDetailRow}>
+                        <Text style={styles.questDetailLabel}></Text>
                         <Text style={styles.questDetailValue}>
                           {selectedGame.name}{" "}
                         </Text>
-                      </View>
+                      </View> */}
 
                       <View style={styles.questDetailRow}>
-                        <Text style={styles.questDetailLabel}>Your Stake:</Text>
+                        <Text style={styles.questDetailLabel}>Your Entry fee:</Text>
                         <Text style={styles.questDetailValue}>
                           {selectedGame.Amount} SOL
                         </Text>
                       </View>
 
                       <View style={styles.questRulesContainer}>
-                        <Text style={styles.questRulesTitle}>Quest Rules:</Text>
+                        <Text style={styles.questRulesTitle}>Challenge Rules:</Text>
                         <Text style={styles.questRulesText}>
-                          • Track your sleep daily for 10 days
+                          • Track your sleep/steps until the competion end
                         </Text>
                         <Text style={styles.questRulesText}>
-                          • Meet your goal at least 7 days to earn rewards
+                          • Meet your goal at until the competion end
                         </Text>
                         <Text style={styles.questRulesText}>
-                          • Earn badges for consistent sleep patterns
+                          • You will win if you hit competion target
                         </Text>
                       </View>
                     </View>
@@ -447,8 +457,6 @@ const StepsCount = () => {
             endTime: now.toISOString(),
           },
         });
-
-        // Calculate steps
         let stepCount = 0;
         stepRecords.forEach((record) => {
           if (
@@ -471,7 +479,6 @@ const StepsCount = () => {
         const sleepMinutes = Math.floor(totalSleepMs / (1000 * 60));
         setSleepMinutes(sleepMinutes);
 
-        // Send data to backend
         const userid = await AsyncStorage.getItem("userid");
         await axios.post(`${BACKEND_URL}/regular/update`, {
           steps: stepCount.toString(),
@@ -483,7 +490,7 @@ const StepsCount = () => {
         });
       } catch (err) {
         console.error("Error fetching health data:", err);
-        setError("Failed to fetch health data. Please try again.");
+        // setError("Failed to fetch health data. Please try again.");
       }
     };
 

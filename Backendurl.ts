@@ -1,1 +1,1 @@
-export const BACKEND_URL = "https://9652-49-36-220-159.ngrok-free.app/api/v1";
+export const BACKEND_URL ="https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1";

@@ -22,6 +22,7 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MaterialIcons } from "@expo/vector-icons";
+import AnimatedStarsBackground from "@/components/utils/background";
 const InitializeHealthConnect = () => {
   const background=async()=>{
     const permissionsToRequest = [
@@ -66,10 +67,12 @@ const InitializeHealthConnect = () => {
     }}
   return (
     <LinearGradient
-      colors={["#1a0033", "#4b0082", "#290d44"]}
-      style={styles.gradient}
-    >
+    colors={["#1a0033", "#4b0082", "#290d44"]}
+    style={styles.gradient}
+  >
+    <AnimatedStarsBackground />
       <SafeAreaView style={styles.container}>
+        
         <View style={styles.content}>
           <Text style={styles.title}>Connect Your Health Data</Text>
           <Text style={styles.smallText}>

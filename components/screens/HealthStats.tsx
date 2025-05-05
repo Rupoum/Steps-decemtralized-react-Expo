@@ -7,11 +7,13 @@ import {
   View,
   Dimensions,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { BACKEND_URL } from "@/Backendurl";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AnimatedStarsBackground from "../utils/background";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -118,12 +120,10 @@ const HealthStats = () => {
   };
   if (isLoading) {
     return (
-      <LinearGradient
-        colors={["#1a0033", "#4b0082", "#8a2be2"]}
-        style={styles.container}
-      >
+      <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+     <AnimatedStarsBackground />
         <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={{ color: 'white' }}>Loading data...</Text>
+         <ActivityIndicator size="large"></ActivityIndicator> <Text style={{ color: 'white' }}>Loading data...</Text>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -156,10 +156,8 @@ const HealthStats = () => {
   }
 
   return (
-    <LinearGradient
-      colors={["#1a0033", "#4b0082", "#8a2be2"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+     <AnimatedStarsBackground />
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {/* Month Selector */}
@@ -365,6 +363,9 @@ const styles = StyleSheet.create({
   scrollContainer: {
     alignItems: "center",
     paddingBottom: 30,
+  },
+  gradient:{
+    flex:1
   },
   monthSelector: {
     flexDirection: "row",

@@ -98,10 +98,11 @@ const Signup = () => {
         password,
         Avatar:randomAvatar
       });
-      await AsyncStorage.setItem("username",username);
+    
       console.log("Signup response:", response.data);
-      router.replace("/(nonav)/nativeheatlth");
       setShowOtpModal(true);
+    
+      
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         console.log(err);
@@ -132,20 +133,25 @@ const Signup = () => {
     try {
       console.log("chc");
       console.log(otp);
+      const randomAvatar = Avatar[Math.floor(Math.random() * Avatar.length)];
       const response = await axios.post(`${BACKEND_URL}/verify`, {
         email,
         code:otp,
         username,
         name,
         password,
-        Avatar:randomAvatar
+        avatar:randomAvatar
       });
       console.log(response);
       await AsyncStorage.setItem("token", response.data.token);
+      await AsyncStorage.setItem("userid",response.data.user.id);
+      await AsyncStorage.setItem("PublicKey",response.data.user.publickey)
+      await AsyncStorage.setItem("username",response.data.user.username);
+      await AsyncStorage.setItem("Avatar",response.data.user.Avatar)
       ToastAndroid.show("Account verified successfully!", ToastAndroid.SHORT);
-      // router.replace("/(nonav)/nativeheatlth");
+      router.replace("/(nonav)/nativeheatlth");
       setShowOtpModal(false);
-      setShowHealthModal(true); 
+      // setShowHealthModal(true); 
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         const axiosError = err as { response: { data: { message: string } } };
@@ -250,9 +256,9 @@ const Signup = () => {
               )}
 
               <View style={styles.newUserContainer}>
-                <Text style={styles.newUserText}>Already have an account </Text>
-                <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-                  <Text style={styles.joinNowText}>Sign In</Text>
+                <Text style={styles.newUserText}>Already have an account? </Text>
+                <TouchableOpacity onPress={() => router.replace("/(auth)/login")}>
+                  <Text style={styles.joinNowText}>  Sign In</Text>
                 </TouchableOpacity>
               </View>
             </View>

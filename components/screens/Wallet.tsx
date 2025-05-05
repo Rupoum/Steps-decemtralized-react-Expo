@@ -231,7 +231,7 @@ const Wallet = () => {
         }
 
         const [response, balance, accountInfo] = await Promise.all([
-          axios.get("http://192.168.29.157:3000/test"),
+          axios.get("https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/test"),
 
           connection.getBalance(new PublicKey(publicKey)),
           connection.getSignaturesForAddress(new PublicKey(publicKey), {

@@ -43,7 +43,7 @@ const Login = () => {
     
     setHealthLoading(true);
     try {
-      // Save health data to backend or local storage
+    
       await AsyncStorage.setItem("userHeight", height);
       await AsyncStorage.setItem("userWeight", weight);
       
@@ -72,7 +72,7 @@ const Login = () => {
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("PublicKey", response.data.user.publickey);
       await AsyncStorage.setItem("userid", response.data.user.id);
-      
+      await AsyncStorage.setItem("Avatar",response.data.user.Avatar)
       router.push("/nativeheatlth");
       if (!AsyncStorage.getItem("PublicKey")) {
         console.log("No public found");

@@ -27,51 +27,34 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { BACKEND_URL } from "@/Backendurl";
+import AnimatedStarsBackground from "../utils/background";
 
-const CreateGameScreen = () => {
+const CreateSleepSccreen = () => {
   const [form, setform] = useState({
     name: "",
     memberqty: 0,
-    Dailystep: 0,
+    Steps: "",
     Amount: 0,
     Digital_Currency: "sol",
     days: 0,
     startdate: format(new Date(), "yyyy-MM-dd").toString(),
     enddate: format(new Date(), "yyyy-MM-dd").toString(),
-  });
-  const [privateform, setprivateform] = useState({
-    name: "",
-    memberqty: 0,
-    Dailystep: 0,
-    Amount: 0,
-    Digital_Currency: "sol",
-    days: 0,
-    type:"private",
-    startdate: format(new Date(), "yyyy-MM-dd").toString(),
-    enddate: format(new Date(), "yyyy-MM-dd").toString(),
-    request: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, seterror] = useState<string | null>(null);
-  const [date, setDate] = useState(new Date(1598051730000));
-  const [mode, setMode] = useState("date");
-  const [show, setShow] = useState(false);
-   const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
-    const [endDateMode, setEndDateMode] = useState<"date" | "time">("date");
-    const [showStartDate, setShowStartDate] = useState(false);
-    const [showEndDate, setShowEndDate] = useState(false);
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+  const [startDateMode, setStartDateMode] = useState<"date" | "time">("date");
+  const [endDateMode, setEndDateMode] = useState<"date" | "time">("date");
+  const [showStartDate, setShowStartDate] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState<"public" | "community">(
     "public"
   );
   const animatedValue = useRef(new Animated.Value(0)).current;
-
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [friends, setFriends] = useState([]);
-
   const [selectedFriends, setSelectedFriends] = useState([]);
-
   useEffect(() => {
     seterror(null);
     if (selectedTab === "community") {
@@ -89,10 +72,10 @@ const CreateGameScreen = () => {
     fetchFriends();
   }, [selectedTab]);
 
-  const toggleFriendSelection = (friend:any) => {
-    setSelectedFriends((prevSelected:any) => {
+  const toggleFriendSelection = (friend: any) => {
+    setSelectedFriends((prevSelected: any) => {
       if (prevSelected.includes(friend)) {
-        const newSelected = prevSelected.filter((f:any) => f !== friend);
+        const newSelected = prevSelected.filter((f: any) => f !== friend);
         // console.log("Friend deselected:", friend);
         // console.log("Currently selected friends:", newSelected);
         return newSelected;
@@ -104,71 +87,93 @@ const CreateGameScreen = () => {
       }
     });
   };
-    const handleStartDateChange = (event: any, selectedDate: any) => {
-      if (selectedDate) {
-        const currentDate = selectedDate;
-        setShowStartDate(false);
-        setStartDate(currentDate);
-        setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
-      } else {
-        setShowStartDate(false);
-      }
-    };
-  
-    const handleEndDateChange = (event: any, selectedDate: any) => {
-      if (selectedDate) {
-        const currentDate = selectedDate;
-        setShowEndDate(false);
-        setEndDate(currentDate);
-        setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
-      } else {
-        setShowEndDate(false);
-      }
-    };
-  
 
   useEffect(() => {
     setform((prev) => ({ ...prev, request: selectedFriends }));
   }, [selectedFriends]);
 
+  const handleStartDateChange = (event: any, selectedDate: any) => {
+    if (selectedDate) {
+      const currentDate = selectedDate;
+      setShowStartDate(false);
+      setStartDate(currentDate);
+      setform({ ...form, startdate: format(currentDate, "yyyy-MM-dd") });
+    } else {
+      setShowStartDate(false);
+    }
+  };
 
+  const handleEndDateChange = (event: any, selectedDate: any) => {
+    if (selectedDate) {
+      const currentDate = selectedDate;
+      setShowEndDate(false);
+      setEndDate(currentDate);
+      setform({ ...form, enddate: format(currentDate, "yyyy-MM-dd") });
+    } else {
+      setShowEndDate(false);
+    }
+  };
+  const showStartDatePicker = () => {
+    setStartDateMode("date");
+    setShowStartDate(true);
+  };
 
-  
+  const showEndDatePicker = () => {
+    setEndDateMode("date");
+    setShowEndDate(true);
+  };
   const handleCreategame = async () => {
     setLoading(true);
     seterror(null);
-    const startDate = new Date(form.startdate);
-    const endDate = new Date(form.enddate);
-    const timeDiff = endDate.getTime() - startDate.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     try {
       console.log("chek1");
-      const response = await axios.post(`${BACKEND_URL}/create/challenge`, {
-        name: form.name,
-        memberqty: form.memberqty,
-        Dailystep: form.Dailystep,
-        Amount: form.Amount,
-        Digital_Currency: "sol",
-        days:daysDiff,
-        startdate: form.startdate,
-        enddate: form.enddate,
-        userid: await AsyncStorage.getItem("userid"),
-        // request: form.request,
-      });
-      
-      Alert.alert("Success", "Game Created Successfully");
-      router.push("/(tabs)");
-      console.log("Signup response:", response.data);
+      console.log("forma", form);
+      const userid = await AsyncStorage.getItem("userid");
+      console.log(userid);
+      const startDate = new Date(form.startdate);
+      const endDate = new Date(form.enddate);
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+      try {
+        console.log(form.Steps);
+        const response = await axios.post(
+          `${BACKEND_URL}/create/challenge`,
+          {
+            name: form.name,
+            memberqty: form.memberqty,
+            // types:"Sleep",
+            Amount: form.Amount,
+            Digital_Currency: "sol",
+            Dailystep:form.Steps,
+            days: daysDiff,
+            startdate: form.startdate,
+            enddate: form.enddate,
+            userid: userid,
+            // request: form.request,
+          }
+        );
+        console.log("Signup response:", response.data);
+        // Alert.alert("Success", "Game Created Successfully");
+        ToastAndroid.show("Game created sucessfully", ToastAndroid.LONG);
+        router.push("/(tabs)");
+      } catch (e) {
+        console.log(e);
+      }
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err.r);
-          
         console.log("heee");
         try {
-          const axiosError = err as { response: { data: { error: { message: string } } } };
-            console.log(axiosError);
+          const axiosError = err as {
+            response: { data: { error: { message: string } } };
+          };
+          console.log(axiosError);
           // @ts-ignore
-          ToastAndroid.show(err.response.data.error[0].message,ToastAndroid.LONG)
+          ToastAndroid.show(
+            err.response.data.error[0].message,
+            ToastAndroid.LONG
+          );
         } catch (parseError) {
           console.error("Error parsing error response:", parseError);
           ToastAndroid.show("An unexpected error occurred.", ToastAndroid.LONG);
@@ -182,28 +187,35 @@ const CreateGameScreen = () => {
     }
   };
   const handlePrivateCreategame = async () => {
+    console.log("chee");
     setLoading(true);
     seterror(null);
     const startDate = new Date(form.startdate);
     const endDate = new Date(form.enddate);
     const timeDiff = endDate.getTime() - startDate.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 2;
+    console.log(selectedFriends)
     try {
-      const response = await axios.post(`${BACKEND_URL}/challenge/private`, {
-        name: privateform.name,
-        memberqty: privateform.memberqty,
-        Dailystep: privateform.Dailystep,
-        Amount:privateform.Amount,
-        Digital_Currency: "sol",
-        days:daysDiff,
-        startdate:privateform.startdate,
-        enddate: privateform.enddate,
-        userid: await AsyncStorage.getItem("userid"),
-        request:selectedFriends,
-      });
-      Alert.alert("Success", "Game Created Successfully");
-      router.push("/(tabs)");
+      const response = await axios.post(
+        `${BACKEND_URL}/challenge/private`,
+        {
+          name: form.name,
+          memberqty: form.memberqty,
+          Dailystep: form.Steps,
+          Amount: form.Amount,
+          Digital_Currency: "sol",
+          days: daysDiff,
+          // types: "Sleep",
+          startdate: form.startdate,
+          enddate: form.enddate,
+          userid: await AsyncStorage.getItem("userid"),
+          request: selectedFriends,
+        }
+      );
+      // Alert.alert("Success", "Game Created Successfully");
       console.log("Signup response:", response.data);
+      router.push("/(tabs)");
+      ToastAndroid.show("Game created sucessfully", ToastAndroid.LONG);
     } catch (err: any) {
       if (err instanceof Error && "response" in err) {
         // console.log(err);
@@ -211,7 +223,10 @@ const CreateGameScreen = () => {
         // @ts-ignore
         console.log(axiosError.response.data.error[0].message);
         // @ts-ignore
-        ToastAndroid.show(err.response.data.error[0].message,ToastAndroid.LONG)
+        ToastAndroid.show(
+          err.response.data.error[0].message,
+          ToastAndroid.LONG
+        );
         // @ts-ignore
         seterror(
           // @ts-ignore
@@ -231,7 +246,6 @@ const CreateGameScreen = () => {
   }, []);
 
   const handleTabPress = (tab: "public" | "community") => {
- 
     setSelectedTab(tab);
     Animated.timing(animatedValue, {
       toValue: tab === "public" ? 0 : 1,
@@ -250,15 +264,6 @@ const CreateGameScreen = () => {
       },
     ],
   };
-  const showStartDatePicker = () => {
-    setStartDateMode("date");
-    setShowStartDate(true);
-  };
-
-  const showEndDatePicker = () => {
-    setEndDateMode("date");
-    setShowEndDate(true);
-  };
 
   const handleSheetChanges = useCallback((index: number) => {
     // console.log("handleSheetChanges", index);
@@ -266,10 +271,9 @@ const CreateGameScreen = () => {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <LinearGradient
-        colors={["#1a0033", "#4b0082", "#8a2be2"]}
-        style={styles.container}
-      >
+     <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+      <AnimatedStarsBackground />
+
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.safeArea}>
             <View>
@@ -288,62 +292,60 @@ const CreateGameScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-
             <View style={styles.tabIndicatorContainer}>
               <Animated.View style={[styles.tabIndicator, animatedBarStyle]} />
             </View>
-
             <ScrollView contentContainerStyle={styles.scrollContainer}>
               <View style={styles.contentContainer}>
                 {selectedTab === "public" ? (
                   <View>
                     <View style={styles.headerContainer}>
                       <Text style={styles.title}>
-                        Create Challenge for Everyone
+                        Create  Step Challenge for Everyone
                       </Text>
                     </View>
 
                     <GameForm
-                 form={form}
-                 setform={setform}
-                 loading={loading}
-                 error={error}
-                 startDate={startDate}
-                 endDate={endDate}
-                 showStartDate={showStartDate}
-                 showEndDate={showEndDate}
-                 startDateMode={startDateMode}
-                 endDateMode={endDateMode}
-                 showStartDatePicker={showStartDatePicker}
-                 showEndDatePicker={showEndDatePicker}
-                 handleStartDateChange={handleStartDateChange}
-                 handleEndDateChange={handleEndDateChange}
-                 handleCreategame={handleCreategame}
+                      form={form}
+                      setform={setform}
+                      loading={loading}
+                      error={error}
+                      startDate={startDate}
+                      endDate={endDate}
+                      showStartDate={showStartDate}
+                      showEndDate={showEndDate}
+                      startDateMode={startDateMode}
+                      endDateMode={endDateMode}
+                      showStartDatePicker={showStartDatePicker}
+                      showEndDatePicker={showEndDatePicker}
+                      handleStartDateChange={handleStartDateChange}
+                      handleEndDateChange={handleEndDateChange}
+                      handleCreategame={handleCreategame}
                     />
                   </View>
                 ) : (
                   <View>
                     <View style={styles.headerContainer}>
                       <Text style={styles.title}>
-                        Create Challenge for Community
+                        Create Step Challenge for Community
                       </Text>
                     </View>
                     <GameForm
-                 form={form}
-                 setform={setform}
-                 loading={loading}
-                 error={error}
-                 startDate={startDate}
-                 endDate={endDate}
-                 showStartDate={showStartDate}
-                 showEndDate={showEndDate}
-                 startDateMode={startDateMode}
-                 endDateMode={endDateMode}
-                 showStartDatePicker={showStartDatePicker}
-                 showEndDatePicker={showEndDatePicker}
-                 handleStartDateChange={handleStartDateChange}
-                 handleEndDateChange={handleEndDateChange}
-                 handleCreategame={handlePrivateCreategame}
+                      form={form}
+                      setform={setform}
+                      loading={loading}
+                      error={error}
+                      startDate={startDate}
+                      endDate={endDate}
+                      showStartDate={showStartDate}
+                      showEndDate={showEndDate}
+                      startDateMode={startDateMode}
+                      endDateMode={endDateMode}
+                      showStartDatePicker={showStartDatePicker}
+                      showEndDatePicker={showEndDatePicker}
+                      handleStartDateChange={handleStartDateChange}
+                      handleEndDateChange={handleEndDateChange}
+                      handleCreategame={handlePrivateCreategame}
                     />
                     <TouchableOpacity
                       onPress={handlePresentModalPress}
@@ -426,7 +428,6 @@ const GameForm = ({
   form,
   setform,
   loading,
-  error,
   startDate,
   endDate,
   showStartDate,
@@ -468,10 +469,10 @@ const GameForm = ({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Step Target"
+          placeholder="Daily step target"
           placeholderTextColor="#999"
-          onChangeText={(e) => setform({ ...form,  Dailystep: parseInt(e) })}
-          keyboardType="name-phone-pad"
+          onChangeText={(e) => setform({ ...form, Steps: parseInt(e) })}
+          keyboardType="number-pad"
           autoCapitalize="none"
         />
       </View>
@@ -487,7 +488,18 @@ const GameForm = ({
           autoCapitalize="none"
         />
       </View>
-    
+      {/* <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Days"
+          placeholderTextColor="#999"
+          onChangeText={(e) => {
+            setform({ ...form, days: parseInt(e) });
+          }}
+          keyboardType="number-pad"
+          autoCapitalize="none"
+        />
+      </View> */}
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={showStartDatePicker}>
           <Text style={styles.dateButtonText}>
@@ -523,11 +535,7 @@ const GameForm = ({
         )}
       </View>
 
-      {error && (
-        <View style={styles.container}>
-          <Text style={styles.signUpButtonText}>{error}</Text>
-        </View>
-      )}
+     
       <TouchableOpacity
         style={styles.signUpButton}
         onPress={handleCreategame}
@@ -542,7 +550,6 @@ const GameForm = ({
     </View>
   );
 };
-
 
 // Styles
 const styles = StyleSheet.create({
@@ -620,6 +627,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#4CAF50",
     marginTop: 4,
+  },
+  gradient: {
+    flex: 1,
   },
   separator: {
     height: 1,
@@ -719,4 +729,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateGameScreen;
+export default CreateSleepSccreen;

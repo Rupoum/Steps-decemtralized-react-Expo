@@ -79,7 +79,7 @@ const AnimatedStars = () => {
             {
               left: star.x,
               top: star.y,
-              width: star.size,
+              // width: star.size,
               height: star.size,
               opacity: star.opacity,
             },
@@ -137,7 +137,7 @@ const ProfileScreen = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(false)
   const [friends, setFriends] = useState([])
-
+  const [avatar,setavatar]=useState("");
   // Animation values
   const profileScale = useRef(new Animated.Value(0.9)).current
   const optionsOpacity = useRef(new Animated.Value(0)).current
@@ -194,7 +194,12 @@ const ProfileScreen = () => {
       ).start()
     }
 
-    // Fetch notification count
+    const fetchavatar=async()=>{
+       const avatar=  await AsyncStorage.getItem("Avatar");
+       if(avatar){
+       setavatar(avatar);
+      }
+    }
     const fetchNotificationCount = async () => {
       try {
         const userid = await AsyncStorage.getItem("userid")
@@ -204,7 +209,7 @@ const ProfileScreen = () => {
         console.error("Error fetching notification count:", error)
       }
     }
-
+   fetchavatar();
     fetchNotificationCount()
   }, [])
 
@@ -353,7 +358,7 @@ const ProfileScreen = () => {
           {/* Profile card with animations */}
           <Animated.View style={[styles.profileCardContainer, { transform: [{ scale: profileScale }] }]}>
             <LinearGradient colors={["rgba(120, 56, 135, 0.8)", "rgba(26, 0, 51, 0.9)"]} style={styles.profileCard}>
-              <Image source={require("../../assets/images/profile.png")} style={styles.profileImage} />
+              <Image source={{uri:avatar}} style={styles.profileImage} />
               <View style={styles.profileInfo}>
                 <Text style={styles.username}>{username}</Text>
                 {/* <LevelProgressBar
@@ -383,7 +388,7 @@ const ProfileScreen = () => {
           </View>
 
           {/* Stats summary */}
-          <View style={styles.statsContainer}>
+          {/* <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{userStats.stats.avgSleep}</Text>
               <Text style={styles.statLabel}>Avg. Sleep</Text>
@@ -396,7 +401,7 @@ const ProfileScreen = () => {
               <Text style={styles.statValue}>{userStats.stats.totalQuests}</Text>
               <Text style={styles.statLabel}>Quests</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Menu options */}
           <View style={styles.optionsContainer}>

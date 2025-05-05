@@ -20,6 +20,7 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import AnimatedStarsBackground from "../utils/background";
 
 const { width } = Dimensions.get("window");
 
@@ -196,7 +197,7 @@ const History = () => {
             </View>
           </View>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.detailsButton}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -205,7 +206,7 @@ const History = () => {
           >
             <Text style={styles.detailsButtonText}>View Details</Text>
             <Ionicons name="chevron-forward" size={16} color="#fff" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </LinearGradient>
       </Animated.View>
     );
@@ -237,10 +238,8 @@ const History = () => {
   );
 
   return (
-    <LinearGradient
-      colors={["#1a0033", "#4b0082", "#8a2be2"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+     <AnimatedStarsBackground />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tournament History</Text>
       </View>
@@ -326,6 +325,9 @@ const History = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  gradient:{
+    flex:1
   },
   header: {
     // paddingTop: 50,

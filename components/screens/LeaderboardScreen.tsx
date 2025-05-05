@@ -73,7 +73,7 @@ export default function GamifiedLeaderboardScreen() {
           username: dat.username,
           steps: dat.steps,
           avatar:
-            "https://c8.alamy.com/comp/2PWERD5/student-avatar-illustration-simple-cartoon-user-portrait-user-profile-icon-youth-avatar-vector-illustration-2PWERD5.jpg",
+            dat.avatar,
           rank: index + 1,
         }))
         .sort((a: any, b: any) => b.steps - a.steps);
@@ -118,7 +118,7 @@ export default function GamifiedLeaderboardScreen() {
           username: dat.username,
           steps: Number(dat.steps),
           avatar:
-            "https://c8.alamy.com/comp/2PWERD5/student-avatar-illustration-simple-cartoon-user-portrait-user-profile-icon-youth-avatar-vector-illustration-2PWERD5.jpg",
+             dat.avatar,
           rank: index + 1,
         }))
         .sort((a: any, b: any) => b.steps - a.steps);

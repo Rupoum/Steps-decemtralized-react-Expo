@@ -24,7 +24,14 @@ interface Stake {
 export default function StakeStatus() {
   const [stake, setStake] = useState<Stake | null>(null);
   const [loading, setLoading] = useState(true);
+  if(stake?.currentday ==null||stake.WithdrawAmount==null){
+    return;
+  }
+   if(stake.currentday<7){
+      stake.WithdrawAmount=stake.WithdrawAmount/2; 
+   }
   useEffect(() => {
+     
     const stake=async()=>{
         setLoading(true);
         const userid=await AsyncStorage.getItem("userid")
@@ -119,10 +126,10 @@ stake();
 
         <View style={styles.cardContent}>
           <View style={styles.row}>
-            <Text style={styles.label}>Status</Text>
-            <View style={[styles.badge, styles.activeBadge]}>
+            {/* <Text style={styles.label}>Status</Text> */}
+            {/* <View style={[styles.badge, styles.activeBadge]}>
               <Text style={styles.badgeText}>{stake.Status}</Text>
-            </View>
+            </View> */}
           </View>
 
           <View style={styles.row}>

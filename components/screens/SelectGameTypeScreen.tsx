@@ -3,13 +3,12 @@ import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import AnimatedStarsBackground from "../utils/background";
 
 const SelectGameTypeScreen = () => {
   return (
-    <LinearGradient
-      colors={["#1a0033", "#4b0082", "#290d44"]}
-      style={styles.gradient}
-    >
+    <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+      <AnimatedStarsBackground />
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.button}
