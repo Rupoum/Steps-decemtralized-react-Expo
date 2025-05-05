@@ -80,16 +80,10 @@ const Layout = () => {
           title: "Home",
         }}
       />
-      {/* <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-        }}
-      /> */}
       <Tabs.Screen
-        name="stats"
+        name="Health"
         options={{
-          title: "Statistics",
+          title: "Health",
         }}
       />
     </Tabs>
