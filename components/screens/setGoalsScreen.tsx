@@ -341,7 +341,6 @@ const SetGoalsScreen = () => {
   const [showLoader, setShowLoader] = useState(false)
   const [stakeds, setStaked] = useState(false)
 
-  // Animation values
   const titleOpacity = useRef(new Animated.Value(0)).current
   const sliderScale = useRef(new Animated.Value(0.9)).current
   const inputScale = useRef(new Animated.Value(0.9)).current
@@ -380,6 +379,7 @@ const SetGoalsScreen = () => {
         const userid = await AsyncStorage.getItem("userid")
         const stake = await axios.get(`${BACKEND_URL}/getstake/${userid}`)
         if (stake.data.stake[0]?.Status === "CurrentlyRunning") {
+          router.replace("/(nonav)/goal")
           setStaked(true)
         } else {
           setStaked(false)

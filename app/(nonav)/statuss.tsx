@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 const Profile = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-       <SetGoalsScreen />
+    <StakeStatus/>
     </GestureHandlerRootView>
   );
 };

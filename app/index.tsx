@@ -34,11 +34,17 @@ const StartPage = () => {
     return <ActivityIndicator />;
   }
 
-  return (
-    <>
-      {auth ? <Redirect href="/(tabs)" /> : <Redirect href="/(auth)/welcome" />}
-    </>
-  );
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
+
+  if (!auth) {
+    // Redirect to the welcome page if not authenticated
+    return <Redirect href="/welcome" />;
+  }
+
+  // Redirect to the profile page if authenticated
+  return <Redirect href="/(tabs)" />;
 };
 
 export default StartPage;

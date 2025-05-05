@@ -25,10 +25,12 @@ import {
   BottomSheetFlatList,
 } from "@gorhom/bottom-sheet"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { router } from "expo-router"
+import { router, useFocusEffect } from "expo-router"
 import { FlatList } from "react-native-gesture-handler"
 import axios from "axios"
 import { BACKEND_URL } from "@/Backendurl"
+import { navigate } from "expo-router/build/global-state/routing"
+import AnimatedStarsBackground from "../utils/background"
 
 const { width, height } = Dimensions.get("window")
 
@@ -143,7 +145,27 @@ const ProfileScreen = () => {
   const optionsOpacity = useRef(new Animated.Value(0)).current
   const notificationBounce = useRef(new Animated.Value(0)).current
 
-  // Game stats (mock data - would come from API in real app)
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          // const response = await axios.get(`${BACKEND_URL}/your-endpoint`);
+          // setData(response.data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    }, [])
+  );
+
   const [userStats, setUserStats] = useState({
     level: 8,
     experience: 750,
@@ -234,7 +256,14 @@ const ProfileScreen = () => {
     await AsyncStorage.removeItem("token")
     await AsyncStorage.removeItem("userid")
     await AsyncStorage.removeItem("PublicKey")
-    router.push("/(auth)/welcome")
+   const token= await AsyncStorage.getItem("token");
+    console.log("token",token);
+    // navigatio
+    router.navigate({
+        pathname: "/(auth)/welcome",
+      
+      });
+    // router.replace("/(auth)/welcome")
   }
 
   const handlePresentModalPress = useCallback(() => {
@@ -300,10 +329,8 @@ const ProfileScreen = () => {
     }
   }
 
-  // Option item with animation
-  const OptionItem = ({ icon, label, onPress, color = "#783887" }) => {
+  const OptionItem = ({ icon, label, onPress, color = "#783887" }:any) => {
     const buttonScale = useRef(new Animated.Value(1)).current
-
     const handlePress = () => {
       Animated.sequence([
         Animated.timing(buttonScale, {
@@ -322,7 +349,7 @@ const ProfileScreen = () => {
     }
 
     return (
-      <Animated.View style={{ opacity: optionsOpacity, transform: [{ scale: buttonScale }] }}>
+      // <Animated.View style={{ opacity: optionsOpacity, transform: [{ scale: buttonScale }] }}>
         <TouchableOpacity onPress={handlePress}>
           <View style={styles.options}>
             <View style={[styles.optionIconContainer, { backgroundColor: color }]}>
@@ -332,15 +359,16 @@ const ProfileScreen = () => {
             <Ionicons name="chevron-forward-outline" size={24} color="white" style={styles.optionArrow} />
           </View>
         </TouchableOpacity>
-      </Animated.View>
+      // </Animated.View>
     )
   }
 
   return (
     <BottomSheetModalProvider>
-      <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
-        <AnimatedStars />
-
+      {/* <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+        <AnimatedStars /> */}
+ <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
+ <AnimatedStarsBackground />
         <View style={styles.container}>
           {/* Header with notification */}
           <View style={styles.header}>

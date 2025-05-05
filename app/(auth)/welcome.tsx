@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   FlatList,
   Animated,
+  Alert,
+  BackHandler,
 } from "react-native";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
@@ -171,6 +173,27 @@ const Welcome = () => {
       router.push("/(auth)/singup");
     }
   };
+  useEffect(() => {
+    const backAction = () => {
+      // Alert.alert('Hold on!', 'Are you sure you want to go back?', [
+      //   {
+      //     text: 'Cancel',
+      //     onPress: () => null,
+      //     style: 'cancel',
+      //   },
+      //   {text: 'YES', onPress: () => BackHandler.exitApp()},
+      // ]);
+      BackHandler.exitApp()
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [])
 
   const animateButton = () => {
     Animated.sequence([

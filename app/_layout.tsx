@@ -20,15 +20,18 @@ export default function RootLayout() {
       <Stack.Screen
         name="(nonav)/officialGames"
         options={{ title: "Official Games" }}
-      />{" "}
+      />
+      <Stack.Screen name="(nonav)/nativeheatlth" options={{title:""}}></Stack.Screen>
       <Stack.Screen
         name="(nonav)/communityGames"
         options={{ title: "Community Games" }}
       />
        <Stack.Screen
         name="(auth)/welcome"
-        options={{ title: "Welcome to Solara" }}
+        
+        options={{ title: "Welcome to Solara" ,headerBackVisible:false}}
       />
+      <Stack.Screen name="(nonav)/statuss"></Stack.Screen>
       <Stack.Screen name="(nonav)/newGame" options={{ title: "Create Game" }} />
       <Stack.Screen
         name="(nonav)/newSleepGame"
