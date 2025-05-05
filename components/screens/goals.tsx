@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Animated, Vibration, Easing } from 'react-native';
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 import { BACKEND_URL } from '@/Backendurl';
 import { AsyncLocalStorage } from 'async_hooks';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BottomSheet } from '@rneui/base';
-import SlideButton from "rn-slide-button";
 import { router } from 'expo-router';
+import SlideButton from 'rn-slide-button';
+
 interface Stake {
   id: string;
   amount: number;
@@ -20,17 +21,15 @@ interface Stake {
   Userid: string;
   misseday: number;
   Status: string;
-} const StakeStatus=()=> {
+  daycount:string
+}
+
+export default function StakeStatus() {
   const [stake, setStake] = useState<Stake | null>(null);
   const [loading, setLoading] = useState(true);
-  if(stake?.currentday ==null||stake.WithdrawAmount==null){
-    return;
-  }
-   if(stake.currentday<7){
-      stake.WithdrawAmount=stake.WithdrawAmount/2; 
-   }
+//  
   useEffect(() => {
-     
+   
     const stake=async()=>{
         setLoading(true);
         const userid=await AsyncStorage.getItem("userid")
@@ -38,10 +37,11 @@ interface Stake {
         setStake(stake.data.stake[0]); 
     }
 stake();
+
     // setStake(sampleStake);
     setLoading(false);
   }, []); 
-   const destake=async()=>{
+  const destake=async()=>{
     try{
       setLoading(true);
       const response=await axios.post(`${BACKEND_URL}/destake`,{id:stake?.id})
@@ -55,16 +55,8 @@ stake();
       }
 
    }
-  
-   const [isVisible, setIsVisible] = useState(false);
 
-   const openBottomSheet = () => {
-     setIsVisible(true);
-   };
- 
-   const closeBottomSheet = () => {
-     setIsVisible(false);
-   };  
+
   const calculateDaysSinceStart = (startDate: string) => {
     const start = new Date(startDate);
     const today = new Date();
@@ -86,6 +78,7 @@ stake();
       </LinearGradient>
     );
   }
+
   if (!stake) {
     return (
       <LinearGradient
@@ -102,7 +95,7 @@ stake();
     );
   }
 
-
+  const daysSinceStart = calculateDaysSinceStart(stake.startdate);
 
   return (
     <LinearGradient
@@ -110,7 +103,7 @@ stake();
       style={styles.container}
     >
       <Text style={styles.title}>Your Sleep Challenge</Text>
-       
+
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.statusIndicator}>
@@ -124,16 +117,16 @@ stake();
         </View>
 
         <View style={styles.cardContent}>
-          <View style={styles.row}>
-            {/* <Text style={styles.label}>Status</Text> */}
-            {/* <View style={[styles.badge, styles.activeBadge]}>
+          {/* <View style={styles.row}>
+            <Text style={styles.label}>Status</Text>
+            <View style={[styles.badge, styles.activeBadge]}>
               <Text style={styles.badgeText}>{stake.Status}</Text>
-            </View> */}
-          </View>
+            </View>
+          </View> */}
 
           <View style={styles.row}>
             <Text style={styles.label}>Sleep Goal</Text>
-            <Text style={styles.value}>{stake.Hours} hours</Text>
+            <Text style={styles.value}>{stake.Hours}</Text>
           </View>
 
           <View style={styles.row}>
@@ -143,12 +136,16 @@ stake();
 
           <View style={styles.row}>
             <Text style={styles.label}>Current Day</Text>
-            <Text style={styles.value}>{stake.currentday}</Text>
+            <Text style={styles.value}>{stake.daycount}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Missed Days</Text>
+            <Text style={styles.label}>Missed Days Streak</Text>
             <Text style={styles.value}>{stake.misseday}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Progress Days Streak</Text>
+            <Text style={styles.value}>{stake.currentday}</Text>
           </View>
 
           <View style={styles.progressContainer}>
@@ -184,51 +181,23 @@ stake();
             </View>
           )}
         </View>
+
         <View style={styles.cardFooter}>
           <Text style={styles.footerText}>
             Last updated: {new Date(stake.Updateddate).toLocaleDateString()}
           </Text>
           <Text style={styles.footerText}>
-            Potential withdrawal: {stake.WithdrawAmount} SOL
+            Potential withdrawal: {stake.currentday<7 ?(stake.WithdrawAmount/2):(stake.WithdrawAmount)} SOL
           </Text>
           {loading?<ActivityIndicator  size="large"></ActivityIndicator>:<View><SlideButton title="Slide To Destake" onSlideEnd={destake}/></View>}
-          
         </View>
-        <View style={styles.container}>
-      
-
-      {isVisible && (
-          // <BottomSheetView>
-          <BottomSheet>
-          <View>
-            <View style={{ paddingHorizontal: 10 }}>
-              <View style={styles.gameDetailsContainer}>
-                <Text style={styles.bottomSheetTitle}>You confi</Text>
-                <Text style={{ color: "white" }}>You Pay:</Text> 
-                <SlideButton
-            title="Slide To Confirm"
-            onSlideEnd={() => console.log("Confirmed!")}
-            height={50} // Optional but recommended
-          />
-              </View>
-            </View>
-            <TouchableOpacity onPress={closeBottomSheet}>
-              <Text style={{ color: "white", textAlign: "center" }}>
-                Close
-              </Text>
-              
-            </TouchableOpacity>
-          </View>
-          </BottomSheet>
-            // </BottomSheetView>
-            //         </BottomSheetModal>
-      )}
-    </View>
+        <TouchableOpacity onPress={destake}>
+            <Text>Destake</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -268,19 +237,6 @@ const styles = StyleSheet.create({
     padding: 16,
     position: 'relative',
   },
-  gameDetailsContainer: {
-    backgroundColor: "#1a0033",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  bottomSheetTitle: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginLeft: 20,
-    marginBottom: 15,
-  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -300,12 +256,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(120, 56, 135, 0.5)',
   },
-  BottomSheetBackground: {
-    flex: 1,
-    backgroundColor: "#7E3887",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -314,19 +264,6 @@ const styles = StyleSheet.create({
   label: {
     color: '#D1D5DB',
     fontSize: 14,
-  },
-  signUpButton: {
-    backgroundColor: "#8a2be2",
-    borderRadius: 5,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  signUpButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   value: {
     color: 'white',
@@ -402,4 +339,3 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 });
-export default StakeStatus

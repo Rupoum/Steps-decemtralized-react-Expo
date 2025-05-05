@@ -8,6 +8,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 const Profile = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+        {/* <View>
+            <Text>hello</Text>
+        </View> */}
         <StakeStatus/>
     </GestureHandlerRootView>
   );

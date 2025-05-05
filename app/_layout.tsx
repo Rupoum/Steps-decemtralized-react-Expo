@@ -1,5 +1,6 @@
 import React from "react";
 import { Stack } from "expo-router";
+import { Button, Touchable, TouchableOpacity, View } from "react-native";
 
 export default function RootLayout() {
   return (
@@ -39,6 +40,19 @@ export default function RootLayout() {
       />
       <Stack.Screen name="(auth)/singup" options={{title:"Sign Up"}}></Stack.Screen>
       <Stack.Screen name="(auth)/login" options={{title:"Login"}}></Stack.Screen>
+      <Stack.Screen 
+  name="(nonav)/goal" 
+  options={() => ({
+    title: "Goals",
+    headerBackTitle: 'Custom Back',
+    headerBackTitleStyle: { fontSize: 30 },
+    headerLeft: () => (
+      <View>
+      <TouchableOpacity onPress={() => alert('This is a button!')}></TouchableOpacity>
+      </View>
+    )
+  })}
+/>
       <Stack.Screen
         name="(nonav)/historyGames"
         options={{ title: " " }}
