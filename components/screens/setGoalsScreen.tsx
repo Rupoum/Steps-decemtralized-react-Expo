@@ -512,7 +512,7 @@ const SetGoalsScreen = () => {
   }
   const interpolatedWidth = sliderScale.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", "100%"], // Adjust the range as needed
+    outputRange: [0, width * 0.8], // Adjust the range as needed
   });
 
   // Get difficulty level based on sleep goal
@@ -548,12 +548,12 @@ const SetGoalsScreen = () => {
                   </View> */}
                 </View>
 
-                <Animated.View
+                {/* <Animated.View
                   style={{
                     width: interpolatedWidth,
                     // transform: [{ scaleX: sliderScale }],
                   }}
-                >
+                > */}
                   <Slider
                     style={styles.slider}
                     minimumValue={5}
@@ -571,7 +571,7 @@ const SetGoalsScreen = () => {
                     <Text style={styles.sliderLabel}>5h</Text>
                     <Text style={styles.sliderLabel}>12h</Text>
                   </View>
-                </Animated.View>
+                {/* </Animated.View> */}
 
                 <View style={styles.rewardInfoContainer}>
                   <Text style={styles.rewardInfoText}>Healthy sleep (7-9h) earns bonus rewards!</Text>
