@@ -1,13 +1,15 @@
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
     ext {
         buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
-        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
+        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '26')
         compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
-        kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
-
+        kotlinVersion = '2.0.0'
+          ndkVersion = "26.1.10909125"
+        //  composeCompilerVersion = '1.5.4'
         ndkVersion = "26.1.10909125"
     }
     repositories {
@@ -15,14 +17,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath('com.android.tools.build:gradle')
-        classpath('com.facebook.react:react-native-gradle-plugin')
-        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+
     }
 }
-
-apply plugin: "com.facebook.react.rootproject"
-
+plugins {
+    // id("libs.plugins.compose.compiler") apply false
+    id("com.facebook.react.rootproject") apply false
+}
 allprojects {
     repositories {
         maven {
@@ -36,6 +40,6 @@ allprojects {
 
         google()
         mavenCentral()
-        maven { url 'https://www.jitpack.io' }
+             maven { url 'https://www.jitpack.io' }
     }
 }

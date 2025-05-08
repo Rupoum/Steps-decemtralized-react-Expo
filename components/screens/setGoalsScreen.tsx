@@ -1,7 +1,7 @@
-import React from "react";
+"use client"
 
-import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   StyleSheet,
   Text,
@@ -13,37 +13,26 @@ import {
   Vibration,
   Dimensions,
   Easing,
-  Image,
-  ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Slider from "@react-native-community/slider";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import { BACKEND_URL } from "@/Backendurl";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
-import {
-  Connection,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import SlideButton from "rn-slide-button";
-import { router } from "expo-router";
+} from "react-native"
+import { SafeAreaView } from "react-native-safe-area-context"
+import Slider from "@react-native-community/slider"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import { BACKEND_URL } from "@/Backendurl"
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet"
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
+import { GestureHandlerRootView } from "react-native-gesture-handler"
+import SlideButton from "rn-slide-button"
+import { router } from "expo-router"
+import React from "react"
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window")
 
 // Animated stars component for background
 const AnimatedStars = () => {
   const stars = useMemo(() => {
     return Array.from({ length: 20 }).map((_, i) => {
-      const size = Math.random() * 3 + 1;
+      const size = Math.random() * 3 + 1
       return {
         id: i,
         x: Math.random() * width,
@@ -51,9 +40,9 @@ const AnimatedStars = () => {
         size,
         opacity: new Animated.Value(Math.random()),
         speed: Math.random() * 2000 + 1000,
-      };
-    });
-  }, []);
+      }
+    })
+  }, [])
 
   useEffect(() => {
     stars.forEach((star) => {
@@ -71,10 +60,10 @@ const AnimatedStars = () => {
             easing: Easing.linear,
             useNativeDriver: true,
           }),
-        ])
-      ).start();
-    });
-  }, [stars]);
+        ]),
+      ).start()
+    })
+  }, [stars])
 
   return (
     <View style={styles.starsContainer}>
@@ -94,13 +83,13 @@ const AnimatedStars = () => {
         />
       ))}
     </View>
-  );
-};
+  )
+}
 
 // Animated moon component
 const AnimatedMoon = () => {
-  const moonScale = useRef(new Animated.Value(1)).current;
-  const moonRotation = useRef(new Animated.Value(0)).current;
+  const moonScale = useRef(new Animated.Value(1)).current
+  const moonRotation = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     Animated.loop(
@@ -117,8 +106,8 @@ const AnimatedMoon = () => {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]),
+    ).start()
 
     Animated.loop(
       Animated.timing(moonRotation, {
@@ -126,14 +115,14 @@ const AnimatedMoon = () => {
         duration: 10000,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
-    ).start();
-  }, []);
+      }),
+    ).start()
+  }, [])
 
   const spin = moonRotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
-  });
+  })
 
   return (
     <Animated.View
@@ -150,14 +139,14 @@ const AnimatedMoon = () => {
         <View style={styles.moonCrater3} />
       </View>
     </Animated.View>
-  );
-};
+  )
+}
 
 // Animated coin component
 const AnimatedCoin = ({ value }) => {
-  const coinRotation = useRef(new Animated.Value(0)).current;
-  const coinScale = useRef(new Animated.Value(1)).current;
-  const coinY = useRef(new Animated.Value(0)).current;
+  const coinRotation = useRef(new Animated.Value(0)).current
+  const coinScale = useRef(new Animated.Value(1)).current
+  const coinY = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     // Coin flip animation
@@ -169,8 +158,8 @@ const AnimatedCoin = ({ value }) => {
           easing: Easing.linear,
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]),
+    ).start()
 
     // Coin bounce animation
     Animated.loop(
@@ -187,8 +176,8 @@ const AnimatedCoin = ({ value }) => {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]),
+    ).start()
 
     // Pulse animation when value changes
     Animated.sequence([
@@ -202,29 +191,25 @@ const AnimatedCoin = ({ value }) => {
         duration: 200,
         useNativeDriver: true,
       }),
-    ]).start();
-  }, [value]);
+    ]).start()
+  }, [value])
 
   const spin = coinRotation.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: ["0deg", "90deg", "180deg"],
-  });
+  })
 
   const coinWidth = coinRotation.interpolate({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
     outputRange: [40, 20, 0, 20, 40],
-  });
+  })
 
   return (
     <Animated.View
       style={[
         styles.coinContainer,
         {
-          transform: [
-            { translateY: coinY },
-            { rotateY: spin },
-            { scale: coinScale },
-          ],
+          transform: [{ translateY: coinY }, { rotateY: spin }, { scale: coinScale }],
         },
       ]}
     >
@@ -236,29 +221,18 @@ const AnimatedCoin = ({ value }) => {
           },
         ]}
       >
-        {/* <Text style={styles.coinText}>SOL</Text>
-         */}
-        <Image
-          source={require("../../assets/images/Sol.png")}
-          style={{ width: 40, height: 40 }}
-        />
+        <Text style={styles.coinText}>SOL</Text>
       </Animated.View>
     </Animated.View>
-  );
-};
+  )
+}
 
-const TransactionLoader = ({
-  loading,
-  error,
-  success,
-  amount,
-  onRetry,
-  onClose,
-}: any) => {
-  const spinValue = useRef(new Animated.Value(0)).current;
-  const scaleValue = useRef(new Animated.Value(0)).current;
-  const successOpacity = useRef(new Animated.Value(0)).current;
-  const successScale = useRef(new Animated.Value(0.5)).current;
+
+const TransactionLoader = ({ loading, error, success, amount, onRetry, onClose }:any) => {
+  const spinValue = useRef(new Animated.Value(0)).current
+  const scaleValue = useRef(new Animated.Value(0)).current
+  const successOpacity = useRef(new Animated.Value(0)).current
+  const successScale = useRef(new Animated.Value(0.5)).current
   useEffect(() => {
     if (loading) {
       Animated.loop(
@@ -266,21 +240,21 @@ const TransactionLoader = ({
           toValue: 1,
           duration: 1500,
           useNativeDriver: true,
-        })
-      ).start();
+        }),
+      ).start()
 
       Animated.timing(scaleValue, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
-      }).start();
+      }).start()
     } else {
-      spinValue.setValue(0);
+      spinValue.setValue(0)
     }
 
     if (success) {
       // Vibrate on success
-      Vibration.vibrate([0, 70, 50, 100]);
+      Vibration.vibrate([0, 70, 50, 100])
 
       // Animate success message
       Animated.parallel([
@@ -295,25 +269,21 @@ const TransactionLoader = ({
           tension: 40,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start()
       setTimeout(() => {
-        router.push("/(nonav)/profile");
-      }, 2000);
+        router.push("/(nonav)/profile")
+
+      }, 2000)
     }
-  }, [loading, success]);
+  }, [loading, success])
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
-  });
+  })
 
   return (
-    <Animated.View
-      style={[
-        styles.transactionContainer,
-        { transform: [{ scale: scaleValue }] },
-      ]}
-    >
+    <Animated.View style={[styles.transactionContainer, { transform: [{ scale: scaleValue }] }]}>
       {loading && (
         <View style={styles.loaderContainer}>
           <Animated.View style={{ transform: [{ rotate: spin }] }}>
@@ -331,9 +301,7 @@ const TransactionLoader = ({
             <Text style={styles.errorIconText}>!</Text>
           </View>
           <Text style={styles.errorTitle}>Transaction Failed</Text>
-          <Text style={styles.errorMessage}>
-            {error.message || "An error occurred"}
-          </Text>
+          <Text style={styles.errorMessage}>{error.message || "An error occurred"}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -355,35 +323,33 @@ const TransactionLoader = ({
           </View>
           <Text style={styles.successText}>Quest Started!</Text>
           <Text style={styles.successMessage}>You've staked {amount} SOL</Text>
-          <Text style={styles.redirectingText}>
-            Redirecting to your profile...
-          </Text>
+          <Text style={styles.redirectingText}>Redirecting to your profile...</Text>
         </Animated.View>
       )}
     </Animated.View>
-  );
-};
+  )
+}
 
 const SetGoalsScreen = () => {
-  const [sleepGoal, setSleepGoal] = useState(8);
-  const [stakeAmount, setStakeAmount] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [showLoader, setShowLoader] = useState(false);
-  const [stakeds, setStaked] = useState(false);
+  const [sleepGoal, setSleepGoal] = useState(8)
+  const [stakeAmount, setStakeAmount] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+  const [showLoader, setShowLoader] = useState(false)
+  const [stakeds, setStaked] = useState(false)
 
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const sliderScale = useRef(new Animated.Value(0.9)).current;
-  const inputScale = useRef(new Animated.Value(0.9)).current;
-  const buttonScale = useRef(new Animated.Value(1)).current;
-  const sleepGoalScale = useRef(new Animated.Value(1)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current
+  const sliderScale = useRef(new Animated.Value(0.9)).current
+  const inputScale = useRef(new Animated.Value(0.9)).current
+  const buttonScale = useRef(new Animated.Value(1)).current
+  const sleepGoalScale = useRef(new Animated.Value(1)).current
 
-  const connection = new Connection("https://api.devnet.solana.com");
+  const connection = new Connection("https://api.devnet.solana.com")
   const escrowpublickey = "AL3YQV36ADyq3xwjuETH8kceNTH9fuP43esbFiLF1V1A";
 
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["50%", "75%", "95%"], []);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null)
+  const snapPoints = useMemo(() => ["50%", "75%"], [])
 
   useEffect(() => {
     // Animate elements on mount
@@ -405,23 +371,23 @@ const SetGoalsScreen = () => {
         tension: 40,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start()
     const checkStake = async () => {
       try {
-        const userid = await AsyncStorage.getItem("userid");
-        const stake = await axios.get(`${BACKEND_URL}/getstake/${userid}`);
+        const userid = await AsyncStorage.getItem("userid")
+        const stake = await axios.get(`${BACKEND_URL}/getstake/${userid}`)
         if (stake.data.stake[0]?.Status === "CurrentlyRunning") {
-          router.push("/(nonav)/goal");
-          setStaked(true);
+          router.push("/(nonav)/goal")
+          setStaked(true)
         } else {
-          setStaked(false);
+          setStaked(false)
         }
       } catch (e) {
-        console.log(e);
+        console.log(e)
       }
-    };
-    checkStake();
-  }, []);
+    }
+    checkStake()
+  }, [])
 
   // Button press animation
   const animateButton = () => {
@@ -436,8 +402,8 @@ const SetGoalsScreen = () => {
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   // Sleep goal change animation
   useEffect(() => {
@@ -452,25 +418,25 @@ const SetGoalsScreen = () => {
         duration: 200,
         useNativeDriver: true,
       }),
-    ]).start();
-  }, [sleepGoal]);
+    ]).start()
+  }, [sleepGoal])
 
   const handlePresentModalPress = useCallback(() => {
-    animateButton();
-    setShowLoader(false);
-    bottomSheetModalRef.current?.present();
-  }, []);
+    animateButton()
+    setShowLoader(false)
+    bottomSheetModalRef.current?.present()
+  }, [])
 
   const handleRetry = () => {
-    setError(null);
-    Onsend();
-  };
+    setError(null)
+    Onsend()
+  }
 
   const handleClose = () => {
-    setShowLoader(false);
-    setError(null);
-    setSuccess(false);
-  };
+    setShowLoader(false)
+    setError(null)
+    setSuccess(false)
+  }
 
   const Onsend = async () => {
     setShowLoader(true);
@@ -484,15 +450,15 @@ const SetGoalsScreen = () => {
       }
       console.log("error1");
       const balance = await connection.getBalance(new PublicKey(publickey));
-
+        
       if (balance < Number(stakeAmount) * LAMPORTS_PER_SOL) {
         throw new Error("Insufficient balance");
       }
       console.log("error2");
-      const publickeys = new PublicKey(publickey);
+      const publickeys=new PublicKey(publickey);
       console.log(publickeys);
-      const exc = new PublicKey(escrowpublickey);
-      console.log("assd", exc);
+      const exc=new PublicKey(escrowpublickey);
+        console.log("assd",exc);
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: new PublicKey(publickey),
@@ -514,19 +480,20 @@ const SetGoalsScreen = () => {
 
       console.log(sleepGoal);
       console.log(serializedTransaction);
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split('T')[0];
       const response = await axios.post(`${BACKEND_URL}/create/stake`, {
         tx: serializedTransaction,
         userid: userid,
         amount: Number(stakeAmount),
-        Hours: sleepGoal.toString() + "h",
-        Startdate: today,
-      });
+        Hours: sleepGoal.toString()+"h",
+        Startdate:today
+      }); 
       console.log(response.data);
       if (response.status === 200) {
         setSuccess(true);
         ToastAndroid.show("Added to the contest", ToastAndroid.SHORT);
-        router.push("/(nonav)/profile");
+        router.push("/(nonav)/profile")
+
       }
     } catch (e: any) {
       setError(e);
@@ -537,12 +504,12 @@ const SetGoalsScreen = () => {
     }
   };
   const getRewardEstimate = () => {
-    if (!stakeAmount) return "0";
-    const baseMultiplier = 1.2;
-    const goalBonus = sleepGoal >= 7 && sleepGoal <= 9 ? 0.1 : 0;
-    const estimatedReward = Number(stakeAmount) * (baseMultiplier + goalBonus);
-    return estimatedReward.toFixed(2);
-  };
+    if (!stakeAmount) return "0"
+    const baseMultiplier = 1.2
+    const goalBonus = sleepGoal >= 7 && sleepGoal <= 9 ? 0.1 : 0
+    const estimatedReward = Number(stakeAmount) * (baseMultiplier + goalBonus)
+    return estimatedReward.toFixed(2)
+  }
   const interpolatedWidth = sliderScale.interpolate({
     inputRange: [0, 1],
     outputRange: [0, width * 0.8], // Adjust the range as needed
@@ -561,28 +528,18 @@ const SetGoalsScreen = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <SafeAreaView style={{ flex: 1 }}>
-          <LinearGradient
-            colors={["#1a0033", "#4b0082", "#290d44"]}
-            style={styles.gradient}
-          >
+          <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
             <AnimatedStars />
 
             <View style={styles.container}>
-              <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
-                Sleep Quest Challenge
-              </Animated.Text>
+              <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>Sleep Quest Challenge</Animated.Text>
 
               <View style={styles.questCard}>
                 <AnimatedMoon />
 
                 <View style={styles.goalContainer}>
                   <Text style={styles.goalLabel}>Your Sleep Goal</Text>
-                  <Animated.Text
-                    style={[
-                      styles.goalText,
-                      { transform: [{ scale: sleepGoalScale }] },
-                    ]}
-                  >
+                  <Animated.Text style={[styles.goalText, { transform: [{ scale: sleepGoalScale }] }]}>
                     {sleepGoal} <Text style={styles.goalUnit}>hours</Text>
                   </Animated.Text>
 
@@ -591,34 +548,34 @@ const SetGoalsScreen = () => {
                   </View> */}
                 </View>
 
-                {/* <Animated.View
+                <Animated.View
                   style={{
                     width: interpolatedWidth,
+
                     // transform: [{ scaleX: sliderScale }],
                   }}
-                > */}
+                >
                   <Slider
                     style={styles.slider}
                     minimumValue={5}
                     maximumValue={12}
                     step={1}
-                    // value={sleepGoal}
+                      // value={sleepGoal}
                     onValueChange={(value) => setSleepGoal(value)}
                     minimumTrackTintColor="#7FD4F5"
                     maximumTrackTintColor="rgba(138, 154, 171, 0.4)"
                     thumbTintColor="#7FD4F5"
+                    
                   />
 
                   <View style={styles.sliderLabels}>
                     <Text style={styles.sliderLabel}>5h</Text>
                     <Text style={styles.sliderLabel}>12h</Text>
                   </View>
-                {/* </Animated.View> */}
+                </Animated.View>
 
                 <View style={styles.rewardInfoContainer}>
-                  <Text style={styles.rewardInfoText}>
-                    Healthy sleep (7-9h) earns bonus rewards!
-                  </Text>
+                  <Text style={styles.rewardInfoText}>Healthy sleep (7-9h) earns bonus rewards!</Text>
                 </View>
 
                 <View style={styles.stakeContainer}>
@@ -646,9 +603,7 @@ const SetGoalsScreen = () => {
 
                   {stakeAmount ? (
                     <View style={styles.rewardEstimateContainer}>
-                      <Text style={styles.rewardEstimateText}>
-                        Potential reward: {getRewardEstimate()} SOL
-                      </Text>
+                      <Text style={styles.rewardEstimateText}>Potential reward: {getRewardEstimate()} SOL</Text>
                     </View>
                   ) : null}
                 </View>
@@ -669,11 +624,7 @@ const SetGoalsScreen = () => {
                   </TouchableOpacity>
                 </Animated.View>
 
-                {stakeds && (
-                  <Text style={styles.alreadyStakedText}>
-                    You already have an active sleep quest!
-                  </Text>
-                )}
+                {stakeds && <Text style={styles.alreadyStakedText}>You already have an active sleep quest!</Text>}
               </View>
             </View>
 
@@ -683,89 +634,68 @@ const SetGoalsScreen = () => {
               backgroundStyle={styles.bottomSheetBackground}
             >
               <BottomSheetView style={{ flex: 1 }}>
-                <ScrollView
-                  contentContainerStyle={styles.bottomSheetContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <View style={styles.bottomSheetContent}>
-                    <View style={styles.bottomSheetHandle} />
+                <View style={styles.bottomSheetContent}>
+                  <View style={styles.bottomSheetHandle} />
 
-                    <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
+                  <Text style={styles.confirmTitle}>Confirm Your Quest</Text>
 
-                    <View style={styles.questDetailsCard}>
-                      <View style={styles.questDetailRow}>
-                        <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
-                        <Text style={styles.questDetailValue}>
-                          {sleepGoal} hours
-                        </Text>
-                      </View>
-
-                      <View style={styles.questDetailRow}>
-                        <Text style={styles.questDetailLabel}>Your Stake:</Text>
-                        <Text style={styles.questDetailValue}>
-                          {stakeAmount} SOL
-                        </Text>
-                      </View>
-
-                      <View style={styles.questDetailRow}>
-                        <Text style={styles.questDetailLabel}>
-                          Potential Reward:
-                        </Text>
-                        <Text
-                          style={[styles.questDetailValue, styles.rewardValue]}
-                        >
-                          {getRewardEstimate()} SOL
-                        </Text>
-                      </View>
-
-                      <View style={styles.questRulesContainer}>
-                        <Text style={styles.questRulesTitle}>Quest Rules:</Text>
-                        <Text style={styles.questRulesText}>
-                          • Track your sleep daily for 10 days
-                        </Text>
-                        <Text style={styles.questRulesText}>
-                          • Meet your goal at least 7 days to earn rewards
-                        </Text>
-                        <Text style={styles.questRulesText}>
-                          • Earn badges for consistent sleep patterns
-                        </Text>
-                      </View>
+                  <View style={styles.questDetailsCard}>
+                    <View style={styles.questDetailRow}>
+                      <Text style={styles.questDetailLabel}>Sleep Goal:</Text>
+                      <Text style={styles.questDetailValue}>{sleepGoal} hours</Text>
                     </View>
 
-                    <SlideButton
-                      title="Slide To Begin Quest"
-                      width="90%"
-                      height={60}
-                      reverseSlideEnabled={false}
-                      animation={true}
-                      titleStyle={styles.slideButtonTitle}
-                      titleContainerStyle={styles.slideButtonTitleContainer}
-                      containerStyle={styles.slideButtonContainer}
-                      underlayStyle={styles.slideButtonUnderlay}
-                      thumbStyle={styles.slideButtonThumb}
-                      onSlideEnd={Onsend}
-                    />
+                    <View style={styles.questDetailRow}>
+                      <Text style={styles.questDetailLabel}>Your Stake:</Text>
+                      <Text style={styles.questDetailValue}>{stakeAmount} SOL</Text>
+                    </View>
 
-                    {showLoader && (
-                      <TransactionLoader
-                        loading={loading}
-                        error={error}
-                        success={success}
-                        amount={stakeAmount}
-                        onRetry={handleRetry}
-                        onClose={handleClose}
-                      />
-                    )}
+                    <View style={styles.questDetailRow}>
+                      <Text style={styles.questDetailLabel}>Potential Reward:</Text>
+                      <Text style={[styles.questDetailValue, styles.rewardValue]}>{getRewardEstimate()} SOL</Text>
+                    </View>
+
+                    <View style={styles.questRulesContainer}>
+                      <Text style={styles.questRulesTitle}>Quest Rules:</Text>
+                      <Text style={styles.questRulesText}>• Track your sleep daily for 10 days</Text>
+                      <Text style={styles.questRulesText}>• Meet your goal at least 7 days to earn rewards</Text>
+                      <Text style={styles.questRulesText}>• Earn badges for consistent sleep patterns</Text>
+                    </View>
                   </View>
-                </ScrollView>
+
+                  <SlideButton
+                    title="Slide To Begin Quest"
+                    width="90%"
+                    height={60}
+                    reverseSlideEnabled={false}
+                    animation={true}
+                    titleStyle={styles.slideButtonTitle}
+                    titleContainerStyle={styles.slideButtonTitleContainer}
+                    containerStyle={styles.slideButtonContainer}
+                    underlayStyle={styles.slideButtonUnderlay}
+                    thumbStyle={styles.slideButtonThumb}
+                    onSlideEnd={Onsend}
+                  />
+
+                  {showLoader && (
+                    <TransactionLoader
+                      loading={loading}
+                      error={error}
+                      success={success}
+                      amount={stakeAmount}
+                      onRetry={handleRetry}
+                      onClose={handleClose}
+                    />
+                  )}
+                </View>
               </BottomSheetView>
             </BottomSheetModal>
           </LinearGradient>
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   gradient: {
@@ -931,7 +861,7 @@ const styles = StyleSheet.create({
   },
   coin: {
     height: 40,
-    backgroundColor: "black",
+    backgroundColor: "#FFD700",
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -991,15 +921,13 @@ const styles = StyleSheet.create({
   },
   bottomSheetContent: {
     flex: 1,
-    // paddingBottom: 30,
-    paddingHorizontal: 10,
-
-    // alignItems: "center",
+    padding: 20,
+    alignItems: "center",
   },
   bottomSheetHandle: {
     width: 40,
     height: 5,
-    // backgroundColor: "#783887",
+    backgroundColor: "#783887",
     borderRadius: 3,
     marginBottom: 20,
   },
@@ -1007,7 +935,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
     textAlign: "center",
   },
   questDetailsCard: {
@@ -1076,10 +1004,8 @@ const styles = StyleSheet.create({
     borderColor: "#7FD4F5",
   },
   transactionContainer: {
-    marginTop: 10,
-    marginBottom: 20,
-    padding: 10,
-
+    marginTop: 20,
+    padding: 20,
     backgroundColor: "rgba(26, 0, 51, 0.9)",
     borderRadius: 15,
     width: "100%",
@@ -1190,6 +1116,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: "italic",
   },
-});
+})
 
-export default SetGoalsScreen;
+export default SetGoalsScreen

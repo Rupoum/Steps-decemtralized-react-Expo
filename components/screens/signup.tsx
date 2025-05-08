@@ -38,7 +38,7 @@ const Avatar=[
 "https://picsum.photos/200/200?grayscale",
 "https://picsum.photos/seed/avatar12/200/200",
 "https://api.multiavatar.com/avatar1.png",
-"https://api.multiavatar.com/${Math.random().toString(36).substring(2)}.png",
+`https://api.multiavatar.com/${Math.random().toString(36).substring(2)}.png`,
 "https://api.adorable.io/avatars/200/avatar15.png",
 "https://source.boringavatars.com/beam/200/avatar16",
 "https://source.boringavatars.com/marble/200/avatar17",

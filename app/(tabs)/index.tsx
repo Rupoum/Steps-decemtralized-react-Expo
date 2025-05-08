@@ -297,7 +297,7 @@ const App = () => {
                 }}
               >
                 <Image
-                  source={{ uri: avatarUri }} // Fallback to a default image if no URI is found
+                    source={{ uri: avatarUri ? avatarUri : "https://picsum.photos/seed/avatar12/200/200" }}
                   style={{
                     width: 40,
                     height: 40,

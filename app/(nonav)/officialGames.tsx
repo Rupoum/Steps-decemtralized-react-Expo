@@ -7,10 +7,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 const OfficialGames = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-       <LinearGradient colors={["#1a0033", "#4b0082", "#290d44"]} style={styles.gradient}>
-       <AnimatedStarsBackground />
+     
       <OfficialGamesScreen />
-      </LinearGradient>
+      {/* </LinearGradient> */}
     </GestureHandlerRootView>
 
   );

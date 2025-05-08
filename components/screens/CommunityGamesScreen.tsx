@@ -72,13 +72,13 @@ const OfficialGamesScreen = () => {
   useEffect(() => {
     const fetchuserdata = async () => {
       try {
-        const userid = await AsyncStorage.getItem("username");
+        const userid = await AsyncStorage.getItem("userid");
         console.log("userdid");
         const response = await axios.get(
-          `${BACKEND_URL}/challenge/private/${userid}`
+          `${BACKEND_URL}/history/prev/${userid}`
         );
-        console.log(response.data);
-        setjoined(response.data.allchalange);
+        console.log("cca",response.data.Tournament);
+        setjoined(response.data.Tournament);
       } catch (error) {
         console.log(error);
       }

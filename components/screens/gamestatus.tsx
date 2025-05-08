@@ -53,8 +53,6 @@ const GamifiedStepTable = ({ challengeId }: { challengeId: string }) => {
 
         const duration = datesInRange.length
         setChallengeDuration(duration)
-
-        // Calculate current day based on today's date
         const today = new Date().toISOString().split("T")[0]
         const startDateObj = new Date(startdate)
         const todayObj = new Date(today)
