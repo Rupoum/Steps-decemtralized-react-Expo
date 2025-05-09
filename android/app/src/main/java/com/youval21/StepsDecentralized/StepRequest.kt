@@ -4,7 +4,6 @@ import retrofit2.http.POST
 import retrofit2.http.GET
 
 interface BackendApiService {
-
     @GET("hello")
    suspend fun  getstep(): Getresponse
    @POST("update")

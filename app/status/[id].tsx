@@ -6,11 +6,11 @@ const App = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a0033" />
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.headerTitle}>Step Challenge</Text>
         <Text style={styles.headerSubtitle}>Track your daily progress</Text>
-      </View>
-      <GamifiedStepTable challengeId="123" />
+      </View> */}
+      <GamifiedStepTable/>
     </SafeAreaView>
   )
 }

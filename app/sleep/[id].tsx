@@ -9,7 +9,7 @@ const App=()=>{
     return(
         // <View>
           // <GameLeaderboard>
-          <StepTable challengeId={id as String}/>
+          <GamifiedActivityTable challengeId={id as String}/>
           // </GameLeaderboard>
         // </View>
     )

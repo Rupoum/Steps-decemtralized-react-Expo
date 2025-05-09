@@ -837,7 +837,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                             : "#9d4edd",
                       }}
                     >
-                      {/* <Pressable
+                      <Pressable
                         onPress={() => router.push(`/status/${game.id}`)}
                         style={({ pressed }) => [
                           { opacity: pressed ? 0.8 : 1 },
@@ -845,7 +845,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                           // { padding: 16 },
                         ]}
                         android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-                      > */}
+                      >
                       {/* Header Section */}
                       <View
                         style={{
@@ -1138,7 +1138,7 @@ const OfficialGames = ({ handleJoinClick }: any) => {
                           {game.Totalamount}
                         </Text>
                       </View>
-                      {/* </Pressable> */}
+                      </Pressable>
                     </LinearGradient>
                   </Animated.View>
                 </View>
