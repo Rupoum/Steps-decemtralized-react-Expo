@@ -3,13 +3,14 @@ import GameLeaderboard from "@/components/screens/gamestatus";
 import { useLocalSearchParams, useSearchParams } from "expo-router/build/hooks";
 import React from "react";
 import { View,Text } from "react-native"
+import GamifiedActivityTable from "@/components/screens/gamestatus";
 const App=()=>{
   const {id}=useLocalSearchParams();
 
     return(
         // <View>
           // <GameLeaderboard>
-          <GamifiedActivityTable challengeId={id as String}/>
+          <GamifiedActivityTable challengeId={id as string} />
           // </GameLeaderboard>
         // </View>
     )

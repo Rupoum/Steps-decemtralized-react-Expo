@@ -22,6 +22,8 @@ export default function RootLayout() {
         name="(nonav)/officialGames"
         options={{ title: "Official Games" }}
       />
+      <Stack.Screen name="status/[id]"
+      options={{title:"Challenge Info"}}></Stack.Screen>
       <Stack.Screen name="(nonav)/nativeheatlth" options={{title:""}}></Stack.Screen>
       <Stack.Screen
         name="(nonav)/communityGames"

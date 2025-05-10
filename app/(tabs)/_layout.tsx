@@ -63,9 +63,9 @@ const Layout = () => {
       })}
     >
       <Tabs.Screen
-        name="wallet"
+        name="index"
         options={{
-          title: "Wallet",
+          title: "Home",
         }}
       />
       <Tabs.Screen
@@ -75,15 +75,15 @@ const Layout = () => {
         }}
       />
       <Tabs.Screen
-        name="index"
+        name="Stats"
         options={{
-          title: "Home",
+          title: "Health",
         }}
       />
       <Tabs.Screen
-        name="Health"
+        name="wallet"
         options={{
-          title: "Health",
+          title: "Wallet",
         }}
       />
     </Tabs>

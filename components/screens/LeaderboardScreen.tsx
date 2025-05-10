@@ -105,8 +105,6 @@ export default function GamifiedLeaderboardScreen() {
       });
     }, 300);
   };
-
-  // Fetch step data
   const fetchStepData = async () => {
     try {
       setloading(true);

@@ -1,19 +1,18 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { View, Text, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Image } from "react-native"
+import { View, Text, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Image, TouchableOpacity, Share, Alert } from "react-native"
 import React from "react"
 import axios from "axios"
 import { BACKEND_URL } from "@/Backendurl"
 import { LinearGradient } from "expo-linear-gradient"
 import AnimatedStarsBackground from "../utils/background"
-const { width: SCREEN_WIDTH } = Dimensions.get("window")
-
 interface ActivityData {
   username: string
   Hours?: string
   Steps?:string
   day: string
+  avatar:string
 }
 
 interface ChallengeInfo {
@@ -21,6 +20,11 @@ interface ChallengeInfo {
   enddate: string
   result: ActivityData[]
   user: string[]
+  name: string
+  type: 'Sleep' | 'Step'
+  target: number
+  days: number
+  amount?: number
 }
 
 interface ParticipantStats {
@@ -29,7 +33,12 @@ interface ParticipantStats {
   avatar?: string
 }
 
-const GamifiedActivityTable = (challengeid:string) => {
+interface GamifiedActivityTableProps {
+  challengeId: string;
+}
+
+const GamifiedActivityTable = ({ challengeId }: GamifiedActivityTableProps) => {
+  console.log("challengid",challengeId);
   const horizontalScrollRef = useRef<ScrollView>(null)
   const contentScrollRefs = useRef<ScrollView[]>([])
   const [days, setDays] = useState<string[]>([])
@@ -37,7 +46,7 @@ const GamifiedActivityTable = (challengeid:string) => {
   const [loading, setLoading] = useState(true)
   const [challengeType, setChallengeType] = useState<'sleep' | 'step'>('step')
   const [challengeTitle, setChallengeTitle] = useState("Moonwalk Shrimp Shred")
-  const[sampleData,setadata]=useState<ChallengeInfo>()
+  const[data,setadata]=useState<ChallengeInfo>()
   // const sampleData = {
   //   result: [
   //     {
@@ -64,40 +73,34 @@ const GamifiedActivityTable = (challengeid:string) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await axios.get(`${BACKEND_URL}/challenge/info/${challengeid}`)
+        console.log("che");
+        const data = await axios.get(`${BACKEND_URL}/challenge/info/${challengeId}`)
+      
         setadata(data.data)
         console.log(data.data)
-        const { startdate, enddate, result, user } = data.data
-
-        // Check if the data contains Hours or Steps
+        const { startdate, enddate, result, user,name,target } = data.data
         const hasHours = result.some((item: ActivityData) => item.Hours !== undefined)
         setChallengeType(hasHours ? 'sleep' : 'step')
-
+          setChallengeTitle(name);
         const datesInRange = getDatesBetween(new Date(startdate), new Date(enddate))
         setDays(datesInRange)
     
-        // Process data to create participant stats
         const participantMap = new Map<string, ParticipantStats>()
 
-        // Initialize all users from the user array
-        user.forEach((username:any) => {
-          participantMap.set(username, {
-            username,
-            dailyHours: {},
-            // In a real app, you would have a way to get avatars
-            avatar: Math.random() > 0.7 ? `https://i.pravatar.cc/150?u=${username}` : undefined,
-          })
-        })
-
-        // Fill in the hours data
+         user.forEach((userObj: { username: string, avatar: string }) => {
+        participantMap.set(userObj.username, {
+          username: userObj.username,
+          dailyHours: {},
+          avatar: userObj.avatar || "" // Use the provided avatar or empty string
+        });
+      });
+  
         result.forEach((item: ActivityData) => {
           if (participantMap.has(item.username)) {
             const participant = participantMap.get(item.username)!
             participant.dailyHours[item.day] = item.Hours || "0h 0m"
           }
         })
-
-        // Convert to array
         const participantsArray = Array.from(participantMap.values())
 
         setParticipants(participantsArray)
@@ -152,6 +155,48 @@ const GamifiedActivityTable = (challengeid:string) => {
     })
   }
 
+  const onShare = async () => {
+    try {
+      if (!data) {
+        console.log("No data available for sharing");
+        return;
+      } console.log("data",data)
+      
+      console.log("Share data:", {
+        name: data.name,
+        type: data.type,
+        target: data.target,
+        days: data.days,
+        amount: data.amount,
+        startdate:data.startdate
+      });
+
+      const shareMessage = 
+        `${data.type === 'Sleep' ? '🌙' : '👟'} Join my "${data.name}" ${data.type === 'Sleep' ? 'Sleep' : 'Step'} Challenge on Solara!\n\n` +
+        `🎯 Target: ${data.target} ${data.type === 'Sleep' ? 'hours/night' : 'steps/day'}\n` +
+        `⏳ Duration: ${data.days} days\n` +
+
+        `${data.amount ? `💰 Entry Amount: ${data.amount} SOL\n\n` : '\n'}` +
+        // `👉 Join here:com.youval21.stepsdecentralized://expo-development-client/?url=http%3A%2F%2F192.168.29.157%3A8081` +
+        `📲 Download Solara now start earning: https://solaratech.me/`;
+
+      console.log("Share message:", shareMessage);
+
+      const result = await Share.share({
+        message: shareMessage
+      });
+      
+      if (result.action === Share.sharedAction) {
+        console.log("Share successful");
+      } else if (result.action === Share.dismissedAction) {
+        console.log("Share dismissed");
+      }
+    } catch (error: any) {
+      console.error("Share error:", error);
+      Alert.alert("Error", "Failed to share challenge. Please try again.");
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -169,8 +214,10 @@ const GamifiedActivityTable = (challengeid:string) => {
         <Text style={styles.simpleHeaderText}>
           {challengeType === 'sleep' ? 'Sleep Challenge' : 'Step Challenge'}
         </Text>
+        <TouchableOpacity onPress={onShare} style={styles.shareButton}>
+          <Text style={styles.shareButtonText}>Share Challenge</Text>
+        </TouchableOpacity>
       </View>
-
       {/* Table Container */}
       <View style={styles.tableContainer}>
         {/* Header Row - Days */}
@@ -387,6 +434,19 @@ const styles = StyleSheet.create({
     color: "#7FD4E4",
     marginTop: 10,
     fontSize: 16,
+  },
+  shareButton: {
+    backgroundColor: '#7FD4E4',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 10,
+    alignSelf: 'center',
+  },
+  shareButtonText: {
+    color: '#1a0033',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 })
 
