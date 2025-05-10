@@ -29,6 +29,7 @@ interface FORM {
   username: string;
   id: string;
   avatar: string;
+  displaySteps?: string
 }
 
 const { width } = Dimensions.get("window");
@@ -62,22 +63,42 @@ export default function GamifiedLeaderboardScreen() {
     }
   }, []);
 
-  // Fetch sleep data
   const fetchSleepData = async () => {
     try {
       setloading(true);
       const response = await axios.get(`${BACKEND_URL}/total/sleep`);
+      
+      // Parse sleep data (assuming format is "Xh Ym" or total minutes)
       const formattedData = response.data.data
-        .map((dat: any, index: number) => ({
-          id: dat.username,
-          username: dat.username,
-          steps: dat.steps,
-          avatar:
-            dat.avatar,
+        .map((dat: any) => {
+          // Convert sleep time to minutes for sorting
+          let sleepMinutes = 0;
+          
+          if (typeof dat.steps === 'string') {
+            // Parse "Xh Ym" format
+            const [hoursPart, minsPart] = dat.steps.split(' ');
+            const hours = parseInt(hoursPart.replace('h', '')) || 0;
+            const mins = parseInt(minsPart.replace('m', '')) || 0;
+            sleepMinutes = hours * 60 + mins;
+          } else {
+            // Assume it's already in minutes
+            sleepMinutes = dat.steps;
+          }
+          
+          return {
+            id: dat.username,
+            username: dat.username,
+            steps: sleepMinutes, // Store as minutes for sorting
+            displaySteps: dat.steps, // Keep original format for display
+            avatar: dat.avatar,
+          };
+        })
+        .sort((a: any, b: any) => b.steps - a.steps) // Sort by minutes (descending)
+        .map((item: any, index: number) => ({
+          ...item,
           rank: index + 1,
-        }))
-        .sort((a: any, b: any) => b.steps - a.steps);
-
+        }));
+  
       setSleepData(formattedData);
     } catch (e) {
       console.log(e);
@@ -94,6 +115,7 @@ export default function GamifiedLeaderboardScreen() {
         rankAnimations[item.id] = new Animated.Value(0);
       }
     });
+    
     setTimeout(() => {
       data.forEach((item, index) => {
         Animated.timing(rankAnimations[item.id], {
@@ -285,11 +307,8 @@ export default function GamifiedLeaderboardScreen() {
   const renderItem = ({ item, index }: { item: FORM; index: number }) => {
     const isSelected = selectedUser === item.id;
     const displayValue = showSleep
-      ? item.steps === 0
-        ? "0h 0m"
-        : `${item.steps}`
-      : item.steps;
-
+    ? item.displaySteps || "0h 0m" // Use displaySteps for sleep data
+    : item.steps;
     // console.log("dasdsa",item.username);
     const rank = index + 1;
     const maxValue = getMaxValue(showSleep ? sleep : form);
